@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">In Case Of</string>
+    <string name="tagline">Local-first safety plans.</string>
+    <string name="im_safe">I\'m safe</string>
+    <string name="create_case">Create Case</string>
+    <string name="generate_plan">Generate safety plan</string>
+    <string name="enable_case">Enable case</string>
+    <string name="check_in">Check in</string>
+    <string name="in_case_of">In case of…</string>
+    <string name="app_should">The app should…</string>
+    <string name="processed_locally">Processed on device with Gemma 4. Your data stays local.</string>
+    <string name="safety_review">Safety Review</string>
+    <string name="trusted_contact">Trusted Contact</string>
+    <string name="simulation">Simulation</string>
+    <string name="safety_log">Safety Log</string>
+    <string name="settings">Settings</string>
+    <string name="about">About</string>
+</resources>

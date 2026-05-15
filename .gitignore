@@ -1,0 +1,52 @@
+# Built application files
+*.apk
+*.aab
+*.ap_
+*.aar
+
+# Build outputs
+/build/
+/app/build/
+/captures/
+/.externalNativeBuild/
+/.cxx/
+
+# Gradle
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+!gradle/wrapper/
+.gradletasknamecache
+
+# IDE
+*.iml
+.idea/
+*.swp
+*.swo
+*~
+
+# Local configuration file
+local.properties
+
+# Android signing
+*.keystore
+*.jks
+*.p12
+*.pem
+
+# Google services
+google-services.json
+
+# Environment
+*.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Room schema exports (optional — can include for migrations)
+# /app/schemas/
+
+# Kotlin
+*.class

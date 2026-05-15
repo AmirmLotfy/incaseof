@@ -179,3 +179,10 @@ Built for **Gemma 4 Good** — using AI for positive societal impact.
 - **Inference:** On-device, local-first, no cloud required, **no API key needed**
 - **Runtime:** LiteRT-LM 0.11.0 Kotlin API
 - **Impact:** Safety automation for people living alone, travelers, caregivers
+
+### Links
+
+- **Repository:** [github.com/AmirmLotfy/incaseof](https://github.com/AmirmLotfy/incaseof)
+- **Model:** [Gemma 4 E2B IT (.litertlm)](https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm)
+- **LiteRT-LM Docs:** [ai.google.dev/edge/litert-lm/android](https://ai.google.dev/edge/litert-lm/android)
+- **Hackathon:** [Kaggle Gemma 4 Good](https://www.kaggle.com/competitions/gemma-4-good-hackathon)

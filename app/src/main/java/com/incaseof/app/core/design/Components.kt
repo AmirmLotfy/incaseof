@@ -426,12 +426,12 @@ fun SectionHeader(
 @Composable
 fun BrandShield(
     modifier: Modifier = Modifier,
-    size: Int = 64
+    height: Int = 32
 ) {
     androidx.compose.foundation.Image(
         painter = androidx.compose.ui.res.painterResource(id = com.incaseof.app.R.drawable.ico_logo),
         contentDescription = "In Case Of",
-        modifier = modifier.size(size.dp),
+        modifier = modifier.height(height.dp).wrapContentWidth(),
         contentScale = androidx.compose.ui.layout.ContentScale.Fit
     )
 }

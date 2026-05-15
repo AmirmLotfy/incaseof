@@ -6,7 +6,7 @@ const META: Array<[string, string]> = [
   ["Model", "Gemma 4 E2B · LiteRT-LM 0.11.0"],
   ["Package", "com.incaseof.app"],
   ["Updated", "May 2026"],
-  ["SHA-256", "41638a14…bdb2f05a"],
+  ["SHA-256", "df866665…3abed28d"],
 ];
 
 export function Apk() {

@@ -81,7 +81,7 @@ fun OnboardingScreen(
             Spacer(modifier = Modifier.height(48.dp))
 
             // Logo
-            BrandShield(size = 56)
+            BrandShield(height = 56)
 
             Spacer(modifier = Modifier.height(16.dp))
 

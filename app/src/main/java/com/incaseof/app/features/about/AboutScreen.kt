@@ -32,7 +32,7 @@ fun AboutScreen(onBack: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            BrandShield(size = 72)
+            BrandShield(height = 72)
             Text("In Case Of", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
             Text("Built for Gemma 4 Good Hackathon", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
 

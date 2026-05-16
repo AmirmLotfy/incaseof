@@ -1,3 +1,4 @@
+import screensWebp from "@/assets/screens-row.webp";
 import screensImg from "@/assets/screens-row.png";
 
 const CAPTIONS = [
@@ -28,14 +29,21 @@ export function Screens() {
         </div>
 
         <div className="relative mt-14 overflow-hidden rounded-[28px] border hairline bg-gradient-to-b from-card/60 to-background p-2 md:p-4">
-          <img
-            src={screensImg}
-            alt="Five In Case of app screens: Create Case, Safety Review, Active Case, Missed Check-in, Emergency Log"
-            width={1920}
-            height={1080}
-            loading="lazy"
-            className="w-full"
-          />
+          {/* Explicit aspect-ratio prevents CLS on lazy-load */}
+          <div style={{ aspectRatio: '1536/1024' }}>
+            <picture>
+              <source srcSet={screensWebp} type="image/webp" />
+              <img
+                src={screensImg}
+                alt="Five In Case of app screens: Create Case, Safety Review, Active Case, Missed Check-in, Emergency Log"
+                width={1536}
+                height={1024}
+                loading="lazy"
+                decoding="async"
+                className="w-full h-full object-cover"
+              />
+            </picture>
+          </div>
         </div>
 
         <ul className="mt-10 grid grid-cols-1 gap-px overflow-hidden rounded-2xl border hairline bg-border/50 sm:grid-cols-2 lg:grid-cols-5">

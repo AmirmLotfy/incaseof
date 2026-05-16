@@ -177,8 +177,7 @@ fun CompilingScreen(
             modifier = Modifier.padding(32.dp)
         ) {
             // Animated shield
-            BrandShield(
-                size = 80,
+            BrandShield(height = 80,
                 modifier = Modifier.scale(
                     if (!uiState.isComplete) {
                         val scale by infiniteTransition.animateFloat(

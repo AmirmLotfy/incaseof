@@ -87,7 +87,7 @@ fun HomeScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        BrandShield(size = 48)
+                        BrandShield(height = 48)
                     }
                 }
             }

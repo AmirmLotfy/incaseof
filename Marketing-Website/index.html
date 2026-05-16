@@ -15,9 +15,19 @@
     <meta name="twitter:description" content="In Case Of watches over you when you can't respond. Describe a safety scenario in plain language. Gemma 4 builds the workflow. You stay in control." />
     <meta name="twitter:image" content="/og/og-image.jpg" />
     <link rel="icon" href="/app-icon.png" type="image/png" />
+    <!-- Font preconnects -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" />
+    <!-- Non-render-blocking font load: media=print trick avoids FCP delay -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500&family=Inter:wght@400;500;600&display=optional"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" />
+    </noscript>
   </head>
   <body>
     <div id="root"></div>

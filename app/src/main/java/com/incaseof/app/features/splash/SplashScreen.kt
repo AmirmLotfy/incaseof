@@ -95,8 +95,7 @@ fun SplashScreen(
                 .alpha(alpha)
                 .scale(scale)
         ) {
-            BrandShield(
-                size = 96,
+            BrandShield(height = 96,
                 modifier = Modifier.scale(pulseScale)
             )
 

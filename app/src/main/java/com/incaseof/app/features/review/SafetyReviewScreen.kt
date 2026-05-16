@@ -100,7 +100,7 @@ fun SafetyReviewScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    BrandShield(size = 44)
+                    BrandShield(height = 44)
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = workflow.title,

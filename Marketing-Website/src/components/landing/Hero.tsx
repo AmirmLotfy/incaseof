@@ -1,6 +1,7 @@
 import { motion } from "motion/react";
 import { ArrowRight, Download, Github, Play, ShieldCheck } from "lucide-react";
-import heroPhone from "@/assets/hero-phone.png";
+import heroPhoneWebp from "@/assets/hero-phone.webp";
+import heroPhonePng from "@/assets/hero-phone.png";
 
 const TRUST = [
   "Gemma 4 on-device",
@@ -104,13 +105,21 @@ export function Hero() {
           className="relative mx-auto w-full max-w-[520px]"
         >
           <div className="absolute -inset-10 -z-10 rounded-[3rem] bg-gradient-to-br from-accent-cyan/30 via-transparent to-accent-violet/25 blur-3xl" />
-          <img
-            src={heroPhone}
-            alt="In Case of Android app showing an active safety case"
-            width={1024}
-            height={1024}
-            className="relative w-full drop-shadow-[0_40px_60px_oklch(0.16_0.06_280/25%)]"
-          />
+          {/* Explicit aspect-ratio container prevents CLS while image loads */}
+          <div className="relative w-full" style={{ aspectRatio: '1024/1024' }}>
+            <picture>
+              <source srcSet={heroPhoneWebp} type="image/webp" />
+              <img
+                src={heroPhonePng}
+                alt="In Case of Android app showing an active safety case"
+                width={1024}
+                height={1024}
+                fetchpriority="high"
+                decoding="async"
+                className="relative w-full drop-shadow-[0_40px_60px_oklch(0.16_0.06_280/25%)]"
+              />
+            </picture>
+          </div>
           {/* Floating workflow chips */}
           <motion.div
             initial={{ opacity: 0, x: -16 }}

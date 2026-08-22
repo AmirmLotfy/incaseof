@@ -60,16 +60,17 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - uses: android-actions/setup-android@v3
+      - uses: android-actions/setup-android@v4
       - name: Install SDK platform 37
-        run: sdkmanager --install "platforms;android-37" "build-tools;36.0.0"
-      - uses: gradle/actions/setup-gradle@v4
+        # The package id carries the minor version: android-37.0, not android-37.
+        run: sdkmanager --install "platforms;android-37.0" "build-tools;37.0.0"
+      - uses: gradle/actions/setup-gradle@v6
       - name: Assemble, test, lint, style
         working-directory: android
         run: ./gradlew assembleDebug testDebugUnitTest lintDebug ktlintCheck
       - name: Upload reports on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: android-reports
           path: android/app/build/reports/

@@ -1,0 +1,59 @@
+[project]
+name = "incaseof-services"
+version = "0.1.0"
+description = "In Case of — backend services, Strands agent, workers and callbacks."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+license = { text = "Apache-2.0" }
+
+# Versions are PINNED, never ranged. A safety product must build identically
+# tomorrow; a transitive minor bump is not an acceptable source of surprise.
+dependencies = [
+    "strands-agents[gemini]==1.53.0",
+    "strands-agents-tools==0.8.6",
+    "google-genai==2.19.0",
+    "pydantic==2.13.4",
+    "boto3==1.43.78",
+    "aws-lambda-powertools==3.34.0",
+    "jsonschema==4.26.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest==9.1.1",
+    "pytest-cov==7.1.0",
+    "ruff==0.16.4",
+    "mypy==2.3.1",
+    "types-jsonschema==4.26.0.20260518",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["services"]
+
+[tool.pytest.ini_options]
+testpaths = ["services/tests", "evals"]
+# Live-model evals cost money and need GEMINI_API_KEY; opt in with `-m eval`.
+addopts = "-q --strict-markers -m 'not eval'"
+markers = [
+    "eval: agent evaluation, runs against a live model. Excluded from the default run.",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+extend-exclude = ["infra/cdk/cdk.out"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S", "RUF"]
+# S101 (assert) is the correct idiom in pytest.
+per-file-ignores = { "services/tests/**" = ["S101"], "evals/**" = ["S101"] }
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unused_ignores = true
+exclude = ["infra/cdk/cdk\\.out"]

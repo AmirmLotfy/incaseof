@@ -1,0 +1,25 @@
+{
+  "type": "SOLO",
+  "label": "Hike",
+  "timezone": "Africa/Cairo",
+  "trigger": {
+    "kind": "ONE_TIME",
+    "dueAt": "2026-08-26T18:00:00+03:00"
+  },
+  "grace": { "seconds": 1800 },
+  "steps": [
+    { "sequence": 1, "offsetSeconds": 0,    "action": "PUSH_SUBJECT" },
+    { "sequence": 2, "offsetSeconds": 600,  "action": "CALL_SUBJECT" },
+    { "sequence": 3, "offsetSeconds": 900,  "action": "MESSAGE_RESPONDER", "targetRole": "PRIMARY" },
+    { "sequence": 4, "offsetSeconds": 1500, "action": "CALL_RESPONDER",    "targetRole": "BACKUP" }
+  ],
+  "stopConditions": [
+    "SUBJECT_EXPLICIT_CONFIRMATION",
+    "RESPONDER_VERIFIED_CONTACT"
+  ],
+  "contextPolicy": {
+    "location": "NEVER",
+    "battery": "AFTER_SUBJECT_CALL_FAILED"
+  },
+  "leaseSeconds": 600
+}

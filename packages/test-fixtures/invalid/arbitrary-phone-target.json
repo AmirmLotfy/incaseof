@@ -1,0 +1,12 @@
+{
+  "_why": "Attempts to smuggle a raw phone number into a step. The schema has no vocabulary for an endpoint - this is the structural prompt-injection defence. additionalProperties:false must reject it.",
+  "type": "SOLO",
+  "timezone": "Africa/Cairo",
+  "trigger": { "kind": "ONE_TIME", "dueAt": "2026-08-26T18:00:00+03:00" },
+  "grace": { "seconds": 600 },
+  "steps": [
+    { "sequence": 1, "offsetSeconds": 0, "action": "CALL_RESPONDER", "targetRole": "PRIMARY", "phoneNumber": "+12025550123" }
+  ],
+  "stopConditions": ["SUBJECT_EXPLICIT_CONFIRMATION"],
+  "contextPolicy": { "location": "NEVER" }
+}

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/format-hook.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(uv run:*)",
+      "Bash(uv sync)",
+      "Bash(npm run:*)",
+      "Bash(./gradlew:*)",
+      "Bash(./scripts/preflight.sh)",
+      "Bash(./scripts/check-antislop.sh)",
+      "Bash(python3 scripts/check-secrets.py:*)",
+      "Bash(python3 scripts/check-phone-numbers.py:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./android/local.properties)",
+      "Bash(aws iam:*)",
+      "Bash(aws organizations:*)",
+      "Bash(cdk destroy:*)"
+    ]
+  }
+}

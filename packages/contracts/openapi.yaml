@@ -1,0 +1,318 @@
+openapi: 3.1.0
+info:
+  title: In Case of API
+  version: 0.1.0
+  license:
+    name: Apache-2.0
+  description: |
+    In Case of does not decide whether someone is in danger. It notices unresolved
+    expectations and works to close the loop.
+
+    Two authentication realms:
+      * /v1/*  Cognito-authenticated principal.
+      * /r/*   a signed, single-Alert responder token. Never a broad session.
+
+    No endpoint ever returns a plaintext phone number.
+
+servers:
+  - url: https://api.incaof.com
+
+tags:
+  - name: plans
+  - name: moments
+  - name: circle
+  - name: alerts
+  - name: responder
+
+paths:
+  /v1/plans/compile:
+    post:
+      tags: [plans]
+      summary: Compile natural language into a validated CompiledPlan
+      description: |
+        Preview only. This endpoint NEVER creates or activates anything. Activation is a
+        separate explicit call, because a plan that took effect the moment it was
+        described would remove the human confirmation step that the safety model depends on.
+      security: [{ cognito: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [utterance]
+              properties:
+                utterance: { type: string, minLength: 1, maxLength: 2000 }
+                timezone: { type: string }
+      responses:
+        "200":
+          description: Compiled plan for human preview
+          content:
+            application/json:
+              schema:
+                $ref: "../domain-schemas/compiled-plan.schema.json"
+        "422": { $ref: "#/components/responses/Problem" }
+
+  /v1/plans:
+    get:
+      tags: [plans]
+      summary: List plans
+      security: [{ cognito: [] }]
+      responses: { "200": { description: OK } }
+    post:
+      tags: [plans]
+      summary: Create a plan from a compiled plan
+      security: [{ cognito: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "../domain-schemas/compiled-plan.schema.json"
+      responses:
+        "201": { description: Created }
+        "422": { $ref: "#/components/responses/Problem" }
+
+  /v1/plans/{planId}:
+    get:
+      tags: [plans]
+      summary: Get a plan
+      security: [{ cognito: [] }]
+      parameters: [{ $ref: "#/components/parameters/PlanId" }]
+      responses: { "200": { description: OK }, "404": { $ref: "#/components/responses/Problem" } }
+
+  /v1/plans/{planId}/activate:
+    post:
+      tags: [plans]
+      summary: Activate a plan, creating an immutable PlanVersion
+      security: [{ cognito: [] }]
+      parameters: [{ $ref: "#/components/parameters/PlanId" }]
+      responses: { "200": { description: Activated } }
+
+  /v1/plans/{planId}/pause:
+    post:
+      tags: [plans]
+      summary: Pause a plan
+      security: [{ cognito: [] }]
+      parameters: [{ $ref: "#/components/parameters/PlanId" }]
+      responses: { "200": { description: Paused } }
+
+  /v1/plans/{planId}/resume:
+    post:
+      tags: [plans]
+      summary: Resume a plan
+      security: [{ cognito: [] }]
+      parameters: [{ $ref: "#/components/parameters/PlanId" }]
+      responses: { "200": { description: Resumed } }
+
+  /v1/plans/{planId}/test:
+    post:
+      tags: [plans]
+      summary: Drill Mode — run the real workflow on a compressed schedule
+      description: Uses the production workflow engine. There is no demo-only code path.
+      security: [{ cognito: [] }]
+      parameters: [{ $ref: "#/components/parameters/PlanId" }]
+      responses: { "202": { description: Drill started } }
+
+  /v1/moments/next:
+    get:
+      tags: [moments]
+      summary: The next Expected Moment
+      security: [{ cognito: [] }]
+      responses: { "200": { description: OK } }
+
+  /v1/moments/{momentId}:
+    get:
+      tags: [moments]
+      summary: Get a Moment
+      security: [{ cognito: [] }]
+      parameters: [{ $ref: "#/components/parameters/MomentId" }]
+      responses: { "200": { description: OK } }
+
+  /v1/moments/{momentId}/confirm:
+    post:
+      tags: [moments]
+      summary: 'I''m okay — subject confirmation'
+      security: [{ cognito: [] }]
+      parameters:
+        - $ref: "#/components/parameters/MomentId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses: { "200": { description: Resolved } }
+
+  /v1/moments/{momentId}/extend:
+    post:
+      tags: [moments]
+      summary: Extend this Moment only
+      description: Affects tonight alone. It never mutates the recurring plan.
+      security: [{ cognito: [] }]
+      parameters: [{ $ref: "#/components/parameters/MomentId" }]
+      responses: { "200": { description: Extended } }
+
+  /v1/moments/{momentId}/cancel:
+    post:
+      tags: [moments]
+      summary: Cancel a Moment before escalation
+      security: [{ cognito: [] }]
+      parameters: [{ $ref: "#/components/parameters/MomentId" }]
+      responses: { "200": { description: Cancelled } }
+
+  /v1/circle:
+    get:
+      tags: [circle]
+      summary: List Circle members
+      security: [{ cognito: [] }]
+      responses: { "200": { description: OK } }
+
+  /v1/circle/invitations:
+    post:
+      tags: [circle]
+      summary: Invite someone to a Circle
+      description: Nobody becomes a safety contact without explicit acceptance.
+      security: [{ cognito: [] }]
+      responses: { "201": { description: Invited } }
+
+  /v1/circle/invitations/{invitationId}/resend:
+    post:
+      tags: [circle]
+      summary: Resend an invitation
+      security: [{ cognito: [] }]
+      parameters: [{ $ref: "#/components/parameters/InvitationId" }]
+      responses: { "200": { description: Resent } }
+
+  /v1/circle/members/{memberId}:
+    delete:
+      tags: [circle]
+      summary: Remove a Circle member
+      security: [{ cognito: [] }]
+      parameters: [{ $ref: "#/components/parameters/MemberId" }]
+      responses: { "204": { description: Removed } }
+
+  /v1/alerts/{alertId}:
+    get:
+      tags: [alerts]
+      summary: Get an Alert
+      security: [{ cognito: [] }]
+      parameters: [{ $ref: "#/components/parameters/AlertId" }]
+      responses: { "200": { description: OK } }
+
+  /v1/alerts/{alertId}/claim:
+    post:
+      tags: [alerts]
+      summary: Claim an Alert — starts the checking lease
+      description: |
+        Claiming pauses backup escalation for the lease duration. It does NOT mean the
+        subject is safe. Acknowledged is not resolved.
+      security: [{ cognito: [] }]
+      parameters:
+        - $ref: "#/components/parameters/AlertId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200": { description: Claimed }
+        "409": { $ref: "#/components/responses/Problem" }
+
+  /v1/alerts/{alertId}/release:
+    post:
+      tags: [alerts]
+      summary: Release a claim — escalation resumes immediately
+      security: [{ cognito: [] }]
+      parameters: [{ $ref: "#/components/parameters/AlertId" }]
+      responses: { "200": { description: Released } }
+
+  /v1/alerts/{alertId}/resolve:
+    post:
+      tags: [alerts]
+      summary: Resolve an Alert
+      security: [{ cognito: [] }]
+      parameters:
+        - $ref: "#/components/parameters/AlertId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses: { "200": { description: Resolved } }
+
+  /v1/alerts/{alertId}/timeline:
+    get:
+      tags: [alerts]
+      summary: Full audit timeline
+      security: [{ cognito: [] }]
+      parameters: [{ $ref: "#/components/parameters/AlertId" }]
+      responses: { "200": { description: OK } }
+
+  /r/{signedToken}:
+    get:
+      tags: [responder]
+      summary: Incident Room — no account required
+      security: []
+      parameters: [{ $ref: "#/components/parameters/SignedToken" }]
+      responses: { "200": { description: HTML Incident Room }, "410": { $ref: "#/components/responses/Problem" } }
+
+  /v1/r/{signedToken}/claim:
+    post:
+      tags: [responder]
+      summary: Responder claims the Alert
+      security: []
+      parameters: [{ $ref: "#/components/parameters/SignedToken" }]
+      responses: { "200": { description: Claimed } }
+
+  /v1/r/{signedToken}/extend:
+    post:
+      tags: [responder]
+      summary: Extend the checking lease
+      security: []
+      parameters: [{ $ref: "#/components/parameters/SignedToken" }]
+      responses: { "200": { description: Extended } }
+
+  /v1/r/{signedToken}/unable:
+    post:
+      tags: [responder]
+      summary: 'I couldn''t reach them — escalation resumes'
+      security: []
+      parameters: [{ $ref: "#/components/parameters/SignedToken" }]
+      responses: { "200": { description: Escalation resumed } }
+
+  /v1/r/{signedToken}/resolve:
+    post:
+      tags: [responder]
+      summary: 'I reached them — they''re okay'
+      security: []
+      parameters: [{ $ref: "#/components/parameters/SignedToken" }]
+      responses: { "200": { description: Resolved } }
+
+  /v1/voice/session:
+    post:
+      tags: [responder]
+      summary: Start a voice session (P1)
+      security: [{ cognito: [] }]
+      responses: { "501": { description: Not implemented in P0 } }
+
+components:
+  securitySchemes:
+    cognito:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    PlanId: { name: planId, in: path, required: true, schema: { type: string, format: uuid } }
+    MomentId: { name: momentId, in: path, required: true, schema: { type: string, format: uuid } }
+    AlertId: { name: alertId, in: path, required: true, schema: { type: string, format: uuid } }
+    MemberId: { name: memberId, in: path, required: true, schema: { type: string, format: uuid } }
+    InvitationId: { name: invitationId, in: path, required: true, schema: { type: string, format: uuid } }
+    SignedToken: { name: signedToken, in: path, required: true, schema: { type: string } }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema: { type: string }
+      description: Replays return the original result rather than acting twice.
+  responses:
+    Problem:
+      description: RFC 9457 problem detail
+      content:
+        application/problem+json:
+          schema:
+            type: object
+            properties:
+              type: { type: string }
+              title: { type: string }
+              status: { type: integer }
+              reason_code:
+                type: string
+                description: Stable machine code. Never leaks another user's data.

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Chalk. Mirrors packages/design-tokens/tokens.json (light.background).
+         The launch window cannot read Compose tokens, so this one value is duplicated
+         deliberately. -->
+    <color name="ico_background">#F6F5F0</color>
+    <!-- Ink. Launcher icon background. -->
+    <color name="ico_launcher_background">#171A18</color>
+</resources>

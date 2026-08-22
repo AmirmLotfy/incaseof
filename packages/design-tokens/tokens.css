@@ -1,0 +1,65 @@
+/* GENERATED FILE - edit packages/design-tokens/tokens.json instead. */
+
+:root {
+  --ico-background: #F6F5F0;
+  --ico-surface: #FFFDF8;
+  --ico-ink: #171A18;
+  --ico-graphite: #626660;
+  --ico-stone: #E4E4DE;
+  --ico-primary: #205C47;
+  --ico-signal: #E85B2A;
+  --ico-warning: #D99A29;
+  --ico-critical: #B44438;
+  --ico-resolved: #39705A;
+  --ico-on-primary: #FFFFFF;
+  --ico-on-signal: #171A18;
+  --ico-on-warning: #171A18;
+  --ico-on-critical: #FFFFFF;
+  --ico-on-resolved: #FFFFFF;
+  --ico-radius-heroPanel: 20px;
+  --ico-radius-surface: 14px;
+  --ico-radius-input: 12px;
+  --ico-radius-button: 14px;
+  --ico-radius-bottomSheet: 24px;
+  --ico-radius-chip: 8px;
+  --ico-space-1: 4px;
+  --ico-space-2: 8px;
+  --ico-space-3: 12px;
+  --ico-space-4: 16px;
+  --ico-space-5: 24px;
+  --ico-space-6: 32px;
+  --ico-space-7: 48px;
+  --ico-space-8: 64px;
+  --ico-space-9: 96px;
+  --ico-space-10: 128px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ico-background: #101310;
+    --ico-surface: #181C19;
+    --ico-raised: #212622;
+    --ico-ink: #F2F1EB;
+    --ico-graphite: #A9AEA9;
+    --ico-stone: #343934;
+    --ico-primary: #8FC3AB;
+    --ico-signal: #FF8055;
+    --ico-warning: #E3B151;
+    --ico-critical: #F29A90;
+    --ico-resolved: #8FC3AB;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ico-background: #101310;
+  --ico-surface: #181C19;
+  --ico-raised: #212622;
+  --ico-ink: #F2F1EB;
+  --ico-graphite: #A9AEA9;
+  --ico-stone: #343934;
+  --ico-primary: #8FC3AB;
+  --ico-signal: #FF8055;
+  --ico-warning: #E3B151;
+  --ico-critical: #F29A90;
+  --ico-resolved: #8FC3AB;
+}

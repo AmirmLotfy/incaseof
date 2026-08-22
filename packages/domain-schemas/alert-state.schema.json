@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://incaof.com/schemas/alert-state.schema.json",
+  "title": "AlertState",
+  "description": "Normative Alert lifecycle states. See docs/PRODUCT-STATES.md, which is the source of truth. The model can never author these values; only domain services invoked by the workflow or by an authenticated human action may write them.",
+  "type": "string",
+  "enum": [
+    "SCHEDULED",
+    "DUE",
+    "GRACE",
+    "SELF_CONTACT",
+    "CIRCLE_ESCALATION",
+    "CHECKING",
+    "RESOLVED",
+    "ESCALATION_EXHAUSTED",
+    "CANCELLED"
+  ],
+  "$comment": "Terminal states: RESOLVED, ESCALATION_EXHAUSTED, CANCELLED."
+}

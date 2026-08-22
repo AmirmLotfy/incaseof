@@ -1,0 +1,9 @@
+{
+  "_why": "No timezone. An unzoned safety deadline silently moves across DST and travel.",
+  "type": "ROUTINE",
+  "trigger": { "kind": "RECURRING", "timeOfDay": "21:00" },
+  "grace": { "seconds": 0 },
+  "steps": [ { "sequence": 1, "offsetSeconds": 0, "action": "PUSH_SUBJECT" } ],
+  "stopConditions": ["SUBJECT_EXPLICIT_CONFIRMATION"],
+  "contextPolicy": { "location": "NEVER" }
+}

@@ -1,0 +1,18 @@
+{
+  "type": "RECOVERY",
+  "label": "Tonight",
+  "timezone": "Europe/Amsterdam",
+  "trigger": {
+    "kind": "RECURRING",
+    "timeOfDay": "22:00",
+    "intervalSeconds": 10800
+  },
+  "grace": { "seconds": 900 },
+  "steps": [
+    { "sequence": 1, "offsetSeconds": 0,   "action": "PUSH_SUBJECT" },
+    { "sequence": 2, "offsetSeconds": 600, "action": "MESSAGE_RESPONDER", "targetRole": "PRIMARY" }
+  ],
+  "stopConditions": ["SUBJECT_EXPLICIT_CONFIRMATION", "RESPONDER_VERIFIED_CONTACT"],
+  "contextPolicy": { "location": "NEVER" },
+  "leaseSeconds": 900
+}

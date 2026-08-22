@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Compose owns theming; this exists so the launch window matches the app
+         background instead of flashing white. -->
+    <style name="Theme.InCaseOf" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/ico_background</item>
+        <item name="android:statusBarColor">@color/ico_background</item>
+        <item name="android:navigationBarColor">@color/ico_background</item>
+    </style>
+</resources>

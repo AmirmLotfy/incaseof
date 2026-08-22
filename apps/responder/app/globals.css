@@ -1,0 +1,26 @@
+@import "tailwindcss";
+/* Colour tokens are generated from packages/design-tokens/tokens.json.
+   Never hand-edit them here — `npm run tokens:check` fails on drift. */
+@import "@incaseof/design-tokens/css";
+
+body {
+  background: var(--ico-background);
+  color: var(--ico-ink);
+  font-family: var(--font-public-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Times are core content here; digits must not reflow as they change. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

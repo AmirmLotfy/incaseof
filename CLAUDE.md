@@ -1,0 +1,103 @@
+# In Case of
+
+## Mission
+
+Build a privacy-preserving autonomous safety agent that monitors expected moments rather than
+continuously monitoring people.
+
+> **In Case of does not decide whether someone is in danger. It notices unresolved expectations
+> and works to close the loop.**
+
+## Source of truth
+
+| Topic | File |
+|---|---|
+| Product, scope, Definition of Done | `docs/PRD.md` |
+| Architecture | `docs/ARCHITECTURE.md` |
+| Domain model | `docs/ERD.md` |
+| **Alert states (normative)** | `docs/PRODUCT-STATES.md` |
+| AI boundaries | `docs/AI-SAFETY.md` |
+| Security | `docs/SECURITY.md` |
+| API | `docs/API.md` |
+| Design system | `docs/design/DESIGN.md` |
+| Copy standards | `docs/design/COPY.md` |
+
+If code and these documents disagree, the documents win — fix the code, or change the document
+deliberately and say so.
+
+## Non-negotiables
+
+- AI never directly mutates Alert state.
+- AI never controls timers.
+- AI never receives arbitrary communication endpoints. It selects a **role**, never a person and
+  never a phone number.
+- No external action without policy validation.
+- DynamoDB is authoritative state. Agent memory is context, not truth.
+- Every external action is idempotent (`alert_id + step_id + attempt_number`).
+- Every Alert uses a pinned Plan Version.
+- **Acknowledged ≠ Resolved.**
+- All safety workflows continue if the model is unavailable.
+- No continuous location or microphone by default. Location is off, and P0 does not need it.
+- Never invent metrics, testimonials, or product claims.
+
+## Design
+
+- No gradients. No glassmorphism. No AI icons, sparkles, or glowing orbs.
+- No generic SaaS bento layouts. Not every section is a card.
+- Consumer UI never exposes AI jargon (workflow, state machine, prompt, tool call, LLM).
+- Signal Orange takes **Ink** text, never white — white measures 3.52:1 and fails WCAG AA.
+- A missed Moment is **not red**. Missing means unresolved, not emergency.
+- Colour tokens are generated from `packages/design-tokens/tokens.json`. Never hand-edit
+  `tokens.css` or `Tokens.kt`; run `npm run tokens` and commit the result.
+- **Refero research is required before any significant new user-facing surface.** Record locked
+  references in `docs/design/REFERENCES.md` first. "Make it beautiful" with no references is how
+  this becomes generic AI slop.
+
+## Development
+
+- Work in vertical slices, in the order in `docs/PRD.md`. The deterministic non-AI slice must work
+  end-to-end before the model is added.
+- Tests are part of the implementation, not a later phase.
+- Never disable a failing test to make CI green.
+- Never commit credentials. Never hardcode a phone number, even in a test — use the fixtures.
+- Pin dependency versions exactly. No wildcard ranges.
+- Do not deploy destructive infrastructure without explicit approval.
+- Do not expand scope beyond P0 until the full deterministic slice works.
+
+## Commands
+
+```bash
+uv sync                                   # Python deps
+uv run pytest                             # domain + contract + eval-dataset tests
+uv run ruff check . && uv run ruff format --check .
+uv run mypy services
+
+npm install
+npm run build                             # marketing + responder
+npm run typecheck
+npm run tokens:check                      # design tokens: web and Android agree
+npm run contracts:check                   # openapi.yaml agrees with docs/API.md
+
+cd android && ./gradlew assembleDebug testDebugUnitTest lintDebug ktlintCheck
+cd infra/cdk && npx cdk synth             # add -c env=demo for the demo stack
+
+./scripts/preflight.sh                    # everything above, in order
+```
+
+## Toolchain notes (verified at scaffold time — do not "fix" these)
+
+- **AGP 9 compiles Kotlin natively.** Applying `org.jetbrains.kotlin.android` is an error. The
+  Compose compiler plugin is still applied separately, and `kotlin { compilerOptions { } }` sits
+  outside the `android { }` block.
+- **compileSdk/targetSdk 37** (Android 17). AndroidX requires 37+; 36 fails the build.
+- **Material3 1.4.0 / Compose BOM 2026.08.00** are current stable. 1.5.x is alpha — do not adopt.
+- **Detekt is deliberately absent**: its newest release predates Kotlin 2.4 and AGP 9 built-in
+  Kotlin. Android Lint plus ktlint 14.2.0 cover this until detekt catches up.
+- **mypy, not ty**: `ty` is at 0.0.x and pre-1.0. A release gate should not be a preview tool.
+- Python is `uv`-managed 3.12. The system interpreter is 3.9 and cannot run this project.
+
+## Phase state
+
+**Phase 0 is complete**: contracts, schemas, scaffold, guardrails, CI.
+**Phase 1 is next**: the deterministic domain core — Plan, PlanVersion, Moment, Alert, the state
+machine, Circle, consent, resolution. **No AI in Phase 1.**

@@ -1,0 +1,10 @@
+{
+  "_why": "PUSH_SUBJECT carrying a targetRole. Subject-directed actions must not address a responder.",
+  "type": "SOLO",
+  "timezone": "Africa/Cairo",
+  "trigger": { "kind": "ONE_TIME", "dueAt": "2026-08-26T18:00:00+03:00" },
+  "grace": { "seconds": 600 },
+  "steps": [ { "sequence": 1, "offsetSeconds": 0, "action": "PUSH_SUBJECT", "targetRole": "PRIMARY" } ],
+  "stopConditions": ["SUBJECT_EXPLICIT_CONFIRMATION"],
+  "contextPolicy": { "location": "NEVER" }
+}

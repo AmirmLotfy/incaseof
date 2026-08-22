@@ -1,0 +1,10 @@
+{
+  "_why": "Empty stopConditions. A plan with no way to close would escalate forever.",
+  "type": "SOLO",
+  "timezone": "Africa/Cairo",
+  "trigger": { "kind": "ONE_TIME", "dueAt": "2026-08-26T18:00:00+03:00" },
+  "grace": { "seconds": 600 },
+  "steps": [ { "sequence": 1, "offsetSeconds": 0, "action": "PUSH_SUBJECT" } ],
+  "stopConditions": [],
+  "contextPolicy": { "location": "NEVER" }
+}

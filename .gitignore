@@ -1,0 +1,56 @@
+# ---- Secrets: never commit ----
+.env
+.env.*
+!.env.example
+*.pem
+*.p8
+*.p12
+*.keystore
+*.jks
+google-services.json
+service-account*.json
+secrets.json
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+dist/
+build/
+*.egg-info/
+
+# ---- Node / web ----
+node_modules/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+.eslintcache
+
+# ---- Android ----
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/captures/
+android/.cxx/
+*.apk
+*.aab
+
+# ---- CDK ----
+infra/cdk/cdk.out/
+infra/cdk/node_modules/
+cdk.context.json
+
+# ---- Tooling / OS ----
+.DS_Store
+Thumbs.db
+.idea/
+*.iml
+.vscode/
+coverage/
+*.log

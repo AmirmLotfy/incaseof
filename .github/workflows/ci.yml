@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: Python
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+      - name: Lint
+        run: uv run ruff check .
+      - name: Format
+        run: uv run ruff format --check .
+      - name: Types
+        run: uv run mypy services
+      - name: Tests
+        run: uv run pytest
+
+  web:
+    name: Web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Design tokens agree across platforms
+        run: npm run tokens:check
+      - name: API contracts agree with docs
+        run: npm run contracts:check
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Build
+        run: npm run build
+
+  android:
+    name: Android
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: android-actions/setup-android@v3
+      - name: Install SDK platform 37
+        run: sdkmanager --install "platforms;android-37" "build-tools;36.0.0"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Assemble, test, lint, style
+        working-directory: android
+        run: ./gradlew assembleDebug testDebugUnitTest lintDebug ktlintCheck
+      - name: Upload reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-reports
+          path: android/app/build/reports/
+
+  infra:
+    name: Infrastructure
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npm run typecheck -w @incaseof/infra
+      - name: Synth dev
+        working-directory: infra/cdk
+        run: npx cdk synth
+      - name: Synth demo
+        working-directory: infra/cdk
+        run: npx cdk synth -c env=demo
+
+  guardrails:
+    name: Guardrails
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: No secrets
+        run: python3 scripts/check-secrets.py
+      - name: No real phone numbers
+        run: python3 scripts/check-phone-numbers.py
+      - name: No design slop
+        run: ./scripts/check-antislop.sh
+      - name: Docs carry the product boundary
+        run: |
+          missing=0
+          for f in docs/*.md docs/design/*.md; do
+            if ! grep -q "does not decide whether someone is in danger" "$f"; then
+              echo "✗ $f is missing the product boundary statement"
+              missing=1
+            fi
+          done
+          [ "$missing" -eq 0 ] && echo "✓ every doc states the boundary"
+          exit $missing

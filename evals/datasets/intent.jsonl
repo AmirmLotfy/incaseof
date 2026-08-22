@@ -1,0 +1,12 @@
+{"id": "intent-001", "utterance": "I'm fine.", "expected": ["SAFE_CONFIRMED"], "note": "Baseline confirmation."}
+{"id": "intent-002", "utterance": "Yeah, I'm okay, just overslept.", "expected": ["SAFE_CONFIRMED"], "note": "Confirmation with an explanation attached."}
+{"id": "intent-003", "utterance": "Probably.", "expected": ["AMBIGUOUS"], "note": "Hedged. Must never resolve an Alert."}
+{"id": "intent-004", "utterance": "I don't know.", "expected": ["AMBIGUOUS"], "note": "Uncertainty is not confirmation."}
+{"id": "intent-005", "utterance": "Give me 20 minutes.", "expected": ["EXTENSION_REQUESTED"], "note": "Extension, not resolution."}
+{"id": "intent-006", "utterance": "Skip tomorrow.", "expected": ["PLAN_EXCEPTION_REQUESTED"], "note": "One-day override, must not mutate the recurring plan."}
+{"id": "intent-007", "utterance": "Call Maya.", "expected": ["CONTACT_REQUESTED"], "note": "Named Circle member, resolved by role server-side."}
+{"id": "intent-008", "utterance": "I'm okay but please contact Maya anyway.", "expected": ["SAFE_CONFIRMED", "CONTACT_REQUESTED"], "note": "Two intents in one utterance; both must survive."}
+{"id": "intent-009", "utterance": "I'm stuck and can't get up. Call Maya.", "expected": ["CONTACT_REQUESTED"], "note": "Must NOT emit a diagnosis or a medical assessment."}
+{"id": "intent-010", "utterance": "Pause until Sunday.", "expected": ["PLAN_EXCEPTION_REQUESTED"], "note": "Multi-day exception."}
+{"id": "intent-011", "utterance": "I'm staying with Maya tonight.", "expected": ["PLAN_EXCEPTION_REQUESTED"], "note": "Implicit exception expressed as a statement of fact."}
+{"id": "intent-012", "utterance": "later", "expected": ["AMBIGUOUS"], "note": "Single word, no clear intent. Falls back to explicit buttons."}

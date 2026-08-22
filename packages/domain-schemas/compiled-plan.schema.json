@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://incaof.com/schemas/compiled-plan.schema.json",
+  "title": "CompiledPlan",
+  "description": "The validated, structured output of natural-language plan compilation. This is the ONLY form in which a plan may be activated. Free text is never executed. Produced by the agent, validated deterministically, previewed by a human, and only then turned into a PlanVersion.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "timezone", "trigger", "grace", "steps", "stopConditions", "contextPolicy"],
+  "properties": {
+    "type": {
+      "description": "Which of the four plan templates this compiles to.",
+      "enum": ["ROUTINE", "JOURNEY", "SOLO", "RECOVERY"]
+    },
+    "label": {
+      "type": "string",
+      "description": "Human-facing plan name, e.g. 'Evening check'. Shown in the preview.",
+      "minLength": 1,
+      "maxLength": 60
+    },
+    "timezone": {
+      "type": "string",
+      "description": "IANA timezone. Required: a plan without an explicit zone is ambiguous across DST and travel, which would silently move a safety deadline.",
+      "pattern": "^[A-Za-z_]+/[A-Za-z0-9_+-]+$"
+    },
+    "trigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "enum": ["RECURRING", "ONE_TIME", "RELATIVE"] },
+        "dueAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ONE_TIME only. ISO-8601 with offset."
+        },
+        "timeOfDay": {
+          "type": "string",
+          "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+          "description": "RECURRING only. 24-hour local time in the plan's timezone."
+        },
+        "daysOfWeek": {
+          "type": "array",
+          "description": "RECURRING only. Omit for every day.",
+          "items": { "enum": ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"] },
+          "uniqueItems": true,
+          "minItems": 1,
+          "maxItems": 7
+        },
+        "intervalSeconds": {
+          "type": "integer",
+          "description": "RECURRING with a repeating interval, e.g. 'every three hours tonight'.",
+          "minimum": 900,
+          "maximum": 86400
+        },
+        "offsetSeconds": {
+          "type": "integer",
+          "description": "RELATIVE only. Seconds from activation.",
+          "minimum": 60,
+          "maximum": 604800
+        }
+      },
+      "allOf": [
+        { "if": { "properties": { "kind": { "const": "ONE_TIME" } } }, "then": { "required": ["dueAt"] } },
+        { "if": { "properties": { "kind": { "const": "RECURRING" } } }, "then": { "required": ["timeOfDay"] } },
+        { "if": { "properties": { "kind": { "const": "RELATIVE" } } }, "then": { "required": ["offsetSeconds"] } }
+      ]
+    },
+    "grace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seconds"],
+      "properties": {
+        "seconds": {
+          "type": "integer",
+          "description": "Acceptable uncertainty before escalation begins. Missing does not mean danger; grace is what encodes that.",
+          "minimum": 0,
+          "maximum": 21600
+        }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "description": "The escalation ladder, ordered. Offsets are measured from the end of the grace window.",
+      "minItems": 1,
+      "maxItems": 12,
+      "items": { "$ref": "#/$defs/escalationStep" }
+    },
+    "stopConditions": {
+      "type": "array",
+      "description": "The only ways this Alert may close successfully. A delivered notification or a mere acknowledgement is NEVER a stop condition.",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "SUBJECT_EXPLICIT_CONFIRMATION",
+          "RESPONDER_VERIFIED_CONTACT",
+          "VERIFIED_CALL_RESPONSE",
+          "USER_CANCELLED_BEFORE_ESCALATION",
+          "PLAN_COMPLETION_SIGNAL"
+        ]
+      }
+    },
+    "contextPolicy": {
+      "type": "object",
+      "description": "Progressive context release. Everything defaults to NEVER; the user opts in explicitly, in advance.",
+      "additionalProperties": false,
+      "properties": {
+        "location": { "$ref": "#/$defs/releaseLevel", "default": "NEVER" },
+        "battery": { "$ref": "#/$defs/releaseLevel", "default": "NEVER" },
+        "lastConnection": { "$ref": "#/$defs/releaseLevel", "default": "NEVER" },
+        "networkStatus": { "$ref": "#/$defs/releaseLevel", "default": "NEVER" }
+      }
+    },
+    "leaseSeconds": {
+      "type": "integer",
+      "description": "Checking-lease duration. A responder claiming an Alert pauses backup escalation for this long. Acknowledged is not resolved.",
+      "minimum": 120,
+      "maximum": 3600,
+      "default": 600
+    }
+  },
+  "$defs": {
+    "escalationStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sequence", "offsetSeconds", "action"],
+      "properties": {
+        "sequence": { "type": "integer", "minimum": 1, "maximum": 12 },
+        "offsetSeconds": {
+          "type": "integer",
+          "description": "Seconds after escalation start. Must be non-decreasing with sequence; validated semantically, not by schema.",
+          "minimum": 0,
+          "maximum": 86400
+        },
+        "action": {
+          "description": "PUSH_SUBJECT and MESSAGE_* are P0 channels. CALL_* remain first-class in the schema but report CHANNEL_UNAVAILABLE until Amazon Connect lands in P1 - see docs/PRD.md section 12.",
+          "enum": [
+            "PUSH_SUBJECT",
+            "SMS_SUBJECT",
+            "CALL_SUBJECT",
+            "MESSAGE_RESPONDER",
+            "CALL_RESPONDER"
+          ]
+        },
+        "targetRole": {
+          "description": "Required for responder-directed actions. The agent selects a ROLE, never a person and never an endpoint.",
+          "enum": ["PRIMARY", "BACKUP", "TERTIARY"]
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "action": { "enum": ["MESSAGE_RESPONDER", "CALL_RESPONDER"] } } },
+          "then": { "required": ["targetRole"] }
+        },
+        {
+          "if": { "properties": { "action": { "enum": ["PUSH_SUBJECT", "SMS_SUBJECT", "CALL_SUBJECT"] } } },
+          "then": { "not": { "required": ["targetRole"] } }
+        }
+      ]
+    },
+    "releaseLevel": {
+      "description": "When a context signal may be released. Ordered least to most permissive.",
+      "enum": [
+        "NEVER",
+        "AFTER_SUBJECT_CALL_FAILED",
+        "CIRCLE_ESCALATION",
+        "ON_ALERT_OPEN"
+      ]
+    }
+  }
+}

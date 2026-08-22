@@ -1,0 +1,26 @@
+{
+  "name": "incaseof",
+  "version": "0.1.0",
+  "private": true,
+  "description": "In Case of — someone notices.",
+  "license": "Apache-2.0",
+  "workspaces": [
+    "apps/marketing",
+    "apps/responder",
+    "packages/contracts",
+    "packages/design-tokens",
+    "infra/cdk"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "tokens": "npm run tokens -w @incaseof/design-tokens",
+    "tokens:check": "npm run check -w @incaseof/design-tokens",
+    "contracts:check": "npm run check -w @incaseof/contracts"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

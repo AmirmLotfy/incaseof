@@ -1,0 +1,10 @@
+{
+  "_why": "'NOTIFICATION_DELIVERED' is explicitly NOT a valid stop condition. Delivery is not resolution.",
+  "type": "SOLO",
+  "timezone": "Africa/Cairo",
+  "trigger": { "kind": "ONE_TIME", "dueAt": "2026-08-26T18:00:00+03:00" },
+  "grace": { "seconds": 600 },
+  "steps": [ { "sequence": 1, "offsetSeconds": 0, "action": "PUSH_SUBJECT" } ],
+  "stopConditions": ["NOTIFICATION_DELIVERED"],
+  "contextPolicy": { "location": "NEVER" }
+}

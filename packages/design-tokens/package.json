@@ -1,0 +1,15 @@
+{
+  "name": "@incaseof/design-tokens",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "tokens.json",
+  "exports": {
+    ".": "./tokens.json",
+    "./css": "./tokens.css"
+  },
+  "scripts": {
+    "tokens": "node scripts/generate.mjs",
+    "check": "node scripts/generate.mjs --check"
+  }
+}

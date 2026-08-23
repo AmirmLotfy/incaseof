@@ -12,11 +12,13 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from datetime import datetime
 from functools import lru_cache
 from typing import Any
 
 import boto3
 
+from services.adapters.contact import ContactSender
 from services.adapters.dynamo import (
     DynamoActionLog,
     DynamoAlertRepository,
@@ -25,7 +27,9 @@ from services.adapters.dynamo import (
     DynamoMomentRepository,
     DynamoPlanRepository,
 )
-from services.domain.clock import REAL_TIME, SystemClock, TimeScale
+from services.adapters.queue import ActionQueue, SqsActionQueue
+from services.adapters.scheduling import EventBridgeMomentScheduler, MomentScheduler
+from services.domain.clock import REAL_TIME, Clock, SystemClock, TimeScale
 
 
 def _required(name: str) -> str:
@@ -54,8 +58,18 @@ class Context:
     circles: DynamoCircleRepository
     actions: DynamoActionLog
     audit: DynamoAuditLog
-    clock: SystemClock
+    clock: Clock
     scale: TimeScale
+    # Optional so the slice can be driven without AWS. When absent, the caller supplies
+    # the equivalent — which is exactly what the end-to-end test does, playing the parts
+    # of EventBridge, SQS and Step Functions while every other line of code is the real one.
+    scheduler: MomentScheduler | None = None
+    queue: ActionQueue | None = None
+    sender: ContactSender | None = None
+    signing_key: bytes = b""
+
+    def now(self) -> datetime:
+        return self.clock.now()
 
     @property
     def action_queue_url(self) -> str:
@@ -84,4 +98,23 @@ def build() -> Context:
         audit=DynamoAuditLog(table),
         clock=SystemClock(),
         scale=TimeScale(scale_factor) if scale_factor != 1.0 else REAL_TIME,
+        scheduler=_scheduler(),
+        queue=SqsActionQueue(
+            client=boto3.client("sqs"), queue_url=_required("ICO_ACTION_QUEUE_URL")
+        ),
+    )
+
+
+def _scheduler() -> MomentScheduler | None:
+    """EventBridge Scheduler, when this environment has one."""
+    group = os.environ.get("ICO_SCHEDULE_GROUP")
+    target = os.environ.get("ICO_MOMENT_DUE_ARN")
+    role = os.environ.get("ICO_SCHEDULER_ROLE_ARN")
+    if not (group and target and role):
+        return None
+    return EventBridgeMomentScheduler(
+        client=boto3.client("scheduler"),
+        group_name=group,
+        target_arn=target,
+        role_arn=role,
     )

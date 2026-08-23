@@ -107,11 +107,28 @@ class CircleMember:
 
 @dataclass(frozen=True, slots=True)
 class Circle:
-    """The people a subject chose, and the roles they hold."""
+    """The people a subject chose, and the roles they hold.
+
+    The subject is the *owner*, never a member. Adding them to their own members list would
+    make them eligible for a responder role and, through ``member_for_role``, a candidate
+    to be contacted about their own Alert — which is both wrong and hard to notice, because
+    everything else about it looks like a valid contact.
+
+    ``owner_display_name`` exists so a responder message can say "Mona hasn't responded"
+    without the subject appearing in the roster.
+    """
 
     circle_id: CircleId
     owner_person_id: PersonId
     members: tuple[CircleMember, ...] = ()
+    owner_display_name: str = ""
+
+    def __post_init__(self) -> None:
+        if any(m.person_id == self.owner_person_id for m in self.members):
+            raise ValueError(
+                f"{self.owner_person_id} owns this Circle and cannot also be a member of "
+                f"it: they would become a candidate responder for their own Alert"
+            )
 
     def member_for_role(self, role: ResponderRole) -> CircleMember | None:
         """The accepted member holding this role, lowest priority number first.

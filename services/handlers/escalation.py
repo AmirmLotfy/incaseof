@@ -1,43 +1,48 @@
-"""Step Functions tasks.
+"""The escalation loop.
 
-The state machine is a loop: ask what is due, dispatch it, wait until the next rung, ask
-again. All of the deciding happens here in the domain; the state machine only sequences
-and waits.
+Step Functions sequences and waits; every decision happens here, in code that runs in
+milliseconds under test. The state machine holds no opinions of its own.
 
-Every task is safe to retry. Step Functions retries on its own, and a task that is not
-idempotent turns a transient error into a person being contacted twice.
+Each function takes an explicit Context, so the same code runs behind a Lambda and inside
+the end-to-end slice test with nothing mocked but the wire calls at the very edges.
 """
 
 from __future__ import annotations
 
-import json
+import os
+from datetime import datetime
 from typing import Any
 
-import boto3
-
+from services.adapters.contact import compose_responder_message
+from services.adapters.queue import ActionIntent
 from services.domain.alert import Alert, AlertState
 from services.domain.authorization import evaluate_contact
+from services.domain.circle import CircleMember
 from services.domain.idempotency import key_for
 from services.domain.ids import AlertId, CircleId, PlanId
+from services.domain.plan import EscalationStep
+from services.domain.responder_token import issue
 from services.handlers import bootstrap
 
 TERMINAL = "TERMINAL"
+DISPATCH = "DISPATCH"
+WAIT = "WAIT"
 
 
-def next_action(event: dict[str, Any], _context: Any = None) -> dict[str, Any]:
-    """What should happen next for this Alert, and when.
+# -- deciding -----------------------------------------------------------------
 
-    Returns a decision the state machine can act on without interpreting anything:
-    ``DISPATCH`` with rungs to send, ``WAIT`` with seconds, or ``TERMINAL``.
+
+def decide(ctx: bootstrap.Context, alert_id: AlertId) -> dict[str, Any]:
+    """What happens next for this Alert, and when.
+
+    Returns something the state machine can act on without interpreting anything.
     """
-    ctx = bootstrap.build()
-    alert_id = AlertId(event["alertId"])
     alert = ctx.alerts.get(alert_id)
     if alert is None:
         return {"decision": TERMINAL, "reason": "NO_SUCH_ALERT"}
 
-    now = ctx.clock.now()
-    alert = _advance_phase(ctx, alert, now)
+    now = ctx.now()
+    alert = advance(ctx, alert, now)
 
     if alert.is_terminal:
         return {"decision": TERMINAL, "reason": str(alert.state), "alertId": alert_id}
@@ -46,7 +51,7 @@ def next_action(event: dict[str, Any], _context: Any = None) -> dict[str, Any]:
         lease = alert.lease
         assert lease is not None  # noqa: S101 - CHECKING always carries a lease
         return {
-            "decision": "WAIT",
+            "decision": WAIT,
             "seconds": max(1, int((lease.expires_at - now).total_seconds())),
             "reason": "LEASE_HELD",
             "alertId": alert_id,
@@ -55,7 +60,7 @@ def next_action(event: dict[str, Any], _context: Any = None) -> dict[str, Any]:
     due = alert.due_steps(now)
     if due:
         return {
-            "decision": "DISPATCH",
+            "decision": DISPATCH,
             "alertId": alert_id,
             "sequences": [step.sequence for step in due],
         }
@@ -65,18 +70,19 @@ def next_action(event: dict[str, Any], _context: Any = None) -> dict[str, Any]:
         return {"decision": TERMINAL, "reason": "LADDER_EXHAUSTED", "alertId": alert_id}
 
     return {
-        "decision": "WAIT",
+        "decision": WAIT,
         "seconds": max(1, int((upcoming - now).total_seconds())),
         "reason": "NEXT_RUNG",
         "alertId": alert_id,
     }
 
 
-def _advance_phase(ctx: bootstrap.Context, alert: Alert, now: Any) -> Alert:
-    """Move the Alert through the phases whose trigger is the passage of time.
+def advance(ctx: bootstrap.Context, alert: Alert, now: datetime) -> Alert:
+    """Move through the phases whose only trigger is time passing.
 
-    Grace elapsing, the subject ladder running out, and a lease expiring are all things
-    that simply become true — nobody performs them — so the workflow discovers them here.
+    Grace elapsing, the subject ladder running out and a lease expiring are all things that
+    simply become true — nobody performs them — so the workflow discovers them here rather
+    than waiting to be told.
     """
     moved = alert
 
@@ -86,7 +92,7 @@ def _advance_phase(ctx: bootstrap.Context, alert: Alert, now: Any) -> Alert:
         moved = moved.enter_grace(now)
     if moved.state is AlertState.GRACE:
         moment = ctx.moments.get(moved.moment_id)
-        if moment is not None and moment.grace_elapsed(now):
+        if moment is None or moment.grace_elapsed(now):
             moved = moved.begin_self_contact(now)
     if moved.state is AlertState.CHECKING:
         lease = moved.lease
@@ -109,57 +115,31 @@ def _advance_phase(ctx: bootstrap.Context, alert: Alert, now: Any) -> Alert:
     return moved
 
 
-def dispatch(event: dict[str, Any], _context: Any = None) -> dict[str, Any]:
-    """Turn due rungs into queued actions.
+# -- dispatching --------------------------------------------------------------
 
-    Nothing is sent from here. Each rung becomes an ActionIntent on the queue, guarded by
-    an idempotency key, and a worker performs the actual delivery. That split is what
-    makes a Step Functions retry harmless.
+
+def dispatch(ctx: bootstrap.Context, alert_id: AlertId, sequences: list[int]) -> dict[str, Any]:
+    """Turn due rungs into queued intents.
+
+    Nothing is sent from here. Each rung becomes one queued action guarded by an
+    idempotency key, and a worker performs delivery.
     """
-    ctx = bootstrap.build()
-    alert_id = AlertId(event["alertId"])
     alert = ctx.alerts.get(alert_id)
     if alert is None or alert.is_terminal:
-        # Invariant 4: reaching a terminal state cancels pending external actions.
-        return {"dispatched": [], "suppressed": "ALERT_CLOSED"}
+        # Invariant 4: a terminal Alert cancels everything still pending.
+        return {"dispatched": [], "denied": [], "suppressed": "ALERT_CLOSED"}
 
-    now = ctx.clock.now()
-    sqs = boto3.client("sqs")
+    now = ctx.now()
     dispatched: list[int] = []
     denied: list[dict[str, str]] = []
 
-    for sequence in event.get("sequences", []):
+    for sequence in sequences:
         step = alert.version.step(int(sequence))
 
         if step.action.is_responder_directed:
-            plan_id = PlanId(alert.version.plan_id)
-            plan = ctx.plans.get_plan(plan_id)
-            circle = ctx.circles.get(CircleId(plan.circle_id)) if plan else None
-            decision = (
-                evaluate_contact(
-                    alert=alert,
-                    circle=circle,
-                    consents=ctx.circles.consents_for(plan_id),
-                    sequence=step.sequence,
-                    plan_id=plan_id,
-                    now=now,
-                )
-                if circle is not None
-                else None
-            )
-            if decision is None or not decision.allowed:
-                reason = decision.reason if decision else "NO_CIRCLE"
-                # A denial is recorded, never merely dropped. "Nothing happened" and
-                # "something was blocked" must be distinguishable in the timeline.
-                ctx.audit.append(
-                    alert_id=alert_id,
-                    actor_type="POLICY",
-                    actor_id="authorization",
-                    event_type="CONTACT_DENIED",
-                    at=now,
-                    metadata={"sequence": str(sequence), "reason": str(reason)},
-                )
-                denied.append({"sequence": str(sequence), "reason": str(reason)})
+            decision = _authorise(ctx, alert, step, now)
+            if decision is None:
+                denied.append({"sequence": str(sequence), "reason": "NOT_AUTHORIZED"})
                 alert = alert.record_attempt(step)
                 continue
 
@@ -169,20 +149,19 @@ def dispatch(event: dict[str, Any], _context: Any = None) -> dict[str, Any]:
             alert = alert.record_attempt(step)
             continue
 
-        sqs.send_message(
-            QueueUrl=ctx.action_queue_url,
-            MessageBody=json.dumps(
-                {
-                    "alertId": alert_id,
-                    "stepId": step.step_id,
-                    "sequence": step.sequence,
-                    "action": step.action.value,
-                    "channel": step.action.channel.value,
-                    "targetRole": step.target_role.value if step.target_role else None,
-                    "idempotencyKey": key.value,
-                }
-            ),
-        )
+        if ctx.queue is not None:
+            ctx.queue.enqueue(
+                ActionIntent(
+                    alert_id=alert_id,
+                    step_id=step.step_id,
+                    sequence=step.sequence,
+                    action=step.action,
+                    channel=step.action.channel,
+                    target_role=step.target_role,
+                    idempotency_key=key.value,
+                )
+            )
+
         alert = alert.record_attempt(step)
         dispatched.append(step.sequence)
         ctx.audit.append(
@@ -196,3 +175,102 @@ def dispatch(event: dict[str, Any], _context: Any = None) -> dict[str, Any]:
 
     ctx.alerts.save(alert)
     return {"dispatched": dispatched, "denied": denied, "alertId": alert_id}
+
+
+def _authorise(
+    ctx: bootstrap.Context, alert: Alert, step: EscalationStep, now: datetime
+) -> CircleMember | None:
+    """Policy check for a responder-directed rung.
+
+    A denial is *recorded*, never merely dropped. "Nothing happened" and "something was
+    blocked" must be distinguishable in the timeline, or the audit trail lies by omission.
+    """
+    plan = ctx.plans.get_plan(PlanId(alert.version.plan_id))
+    circle = ctx.circles.get(CircleId(plan.circle_id)) if plan else None
+
+    if plan is None or circle is None:
+        ctx.audit.append(
+            alert_id=alert.alert_id,
+            actor_type="POLICY",
+            actor_id="authorization",
+            event_type="CONTACT_DENIED",
+            at=now,
+            metadata={"sequence": str(step.sequence), "reason": "NO_CIRCLE"},
+        )
+        return None
+
+    decision = evaluate_contact(
+        alert=alert,
+        circle=circle,
+        consents=ctx.circles.consents_for(PlanId(plan.plan_id)),
+        sequence=step.sequence,
+        plan_id=PlanId(plan.plan_id),
+        now=now,
+    )
+    if not decision.allowed or decision.member is None:
+        ctx.audit.append(
+            alert_id=alert.alert_id,
+            actor_type="POLICY",
+            actor_id="authorization",
+            event_type="CONTACT_DENIED",
+            at=now,
+            metadata={"sequence": str(step.sequence), "reason": str(decision.reason)},
+        )
+        return None
+    return decision.member
+
+
+# -- responder links ----------------------------------------------------------
+
+
+def responder_link(
+    ctx: bootstrap.Context, alert: Alert, member: CircleMember, now: datetime
+) -> str | None:
+    """Mint a single-Alert link for one responder.
+
+    The nonce is written before the token is handed out, so a link that exists can always
+    be revoked. A token whose nonce was never stored would be unrevokable.
+    """
+    if not ctx.signing_key:
+        return None
+
+    nonce = f"{alert.alert_id}:{member.person_id}"
+    token = issue(
+        alert_id=alert.alert_id,
+        responder_id=member.person_id,
+        nonce=nonce,
+        key=ctx.signing_key,
+        now=now,
+    )
+    base = os.environ.get("ICO_RESPONDER_BASE_URL", "https://incaof.com")
+    return f"{base}/r/{token}"
+
+
+def responder_body(ctx: bootstrap.Context, alert: Alert, subject_name: str) -> str:
+    """What the responder reads, built from what actually happened."""
+    tried = [
+        f"{event['at']!s:.16}  {event['eventType']!s}"
+        for event in ctx.audit.for_alert(alert.alert_id)
+        if str(event.get("eventType")) in {"ACTION_QUEUED", "ACTION_SENT"}
+    ]
+    return compose_responder_message(
+        subject_name=subject_name,
+        plan_label=alert.version.label or "Check-in",
+        expected_at=alert.opened_at,
+        tried=tried,
+    )
+
+
+# -- Lambda entry points ------------------------------------------------------
+
+
+def next_action(event: dict[str, Any], _context: Any = None) -> dict[str, Any]:
+    return decide(bootstrap.build(), AlertId(event["alertId"]))
+
+
+def dispatch_handler(event: dict[str, Any], _context: Any = None) -> dict[str, Any]:
+    return dispatch(
+        bootstrap.build(),
+        AlertId(event["alertId"]),
+        [int(s) for s in event.get("sequences", [])],
+    )

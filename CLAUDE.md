@@ -115,6 +115,14 @@ Scheduler, Step Functions escalation, SQS outbox, Cognito, HTTP API. Synthesised
 **Phase 3 complete**: the Android shell — Cognito auth, Home (all-clear and action-needed),
 Plans, Plan detail, Circle, History, notifications with a working "I'M OKAY" action, four-tab
 navigation. Runs against a local data source until the stack is deployed.
-**Phase 4 is next**: the complete deterministic vertical slice, end to end.
+**Phase 4 complete**: the deterministic vertical slice. Plan → Moment → missed → Alert →
+Circle contacted → claimed → resolved, proven end to end by `services/tests/slice/`, which
+drives the real handlers, domain, policy layer and DynamoDB semantics. Only EventBridge,
+SQS and Step Functions are played by the driver, and only because they exist to move time
+and messages. Drill Mode runs the same engine compressed.
 
-Still no AI. The vertical slice must work before the model.
+**Not yet proven, and blocked on deployment**: a Moment firing while the phone is off, real
+FCM/SMS delivery, and the live demo. Those need the AWS CLI, credentials and an explicit
+decision to deploy.
+
+**Phase 5 is next**: Strands + Gemini plan compilation, behind the policy layer.

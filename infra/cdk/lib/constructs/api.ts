@@ -104,5 +104,32 @@ export class Api extends Construct {
     for (const [routePath, method] of authenticated) {
       this.httpApi.addRoutes({ path: routePath, methods: [method], integration });
     }
+
+    // Responder routes carry NO Cognito authorizer, deliberately.
+    //
+    // A responder has no account. They are somebody's sister, at 2am, holding a link that
+    // arrived by SMS — and requiring her to sign up before she can say "I've got her"
+    // would defeat the product. The signed single-Alert token *is* the credential, and it
+    // is validated in the handler, where the check can also re-test consent, membership
+    // and whether the Alert is still open. An authorizer could only verify a signature.
+    //
+    // test/stack.test.ts asserts this list is the complete set of unauthenticated routes,
+    // so a future route cannot join it by accident.
+    const responder: Array<[string, apigw.HttpMethod]> = [
+      ["/r/{signedToken}", apigw.HttpMethod.GET],
+      ["/v1/r/{signedToken}/claim", apigw.HttpMethod.POST],
+      ["/v1/r/{signedToken}/extend", apigw.HttpMethod.POST],
+      ["/v1/r/{signedToken}/unable", apigw.HttpMethod.POST],
+      ["/v1/r/{signedToken}/resolve", apigw.HttpMethod.POST],
+    ];
+
+    for (const [routePath, method] of responder) {
+      this.httpApi.addRoutes({
+        path: routePath,
+        methods: [method],
+        integration,
+        authorizer: new apigw.HttpNoneAuthorizer(),
+      });
+    }
   }
 }

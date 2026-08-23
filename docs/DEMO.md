@@ -26,6 +26,16 @@ Any environment with `DEMO_TIME_SCALE != 1.0` shows a persistent banner:
 **Never** build a demo-only branch in domain logic. If a demo needs behaviour the product does not
 have, the product is wrong, not the demo.
 
+`services/tests/slice/test_drill_mode.py` is what keeps this honest. It runs the full slice
+compressed and asserts it reaches the same states, contacts the same people, enforces the same
+consent checks and suppresses the same duplicates as a real run. A shortcut added for the demo
+would make the two diverge and fail there.
+
+**Grace compresses with the ladder; the clock never does.** Leaving grace at full length would
+make a demo sit for ten real minutes before anything happened — which is exactly the pressure
+that leads somebody to build a separate demo path. Timestamps stay real, so the audit trail
+never records a fictional time.
+
 ---
 
 ## 2. Five-minute video beat sheet

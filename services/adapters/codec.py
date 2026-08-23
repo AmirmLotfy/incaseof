@@ -400,6 +400,7 @@ def circle_to(circle: Circle) -> Item:
     return {
         "circleId": circle.circle_id,
         "ownerPersonId": circle.owner_person_id,
+        "ownerDisplayName": circle.owner_display_name,
     }
 
 
@@ -408,4 +409,5 @@ def circle_from(item: Item, members: tuple[CircleMember, ...]) -> Circle:
         circle_id=CircleId(item["circleId"]),
         owner_person_id=PersonId(item["ownerPersonId"]),
         members=members,
+        owner_display_name=item.get("ownerDisplayName", ""),
     )

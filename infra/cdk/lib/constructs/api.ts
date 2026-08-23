@@ -90,6 +90,7 @@ export class Api extends Construct {
     // that was never deployed fails at the worst possible moment — when somebody is trying
     // to say they are okay — so test/stack.test.ts asserts this list covers IcoApi.kt.
     const authenticated: Array<[string, apigw.HttpMethod]> = [
+      ["/v1/plans/compile", apigw.HttpMethod.POST],
       ["/v1/moments/next", apigw.HttpMethod.GET],
       ["/v1/moments/{momentId}/confirm", apigw.HttpMethod.POST],
       ["/v1/moments/{momentId}/extend", apigw.HttpMethod.POST],

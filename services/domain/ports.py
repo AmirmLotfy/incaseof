@@ -19,6 +19,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Protocol
 
+from .agent_decision import AgentDecision
 from .alert import Alert
 from .circle import Circle, ConsentGrant
 from .idempotency import IdempotencyKey
@@ -31,6 +32,8 @@ class PlanRepository(Protocol):
     def get_plan(self, plan_id: PlanId) -> Plan | None: ...
 
     def get_version(self, version_id: PlanVersionId) -> PlanVersion | None: ...
+
+    def save_plan(self, plan: Plan) -> None: ...
 
     def save_version(self, version: PlanVersion) -> None:
         """Persist a version. Versions are immutable; re-saving one is a programming error."""
@@ -75,6 +78,10 @@ class CircleRepository(Protocol):
         """Consent grants covering this plan, keyed by responder."""
         ...
 
+    def save_circle(self, circle: Circle) -> None: ...
+
+    def save_consent(self, consent: ConsentGrant) -> None: ...
+
 
 class ActionLog(Protocol):
     def claim_key(self, key: IdempotencyKey) -> bool:
@@ -88,6 +95,18 @@ class ActionLog(Protocol):
         ...
 
     def was_dispatched(self, key: IdempotencyKey) -> bool: ...
+
+
+class DecisionLog(Protocol):
+    """Agent proposals and their outcomes.
+
+    Separate from the audit log because these answer a different question: not "what
+    happened to this Alert" but "what did the model ask for, and what did policy say".
+    """
+
+    def append(self, decision: AgentDecision) -> None: ...
+
+    def for_alert(self, alert_id: AlertId) -> tuple[dict[str, object], ...]: ...
 
 
 class AuditLog(Protocol):

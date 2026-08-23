@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 from datetime import datetime
 
+from services.domain.agent_decision import AgentDecision
 from services.domain.alert import Alert
 from services.domain.circle import Circle, ConsentGrant
 from services.domain.idempotency import IdempotencyKey
@@ -32,6 +33,9 @@ class InMemoryPlanRepository:
 
     def get_plan(self, plan_id: PlanId) -> Plan | None:
         return self.plans.get(plan_id)
+
+    def save_plan(self, plan: Plan) -> None:
+        self.plans[plan.plan_id] = plan
 
     def get_version(self, version_id: PlanVersionId) -> PlanVersion | None:
         return self.versions.get(version_id)
@@ -107,6 +111,12 @@ class InMemoryCircleRepository:
     def consents_for(self, plan_id: PlanId) -> dict[PersonId, ConsentGrant]:
         return dict(self.consents.get(plan_id, {}))
 
+    def save_circle(self, circle: Circle) -> None:
+        self.circles[circle.circle_id] = circle
+
+    def save_consent(self, consent: ConsentGrant) -> None:
+        self.consents.setdefault(consent.plan_id, {})[consent.responder_person_id] = consent
+
 
 @dataclass
 class InMemoryActionLog:
@@ -129,6 +139,30 @@ class InMemoryActionLog:
 
 
 @dataclass
+class InMemoryDecisionLog:
+    decisions: list[AgentDecision] = field(default_factory=list)
+
+    def append(self, decision: AgentDecision) -> None:
+        self.decisions.append(decision)
+
+    def for_alert(self, alert_id: AlertId) -> tuple[dict[str, object], ...]:
+        return tuple(
+            {
+                "decisionId": d.decision_id,
+                "proposedTool": d.proposed_tool,
+                "policyResult": d.policy_result.value,
+                "reasonCode": d.reason_code,
+            }
+            for d in self.decisions
+            if d.alert_id == alert_id
+        )
+
+    @property
+    def denied(self) -> list[AgentDecision]:
+        return [d for d in self.decisions if d.was_denied]
+
+
+@dataclass
 class InMemoryAuditLog:
     events: list[dict[str, object]] = field(default_factory=list)
 
@@ -142,16 +176,21 @@ class InMemoryAuditLog:
         at: datetime,
         metadata: dict[str, str] | None = None,
     ) -> None:
+        # Keys mirror DynamoAuditLog exactly. The in-memory adapter exists so invariants
+        # can be proven without the cloud, and that only works if a caller cannot tell the
+        # two apart — a different key here would make a test pass against one adapter and
+        # fail against the other.
         self.events.append(
             {
-                "alert_id": alert_id,
-                "actor_type": actor_type,
-                "actor_id": actor_id,
-                "event_type": event_type,
-                "at": at,
+                "pk": f"ALERT#{alert_id}",
+                "alertId": alert_id,
+                "actorType": actor_type,
+                "actorId": actor_id,
+                "eventType": event_type,
+                "at": at.isoformat(),
                 "metadata": metadata or {},
             }
         )
 
     def for_alert(self, alert_id: AlertId) -> tuple[dict[str, object], ...]:
-        return tuple(e for e in self.events if e["alert_id"] == alert_id)
+        return tuple(e for e in self.events if e["alertId"] == alert_id)

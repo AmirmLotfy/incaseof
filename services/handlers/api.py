@@ -19,7 +19,7 @@ from services.domain.errors import (
     NotAuthorized,
     TerminalAlert,
 )
-from services.domain.ids import AlertId, MomentId, PersonId, PlanId
+from services.domain.ids import AlertId, CircleId, MomentId, PersonId, PlanId
 from services.domain.resolution import ResolutionSource
 from services.handlers import bootstrap, responding
 
@@ -81,6 +81,8 @@ def _dispatch(event: dict[str, Any]) -> dict[str, Any]:
         return _responder_route(ctx, route, token)
 
     # -- subject, by Cognito principal ------------------------------------
+    if route == "POST /v1/plans/compile":
+        return _compile(ctx, event)
     if route == "GET /v1/moments/next":
         return _next_moment(ctx, _caller(event))
     if route == "POST /v1/moments/{momentId}/confirm":
@@ -101,6 +103,24 @@ def _dispatch(event: dict[str, Any]) -> dict[str, Any]:
         return _timeline(ctx, AlertId(params["alertId"]))
 
     return _problem(404, "No such route", "NOT_FOUND")
+
+
+def _compile(ctx: bootstrap.Context, event: dict[str, Any]) -> dict[str, Any]:
+    """Natural language to a plan preview.
+
+    Creates nothing. The person confirms separately, and the response says so on the wire.
+    """
+    from services.handlers.compile_plan import compile_for
+
+    body = json.loads(event.get("body") or "{}")
+    result = compile_for(
+        ctx,
+        utterance=body.get("utterance", ""),
+        subject_person_id=_caller(event),
+        circle_id=CircleId(body["circleId"]) if body.get("circleId") else None,
+        timezone=body.get("timezone", "UTC"),
+    )
+    return _response(result["status"], result["body"])
 
 
 # -- responder ----------------------------------------------------------------

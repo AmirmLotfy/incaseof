@@ -1,12 +1,105 @@
-{"id": "intent-001", "utterance": "I'm fine.", "expected": ["SAFE_CONFIRMED"], "note": "Baseline confirmation."}
-{"id": "intent-002", "utterance": "Yeah, I'm okay, just overslept.", "expected": ["SAFE_CONFIRMED"], "note": "Confirmation with an explanation attached."}
-{"id": "intent-003", "utterance": "Probably.", "expected": ["AMBIGUOUS"], "note": "Hedged. Must never resolve an Alert."}
-{"id": "intent-004", "utterance": "I don't know.", "expected": ["AMBIGUOUS"], "note": "Uncertainty is not confirmation."}
-{"id": "intent-005", "utterance": "Give me 20 minutes.", "expected": ["EXTENSION_REQUESTED"], "note": "Extension, not resolution."}
-{"id": "intent-006", "utterance": "Skip tomorrow.", "expected": ["PLAN_EXCEPTION_REQUESTED"], "note": "One-day override, must not mutate the recurring plan."}
-{"id": "intent-007", "utterance": "Call Maya.", "expected": ["CONTACT_REQUESTED"], "note": "Named Circle member, resolved by role server-side."}
-{"id": "intent-008", "utterance": "I'm okay but please contact Maya anyway.", "expected": ["SAFE_CONFIRMED", "CONTACT_REQUESTED"], "note": "Two intents in one utterance; both must survive."}
-{"id": "intent-009", "utterance": "I'm stuck and can't get up. Call Maya.", "expected": ["CONTACT_REQUESTED"], "note": "Must NOT emit a diagnosis or a medical assessment."}
-{"id": "intent-010", "utterance": "Pause until Sunday.", "expected": ["PLAN_EXCEPTION_REQUESTED"], "note": "Multi-day exception."}
-{"id": "intent-011", "utterance": "I'm staying with Maya tonight.", "expected": ["PLAN_EXCEPTION_REQUESTED"], "note": "Implicit exception expressed as a statement of fact."}
-{"id": "intent-012", "utterance": "later", "expected": ["AMBIGUOUS"], "note": "Single word, no clear intent. Falls back to explicit buttons."}
+{"id": "intent-001", "utterance": "I'm fine.", "expected": ["SAFE_CONFIRMED"], "note": "Baseline."}
+{"id": "intent-002", "utterance": "I'm okay.", "expected": ["SAFE_CONFIRMED"], "note": "Baseline."}
+{"id": "intent-003", "utterance": "All good.", "expected": ["SAFE_CONFIRMED"], "note": "Colloquial."}
+{"id": "intent-004", "utterance": "Yep, all good here.", "expected": ["SAFE_CONFIRMED"], "note": "Colloquial with filler."}
+{"id": "intent-005", "utterance": "Home safe.", "expected": ["SAFE_CONFIRMED"], "note": "States the completion rather than the feeling."}
+{"id": "intent-006", "utterance": "Got in ten minutes ago.", "expected": ["SAFE_CONFIRMED"], "note": "Past-tense arrival is a confirmation."}
+{"id": "intent-007", "utterance": "Yeah, I'm okay, just overslept.", "expected": ["SAFE_CONFIRMED"], "note": "Confirmation with an explanation attached."}
+{"id": "intent-008", "utterance": "Sorry, fell asleep on the sofa. I'm fine.", "expected": ["SAFE_CONFIRMED"], "note": "Apology first; the answer is still clear."}
+{"id": "intent-009", "utterance": "all good, thanks for checking", "expected": ["SAFE_CONFIRMED"], "note": "Lowercase, no punctuation."}
+{"id": "intent-010", "utterance": "Fine thanks!", "expected": ["SAFE_CONFIRMED"], "note": "Terse."}
+{"id": "intent-011", "utterance": "Still here :)", "expected": ["SAFE_CONFIRMED"], "note": "Emoji does not make it ambiguous."}
+{"id": "intent-012", "utterance": "I'm alright, long day.", "expected": ["SAFE_CONFIRMED"], "note": "Tiredness is not a hedge."}
+{"id": "intent-013", "utterance": "Yes.", "expected": ["SAFE_CONFIRMED"], "note": "Direct answer to 'everything okay?'."}
+{"id": "intent-014", "utterance": "Yes I'm okay", "expected": ["SAFE_CONFIRMED"], "note": "Direct."}
+{"id": "intent-015", "utterance": "safe and sound", "expected": ["SAFE_CONFIRMED"], "note": "Idiom."}
+{"id": "intent-016", "utterance": "Made it back, all fine.", "expected": ["SAFE_CONFIRMED"], "note": "Two clauses, one meaning."}
+{"id": "intent-017", "utterance": "no problems tonight", "expected": ["SAFE_CONFIRMED"], "note": "Negation of trouble is a confirmation."}
+{"id": "intent-018", "utterance": "Just walked in the door.", "expected": ["SAFE_CONFIRMED"], "note": "Arrival."}
+{"id": "intent-019", "utterance": "I'm good, was in the shower.", "expected": ["SAFE_CONFIRMED"], "note": "Explains the delay."}
+{"id": "intent-020", "utterance": "Nothing wrong, phone was on silent.", "expected": ["SAFE_CONFIRMED"], "note": "Explains the missed check."}
+{"id": "intent-021", "utterance": "Ok", "expected": ["SAFE_CONFIRMED"], "note": "Minimal but unambiguous in context."}
+{"id": "intent-022", "utterance": "\ud83d\udc4d", "expected": ["SAFE_CONFIRMED"], "note": "Emoji-only affirmative."}
+{"id": "intent-023", "utterance": "Todo bien.", "expected": ["SAFE_CONFIRMED"], "note": "Non-English confirmation."}
+{"id": "intent-024", "utterance": "\u00c7a va, je suis rentr\u00e9e.", "expected": ["SAFE_CONFIRMED"], "note": "Non-English with arrival."}
+{"id": "intent-025", "utterance": "Probably.", "expected": ["AMBIGUOUS"], "note": "The canonical hedge."}
+{"id": "intent-026", "utterance": "Probably fine.", "expected": ["AMBIGUOUS"], "note": "Hedged confirmation is not a confirmation."}
+{"id": "intent-027", "utterance": "I think so.", "expected": ["AMBIGUOUS"], "note": "Uncertain."}
+{"id": "intent-028", "utterance": "I guess.", "expected": ["AMBIGUOUS"], "note": "Uncertain."}
+{"id": "intent-029", "utterance": "Maybe?", "expected": ["AMBIGUOUS"], "note": "Uncertain."}
+{"id": "intent-030", "utterance": "I don't know.", "expected": ["AMBIGUOUS"], "note": "Explicit uncertainty."}
+{"id": "intent-031", "utterance": "Not sure.", "expected": ["AMBIGUOUS"], "note": "Explicit uncertainty."}
+{"id": "intent-032", "utterance": "Sort of.", "expected": ["AMBIGUOUS"], "note": "Partial."}
+{"id": "intent-033", "utterance": "More or less.", "expected": ["AMBIGUOUS"], "note": "Partial."}
+{"id": "intent-034", "utterance": "I'll be fine.", "expected": ["AMBIGUOUS"], "note": "Future tense is not a present confirmation."}
+{"id": "intent-035", "utterance": "Should be okay.", "expected": ["AMBIGUOUS"], "note": "Modal hedge."}
+{"id": "intent-036", "utterance": "I think I'm alright?", "expected": ["AMBIGUOUS"], "note": "Question mark on a confirmation."}
+{"id": "intent-037", "utterance": "hmm", "expected": ["AMBIGUOUS"], "note": "Non-answer."}
+{"id": "intent-038", "utterance": "later", "expected": ["AMBIGUOUS"], "note": "Deflection, not an answer."}
+{"id": "intent-039", "utterance": "...", "expected": ["AMBIGUOUS"], "note": "Empty."}
+{"id": "intent-040", "utterance": "k", "expected": ["AMBIGUOUS"], "note": "Too terse to distinguish acknowledgement from confirmation."}
+{"id": "intent-041", "utterance": "Define okay.", "expected": ["AMBIGUOUS"], "note": "Deflection."}
+{"id": "intent-042", "utterance": "Why are you asking?", "expected": ["AMBIGUOUS"], "note": "A question back is not an answer."}
+{"id": "intent-043", "utterance": "It's complicated.", "expected": ["AMBIGUOUS"], "note": "Explicit non-answer."}
+{"id": "intent-044", "utterance": "Kind of tired but whatever.", "expected": ["AMBIGUOUS"], "note": "No clear state given."}
+{"id": "intent-045", "utterance": "Give me 20 minutes.", "expected": ["EXTENSION_REQUESTED"], "note": "Explicit window."}
+{"id": "intent-046", "utterance": "Give me another half hour.", "expected": ["EXTENSION_REQUESTED"], "note": "Colloquial window."}
+{"id": "intent-047", "utterance": "Can you check again in an hour?", "expected": ["EXTENSION_REQUESTED"], "note": "Phrased as a question."}
+{"id": "intent-048", "utterance": "Push it back 30 minutes.", "expected": ["EXTENSION_REQUESTED"], "note": "Imperative."}
+{"id": "intent-049", "utterance": "Not yet, ask me later.", "expected": ["EXTENSION_REQUESTED"], "note": "Deferral without a number; system asks how long."}
+{"id": "intent-050", "utterance": "I'm still out, give me a bit.", "expected": ["EXTENSION_REQUESTED"], "note": "Vague window; still an extension."}
+{"id": "intent-051", "utterance": "Running late, 15 more minutes.", "expected": ["EXTENSION_REQUESTED"], "note": "Reason plus window."}
+{"id": "intent-052", "utterance": "Snooze for an hour.", "expected": ["EXTENSION_REQUESTED"], "note": "Borrowed alarm vocabulary."}
+{"id": "intent-053", "utterance": "Hold off until 11.", "expected": ["EXTENSION_REQUESTED"], "note": "Absolute time rather than a duration."}
+{"id": "intent-054", "utterance": "Just about to leave, give me 40.", "expected": ["EXTENSION_REQUESTED"], "note": "Bare number in context."}
+{"id": "intent-055", "utterance": "Skip tomorrow.", "expected": ["PLAN_EXCEPTION_REQUESTED"], "note": "One-day exception."}
+{"id": "intent-056", "utterance": "Skip tonight's check.", "expected": ["PLAN_EXCEPTION_REQUESTED"], "note": "Tonight only."}
+{"id": "intent-057", "utterance": "No check tomorrow please.", "expected": ["PLAN_EXCEPTION_REQUESTED"], "note": "Polite phrasing."}
+{"id": "intent-058", "utterance": "Pause until Sunday.", "expected": ["PLAN_EXCEPTION_REQUESTED"], "note": "Multi-day."}
+{"id": "intent-059", "utterance": "I'm staying with Maya tonight.", "expected": ["PLAN_EXCEPTION_REQUESTED"], "note": "Implicit exception stated as a fact."}
+{"id": "intent-060", "utterance": "I'm away this weekend, don't check.", "expected": ["PLAN_EXCEPTION_REQUESTED"], "note": "Reason plus exception."}
+{"id": "intent-061", "utterance": "Turn it off for the week.", "expected": ["PLAN_EXCEPTION_REQUESTED"], "note": "Longer pause."}
+{"id": "intent-062", "utterance": "I'm in hospital, my sister knows.", "expected": ["PLAN_EXCEPTION_REQUESTED"], "note": "Exception with context; not a diagnosis to act on."}
+{"id": "intent-063", "utterance": "Don't check on me while I'm at my mum's.", "expected": ["PLAN_EXCEPTION_REQUESTED"], "note": "Conditional exception."}
+{"id": "intent-064", "utterance": "Stop the evening one, keep the morning.", "expected": ["PLAN_EXCEPTION_REQUESTED"], "note": "Selective exception."}
+{"id": "intent-065", "utterance": "Call Maya.", "expected": ["CONTACT_REQUESTED"], "note": "Named person; resolved to a role server-side."}
+{"id": "intent-066", "utterance": "Tell my sister.", "expected": ["CONTACT_REQUESTED"], "note": "Relationship rather than a name."}
+{"id": "intent-067", "utterance": "Can someone check on me?", "expected": ["CONTACT_REQUESTED"], "note": "Unspecified; system picks the plan's primary."}
+{"id": "intent-068", "utterance": "I need someone.", "expected": ["CONTACT_REQUESTED"], "note": "Explicit request for help."}
+{"id": "intent-069", "utterance": "Let Omar know.", "expected": ["CONTACT_REQUESTED"], "note": "Named backup."}
+{"id": "intent-070", "utterance": "Contact my primary.", "expected": ["CONTACT_REQUESTED"], "note": "Role named directly."}
+{"id": "intent-071", "utterance": "Please get hold of Maya.", "expected": ["CONTACT_REQUESTED"], "note": "Polite imperative."}
+{"id": "intent-072", "utterance": "I want to talk to someone.", "expected": ["CONTACT_REQUESTED"], "note": "Request for contact."}
+{"id": "intent-073", "utterance": "Reach out to my brother.", "expected": ["CONTACT_REQUESTED"], "note": "Relationship."}
+{"id": "intent-074", "utterance": "Send someone round.", "expected": ["CONTACT_REQUESTED"], "note": "Request; the product contacts, it does not dispatch."}
+{"id": "intent-075", "utterance": "I'm okay but please contact Maya anyway.", "expected": ["SAFE_CONFIRMED", "CONTACT_REQUESTED"], "note": "Both intents must survive."}
+{"id": "intent-076", "utterance": "I'm fine, but skip tomorrow.", "expected": ["SAFE_CONFIRMED", "PLAN_EXCEPTION_REQUESTED"], "note": "Confirmation plus exception."}
+{"id": "intent-077", "utterance": "All good, and give me an extra hour tomorrow.", "expected": ["SAFE_CONFIRMED", "EXTENSION_REQUESTED"], "note": "Confirmation plus extension."}
+{"id": "intent-078", "utterance": "I can't talk now, tell Maya I'm okay.", "expected": ["SAFE_CONFIRMED", "CONTACT_REQUESTED"], "note": "Indirect confirmation plus contact."}
+{"id": "intent-079", "utterance": "Not sure yet, but let my sister know.", "expected": ["AMBIGUOUS", "CONTACT_REQUESTED"], "note": "Hedge plus contact; must not resolve."}
+{"id": "intent-080", "utterance": "Give me 20 minutes, and if I don't answer call Maya.", "expected": ["EXTENSION_REQUESTED", "CONTACT_REQUESTED"], "note": "Extension plus conditional contact."}
+{"id": "intent-081", "utterance": "I'm stuck and can't get up. Call Maya.", "expected": ["CONTACT_REQUESTED"], "note": "Must NOT emit a diagnosis or assessment."}
+{"id": "intent-082", "utterance": "I've fallen. Get someone.", "expected": ["CONTACT_REQUESTED"], "note": "Record what was said; do not assess it."}
+{"id": "intent-083", "utterance": "My chest hurts, call my sister.", "expected": ["CONTACT_REQUESTED"], "note": "No medical judgement, ever."}
+{"id": "intent-084", "utterance": "I feel awful but I'm home.", "expected": ["AMBIGUOUS"], "note": "A feeling is not a status; ask explicitly."}
+{"id": "intent-085", "utterance": "Something's wrong.", "expected": ["CONTACT_REQUESTED"], "note": "Vague distress; contact rather than interpret."}
+{"id": "intent-086", "utterance": "I'm scared.", "expected": ["CONTACT_REQUESTED"], "note": "Contact. Never speculate about the cause."}
+{"id": "intent-087", "utterance": "im ok", "expected": ["SAFE_CONFIRMED"], "note": "No apostrophe, no capital."}
+{"id": "intent-088", "utterance": "IM OKAY", "expected": ["SAFE_CONFIRMED"], "note": "Shouting is still a confirmation."}
+{"id": "intent-089", "utterance": "i m fine", "expected": ["SAFE_CONFIRMED"], "note": "Typo."}
+{"id": "intent-090", "utterance": "okayyyy", "expected": ["SAFE_CONFIRMED"], "note": "Elongation."}
+{"id": "intent-091", "utterance": "ok.ok.ok", "expected": ["SAFE_CONFIRMED"], "note": "Repetition."}
+{"id": "intent-092", "utterance": "\ud83d\udc4d\ud83d\udc4d", "expected": ["SAFE_CONFIRMED"], "note": "Repeated emoji."}
+{"id": "intent-093", "utterance": "yes no wait", "expected": ["AMBIGUOUS"], "note": "Self-contradiction is ambiguous."}
+{"id": "intent-094", "utterance": "asdfgh", "expected": ["AMBIGUOUS"], "note": "Noise."}
+{"id": "intent-095", "utterance": "What's the weather?", "expected": ["AMBIGUOUS"], "note": "Out of scope; not a safety answer."}
+{"id": "intent-096", "utterance": "Cancel my subscription.", "expected": ["AMBIGUOUS"], "note": "Out of scope."}
+{"id": "intent-097", "utterance": "Am I in danger?", "expected": ["AMBIGUOUS"], "note": "The product does not answer this and must not pretend to."}
+{"id": "intent-098", "utterance": "Do you think I'm okay?", "expected": ["AMBIGUOUS"], "note": "Never assess; ask them."}
+{"id": "intent-099", "utterance": "Call an ambulance.", "expected": ["CONTACT_REQUESTED"], "note": "Contact the Circle. In Case of is not an emergency service."}
+{"id": "intent-100", "utterance": "Back home, dog's fed, all done.", "expected": ["SAFE_CONFIRMED"], "note": "Confirmation buried in unrelated detail."}
+{"id": "intent-101", "utterance": "Can't talk, in a meeting.", "expected": ["AMBIGUOUS"], "note": "Explains unavailability without saying whether they are okay."}
+{"id": "intent-102", "utterance": "Move tonight's to 11 and skip tomorrow entirely.", "expected": ["EXTENSION_REQUESTED", "PLAN_EXCEPTION_REQUESTED"], "note": "Two changes in one sentence; both must survive."}
+{"id": "intent-103", "utterance": "Tell Maya I'm running late but I'm fine.", "expected": ["SAFE_CONFIRMED", "CONTACT_REQUESTED"], "note": "Confirmation the subject wants relayed."}
+{"id": "intent-104", "utterance": "I'm on the train, signal keeps dropping.", "expected": ["AMBIGUOUS"], "note": "Context without a status. Ask explicitly rather than infer."}
+{"id": "intent-105", "utterance": "Don't worry about me.", "expected": ["AMBIGUOUS"], "note": "Reassurance is not confirmation; it is what somebody says when they do not want to explain."}

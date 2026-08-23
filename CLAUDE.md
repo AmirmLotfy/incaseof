@@ -125,4 +125,14 @@ and messages. Drill Mode runs the same engine compressed.
 FCM/SMS delivery, and the live demo. Those need the AWS CLI, credentials and an explicit
 decision to deploy.
 
-**Phase 5 is next**: Strands + Gemini plan compilation, behind the policy layer.
+**Phase 5 complete**: Strands + Gemini behind the policy layer. One agent, eight tools, none
+of which can name a person or an endpoint. Every proposal is recorded as an `AGENT_DECISION`
+with ALLOW/DENY, denials included. Model output is validated twice — Pydantic for shape, then
+the JSON Schema contract — before the existing semantic and safety layers run. Any model
+failure degrades to explicit buttons; escalation timing is unaffected because the timers are
+in EventBridge.
+
+**Not yet run against the real model**: `GEMINI_API_KEY` is not set, so the live eval suite
+has never executed. The suite and harness exist and the boundary is proven structurally.
+
+**Phase 6 is next**: responder web, then the marketing site, then the judge demo.

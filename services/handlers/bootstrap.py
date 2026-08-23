@@ -24,12 +24,22 @@ from services.adapters.dynamo import (
     DynamoAlertRepository,
     DynamoAuditLog,
     DynamoCircleRepository,
+    DynamoDecisionLog,
     DynamoMomentRepository,
     DynamoPlanRepository,
 )
 from services.adapters.queue import ActionQueue, SqsActionQueue
 from services.adapters.scheduling import EventBridgeMomentScheduler, MomentScheduler
 from services.domain.clock import REAL_TIME, Clock, SystemClock, TimeScale
+from services.domain.ports import (
+    ActionLog,
+    AlertRepository,
+    AuditLog,
+    CircleRepository,
+    DecisionLog,
+    MomentRepository,
+    PlanRepository,
+)
 
 
 def _required(name: str) -> str:
@@ -52,12 +62,16 @@ def _table() -> Any:
 class Context:
     """Everything a handler needs, constructed once."""
 
-    plans: DynamoPlanRepository
-    moments: DynamoMomentRepository
-    alerts: DynamoAlertRepository
-    circles: DynamoCircleRepository
-    actions: DynamoActionLog
-    audit: DynamoAuditLog
+    # Declared as ports, never as the DynamoDB adapters. Naming the concrete type here
+    # would make the in-memory adapters unusable by anything type-checked, which is the
+    # opposite of why the ports exist — an invariant proven against one implementation is
+    # only meaningful if both satisfy the same contract.
+    plans: PlanRepository
+    moments: MomentRepository
+    alerts: AlertRepository
+    circles: CircleRepository
+    actions: ActionLog
+    audit: AuditLog
     clock: Clock
     scale: TimeScale
     # Optional so the slice can be driven without AWS. When absent, the caller supplies
@@ -66,6 +80,7 @@ class Context:
     scheduler: MomentScheduler | None = None
     queue: ActionQueue | None = None
     sender: ContactSender | None = None
+    decisions: DecisionLog | None = None
     signing_key: bytes = b""
 
     def now(self) -> datetime:
@@ -102,6 +117,7 @@ def build() -> Context:
         queue=SqsActionQueue(
             client=boto3.client("sqs"), queue_url=_required("ICO_ACTION_QUEUE_URL")
         ),
+        decisions=DynamoDecisionLog(table),
     )
 
 

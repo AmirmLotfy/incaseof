@@ -27,6 +27,7 @@ from typing import TYPE_CHECKING, Any, cast
 from botocore.exceptions import ClientError
 
 from services.adapters import codec, keys
+from services.domain.agent_decision import AgentDecision
 from services.domain.alert import Alert
 from services.domain.circle import Circle, ConsentGrant
 from services.domain.idempotency import IdempotencyKey
@@ -393,6 +394,43 @@ class DynamoActionLog:
 
 
 @dataclass
+class DynamoDecisionLog:
+    """Agent decisions, stored under the Alert they concern.
+
+    Denials are written exactly like allowances. A refused proposal that left no record
+    would make the policy layer unfalsifiable.
+    """
+
+    table: Table
+
+    def append(self, decision: AgentDecision) -> None:
+        partition = keys.alert(decision.alert_id) if decision.alert_id else "AGENT#unattached"
+        self.table.put_item(
+            Item={
+                "pk": partition,
+                "sk": keys.timeline_sk("DECISION", decision.created_at, decision.decision_id),
+                "decisionId": decision.decision_id,
+                "modelId": decision.model_id,
+                "proposedTool": decision.proposed_tool,
+                "policyResult": decision.policy_result.value,
+                "reasonCode": decision.reason_code,
+                "inputHash": decision.input_hash,
+                "arguments": decision.arguments,
+                "at": decision.created_at.isoformat(),
+            }
+        )
+
+    def for_alert(self, alert_id: AlertId) -> tuple[dict[str, object], ...]:
+        from boto3.dynamodb.conditions import Key
+
+        response = self.table.query(
+            KeyConditionExpression=Key("pk").eq(keys.alert(alert_id))
+            & Key("sk").begins_with("DECISION#")
+        )
+        return tuple(dict(item) for item in response.get("Items", []))
+
+
+@dataclass
 class DynamoAuditLog:
     table: Table
 
@@ -410,6 +448,9 @@ class DynamoAuditLog:
             Item={
                 "pk": keys.alert(alert_id),
                 "sk": keys.timeline_sk("AUDIT", at, event_type),
+                # Stored explicitly as well as encoded in the partition key, so a reader
+                # never has to parse `pk` to know what an event belongs to.
+                "alertId": alert_id,
                 "actorType": actor_type,
                 "actorId": actor_id,
                 "eventType": event_type,

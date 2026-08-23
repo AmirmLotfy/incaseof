@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Notification icons are rendered as a silhouette by the system, so this is a solid
+     shape rather than the two-tone launcher mark. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="@color/ico_notification_icon">
+    <path
+        android:fillColor="@color/ico_notification_icon"
+        android:pathData="M4,11 L14,11 L14,13 L4,13 Z" />
+    <path
+        android:fillColor="@color/ico_notification_icon"
+        android:pathData="M17,12 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
+</vector>

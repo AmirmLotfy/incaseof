@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Pre-Android-12 equivalent of data_extraction_rules.xml.
+
+    Same reasoning: session tokens and the times somebody is expected to be home must not
+    end up in a cloud backup. Everything is authoritative in DynamoDB and re-fetched on
+    sign-in, so nothing is lost by excluding all of it.
+-->
+<full-backup-content>
+    <exclude domain="root" path="." />
+    <exclude domain="database" path="." />
+    <exclude domain="sharedpref" path="." />
+    <exclude domain="external" path="." />
+</full-backup-content>

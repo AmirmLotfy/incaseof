@@ -3,28 +3,62 @@
 
     <!--
         Permissions are added by the feature that needs them, never in advance.
-        A safety app that requests more than it uses undermines the one thing it sells.
-        POST_NOTIFICATIONS arrives with notifications in Phase 3.
-        There is no location permission, by design.
+
+        POST_NOTIFICATIONS arrives with notifications, which ship in this phase. INTERNET is
+        needed to reach the API.
+
+        There is deliberately no location permission. The product monitors a plan, not a
+        person, and P0 does not use location at all.
     -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
+        android:name=".IcoApplication"
         android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.InCaseOf">
 
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
+            android:launchMode="singleTask"
             android:theme="@style/Theme.InCaseOf">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!--
+            Confirms a Moment straight from the notification, without opening the app.
+            Not exported: only our own PendingIntent may trigger it, so a third-party app
+            cannot resolve somebody's check on their behalf.
+        -->
+        <receiver
+            android:name=".core.notifications.MomentActionReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.incaof.app.action.CONFIRM_MOMENT" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".core.notifications.IcoMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="moments" />
     </application>
 
 </manifest>

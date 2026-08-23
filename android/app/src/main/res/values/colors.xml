@@ -6,4 +6,8 @@
     <color name="ico_background">#F6F5F0</color>
     <!-- Ink. Launcher icon background. -->
     <color name="ico_launcher_background">#171A18</color>
+    <!-- Notification small icons are drawn as a silhouette and re-tinted by the system;
+         the value only has to be opaque. Declared here rather than inline so no drawable
+         carries a literal colour. -->
+    <color name="ico_notification_icon">#FFFFFF</color>
 </resources>

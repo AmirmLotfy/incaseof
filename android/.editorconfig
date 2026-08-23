@@ -11,6 +11,17 @@ trim_trailing_whitespace = true
 indent_size = 4
 max_line_length = 120
 
+# Declared explicitly rather than relying on the Gradle plugin's android flag, which does
+# not reach ktlint's own config resolution.
+ktlint_code_style = ktlint_official
+
+# Disabled deliberately. This rule forces every signature with two or more parameters
+# onto separate lines, which suits a library API and reads as noise in Compose, where
+# two-parameter functions are the norm. Everything else in ktlint_official stays on:
+# the alternative, android_studio, disallows trailing commas and would churn every file
+# in the opposite direction for no readability gain.
+ktlint_standard_function-signature = disabled
+
 # @Composable functions are PascalCase by Compose convention; ktlint's function-naming
 # rule would otherwise flag every composable in the project.
 ktlint_function_naming_ignore_when_annotated_with = Composable

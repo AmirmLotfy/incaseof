@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
 import { App } from "aws-cdk-lib";
 import { Match, Template } from "aws-cdk-lib/assertions";
@@ -153,6 +154,32 @@ describe("api", () => {
         "JWT",
         `${name} (${route.Properties?.RouteKey}) is not behind the authorizer`,
       );
+    }
+  });
+
+  it("deploys every route the Android client calls", () => {
+    // Read from the client itself rather than a copy of the list, so adding a call to
+    // IcoApi.kt without deploying its route fails here instead of in someone's hand.
+    const client = readFileSync(
+      new URL(
+        "../../../android/app/src/main/java/com/incaof/app/core/network/IcoApi.kt",
+        import.meta.url,
+      ),
+      "utf8",
+    );
+    const called = [...client.matchAll(/@(GET|POST|PUT|DELETE)\("([^"]+)"\)/g)].map(
+      (m) => `${m[1]} /${m[2]}`.replace(/\{(\w+)\}/g, "{}"),
+    );
+    assert.ok(called.length >= 6, `parsed ${called.length} client calls, expected more`);
+
+    const deployed = new Set(
+      Object.values(synth().findResources("AWS::ApiGatewayV2::Route")).map((route) =>
+        String(route.Properties?.RouteKey).replace(/\{(\w+)\}/g, "{}"),
+      ),
+    );
+
+    for (const call of called) {
+      assert.ok(deployed.has(call), `client calls ${call}, which is not deployed`);
     }
   });
 

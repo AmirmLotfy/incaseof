@@ -95,6 +95,14 @@ cd infra/cdk && npx cdk synth             # add -c env=demo for the demo stack
   Kotlin. Android Lint plus ktlint 14.2.0 cover this until detekt catches up.
 - **mypy, not ty**: `ty` is at 0.0.x and pre-1.0. A release gate should not be a preview tool.
 - Python is `uv`-managed 3.12. The system interpreter is 3.9 and cannot run this project.
+- **ktlint's code style comes from `.editorconfig`**, not from the Gradle plugin's `android`
+  flag — that flag does not reach ktlint's own config resolution.
+- **Amplify requires `isCoreLibraryDesugaringEnabled`.** Without it the build fails at
+  `checkDebugAarMetadata`, not at compile.
+- **Adaptive icons must stay in `mipmap-anydpi-v26`** even at minSdk 26. Plain `anydpi` does
+  not resolve and AAPT fails outright; `ObsoleteSdkInt` is disabled for that reason.
+- **Material3 does not bundle icons.** `material-icons-core` is a separate dependency.
+- Hilt, KSP and Room are deliberately absent — see `android/gradle/libs.versions.toml`.
 
 ## Phase state
 
@@ -104,6 +112,9 @@ cd infra/cdk && npx cdk synth             # add -c env=demo for the demo stack
 **Phase 2 complete**: infrastructure. DynamoDB adapters with conditional writes, EventBridge
 Scheduler, Step Functions escalation, SQS outbox, Cognito, HTTP API. Synthesised and asserted;
 **not yet deployed** — that needs the AWS CLI, credentials and explicit approval.
-**Phase 3 is next**: the Android shell — auth, Home, Plans, Circle, Moment, notifications.
+**Phase 3 complete**: the Android shell — Cognito auth, Home (all-clear and action-needed),
+Plans, Plan detail, Circle, History, notifications with a working "I'M OKAY" action, four-tab
+navigation. Runs against a local data source until the stack is deployed.
+**Phase 4 is next**: the complete deterministic vertical slice, end to end.
 
-Still no AI. The complete deterministic vertical slice (Phase 4) must work before the model.
+Still no AI. The vertical slice must work before the model.

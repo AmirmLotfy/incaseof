@@ -45,10 +45,7 @@ private val IcoTypography =
     )
 
 @Composable
-fun InCaseOfTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable () -> Unit,
-) {
+fun InCaseOfTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     val ico = if (darkTheme) IcoDarkColors else IcoLightColors
 
     // Deliberately NOT dynamic colour. A safety surface must look the same on every

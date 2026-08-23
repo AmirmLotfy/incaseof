@@ -86,8 +86,16 @@ export class Api extends Construct {
     // Routes are declared explicitly rather than as a proxy. A proxy route would let a
     // path reach the handler before anyone decided it should exist, and this is the
     // surface where "what can be asked for" is a security property.
+    // Every route the Android client calls must appear here. A client calling a path
+    // that was never deployed fails at the worst possible moment — when somebody is trying
+    // to say they are okay — so test/stack.test.ts asserts this list covers IcoApi.kt.
     const authenticated: Array<[string, apigw.HttpMethod]> = [
+      ["/v1/moments/next", apigw.HttpMethod.GET],
       ["/v1/moments/{momentId}/confirm", apigw.HttpMethod.POST],
+      ["/v1/moments/{momentId}/extend", apigw.HttpMethod.POST],
+      ["/v1/plans", apigw.HttpMethod.GET],
+      ["/v1/plans/{planId}", apigw.HttpMethod.GET],
+      ["/v1/circle", apigw.HttpMethod.GET],
       ["/v1/alerts/{alertId}/claim", apigw.HttpMethod.POST],
       ["/v1/alerts/{alertId}/resolve", apigw.HttpMethod.POST],
       ["/v1/alerts/{alertId}/timeline", apigw.HttpMethod.GET],

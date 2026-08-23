@@ -2,4 +2,57 @@
 <resources>
     <string name="app_name">In Case of</string>
     <string name="tagline">Someone notices.</string>
+
+    <!-- Notifications -->
+    <string name="channel_moments">Check-ins</string>
+    <string name="channel_moments_description">Asks whether you\'re okay at the times you chose.</string>
+    <string name="notification_moment_body">Everything okay?</string>
+    <string name="check_in">Check-in</string>
+    <string name="action_im_okay">I\'M OKAY</string>
+    <string name="confirm_failed">Couldn\'t send your check. Open In Case of to try again.</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_plans">Plans</string>
+    <string name="nav_circle">Circle</string>
+    <string name="nav_history">History</string>
+
+    <!-- Home -->
+    <string name="status_all_clear">ALL CLEAR</string>
+    <string name="status_action_needed">ACTION NEEDED</string>
+    <string name="next_label">Next</string>
+    <string name="if_unresolved">If unresolved</string>
+    <string name="expected">Expected</string>
+    <string name="need_someone">Need someone</string>
+    <string name="give_me_more_time">Give me more time</string>
+    <string name="next_action">Next action</string>
+
+    <!-- Plans -->
+    <string name="what_happens">WHAT HAPPENS</string>
+    <string name="shared_if_needed">SHARED IF NEEDED</string>
+    <string name="your_circle">YOUR CIRCLE</string>
+    <string name="test_plan">Test plan</string>
+    <string name="plan_active">Active</string>
+    <string name="plan_paused">Paused</string>
+
+    <!-- Circle -->
+    <string name="verified">Verified</string>
+    <string name="not_verified">Not verified</string>
+    <string name="accepted">Accepted</string>
+    <string name="invitation_pending">Invitation pending</string>
+
+    <!-- History -->
+    <string name="resolved">Resolved</string>
+    <string name="history_empty">Nothing to show yet. Resolved checks appear here.</string>
+
+    <!-- Auth -->
+    <string name="sign_in">Sign in</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="retry">Try again</string>
+
+    <!-- Accessibility. Never rely on colour alone to convey state. -->
+    <string name="cd_status_all_clear">Status: all clear. Nothing needs your attention.</string>
+    <string name="cd_status_action_needed">Status: action needed. In Case of is waiting for your check.</string>
+    <string name="cd_confirm_okay">Confirm that you are okay. This resolves tonight\'s check.</string>
 </resources>

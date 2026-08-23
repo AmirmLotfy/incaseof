@@ -14,9 +14,23 @@ globs: ["android/**"]
 
 ## Architecture
 ```
-Compose UI → ViewModel → UseCase → Repository → (Room cache | API)
+Compose UI → ViewModel → Repository → (local cache | API)
 ```
-Room is a **cache only**. It is never authoritative — DynamoDB is.
+Any local store is a **cache only**. It is never authoritative — DynamoDB is.
+
+Dependency injection is a hand-written `AppContainer`, not Hilt. AGP 9 compiles Kotlin
+natively and stacking KSP on top is unproven; the graph is small enough that generated code
+would cost more than it saves. Reconsider when one file no longer explains it.
+
+Room is deferred for the same reason. It is a cache, so nothing depends on it being there.
+
+## Toolchain facts learned the hard way
+- ktlint reads its code style from `.editorconfig`. The Gradle plugin's `android.set(true)`
+  does not reach it.
+- Amplify needs `isCoreLibraryDesugaringEnabled`; it fails at AAR metadata check, not compile.
+- Adaptive icons need `mipmap-anydpi-v26` even at minSdk 26.
+- `androidx.test.ext:junit` is at 1.3.0 and `espresso-core` at 3.7.0 — not the 1.4.x/3.8.x
+  you might assume from the other AndroidX versions.
 
 ## WorkManager
 Allowed: cache sync, telemetry upload, refreshing non-critical content.

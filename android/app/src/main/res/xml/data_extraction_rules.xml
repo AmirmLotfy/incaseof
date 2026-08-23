@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Nothing is backed up or transferred.
+
+    This app's local state includes session tokens and the times somebody is expected to be
+    home. A cloud backup of that is a copy of the most sensitive thing the product knows,
+    sitting somewhere the user is not thinking about.
+
+    Everything that matters is authoritative in DynamoDB and re-fetched on sign-in, so
+    excluding all of it costs the user nothing.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+    </device-transfer>
+</data-extraction-rules>

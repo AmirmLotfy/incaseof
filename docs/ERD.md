@@ -268,8 +268,26 @@ key, so rendering the Incident Room and the audit trail is a single query.
 **Create a GSI only from a demonstrated query.** Abstract future scalability is not a reason.
 Every GSI added must be justified in this file with the access pattern that required it.
 
-Current GSIs: *none yet.* Expected first: due-Moment lookup by time window, and Alerts-by-responder
-for the responder web surface — both added in Phase 1/2 when the query actually exists.
+**`gsi1-moments-due`** — added in Phase 2.
+
+| Field | Value |
+|---|---|
+| Partition key | `gsi1pk` = `DUE#<yyyy-mm-dd>` |
+| Sort key | `gsi1sk` = `<due_at ISO>#<moment_id>` |
+| Access pattern | *"Which Moments were due by now and never opened an Alert?"* |
+| Used by | The reconciliation sweeper |
+
+EventBridge Scheduler owns the timers, so this index is a **backstop**, not the primary path.
+It exists because in a safety product the failure of the thing that notices cannot itself go
+unnoticed: if a schedule never delivers, nothing else in the system would ever find out.
+
+Two properties are deliberate. It is **bucketed by day** rather than using a single `DUE`
+partition, so it does not become one hot key. And it is **sparse** — the `gsi1pk`/`gsi1sk`
+attributes are written only while a Moment is `SCHEDULED` or `DUE`, so the index holds
+outstanding work rather than history, and shrinks as Moments resolve.
+
+*Alerts-by-responder is still not indexed.* Responders arrive through a signed link that names
+the Alert, so the lookup is a direct read. No query has demonstrated the need.
 
 ### Conditional writes
 

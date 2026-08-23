@@ -87,6 +87,8 @@ jobs:
       - run: npm ci
       - name: Typecheck
         run: npm run typecheck -w @incaseof/infra
+      - name: Template assertions
+        run: npm run test -w @incaseof/infra
       - name: Synth dev
         working-directory: infra/cdk
         run: npx cdk synth

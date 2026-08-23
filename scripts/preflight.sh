@@ -30,6 +30,7 @@ run "secrets"              python3 scripts/check-secrets.py
 run "phone numbers"        python3 scripts/check-phone-numbers.py
 run "anti-slop"            ./scripts/check-antislop.sh
 run "android"              env -C android ./gradlew --quiet assembleDebug testDebugUnitTest lintDebug ktlintCheck
+run "infra: tests"         npm run test -w @incaseof/infra --silent
 run "cdk synth"            env -C infra/cdk npx --no-install cdk synth --quiet
 
 echo ""

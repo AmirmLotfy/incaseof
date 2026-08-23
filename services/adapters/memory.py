@@ -82,6 +82,10 @@ class InMemoryAlertRepository:
     def save(self, alert: Alert) -> None:
         self.alerts[alert.alert_id] = alert
 
+    def alert_for_moment(self, moment_id: MomentId) -> Alert | None:
+        existing_id = self._by_moment.get(moment_id)
+        return self.alerts.get(existing_id) if existing_id else None
+
     def open_for_moment(self, alert: Alert) -> Alert:
         """Conditional insert keyed on the Moment. Invariant 1."""
         existing_id = self._by_moment.get(alert.moment_id)

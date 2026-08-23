@@ -25,6 +25,8 @@ dev = [
     "ruff==0.16.4",
     "mypy==2.3.1",
     "types-jsonschema==4.26.0.20260518",
+    "moto[dynamodb]==5.2.3",
+    "boto3-stubs[dynamodb,scheduler,sqs,stepfunctions]==1.43.78",
 ]
 
 [build-system]

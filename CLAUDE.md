@@ -98,6 +98,12 @@ cd infra/cdk && npx cdk synth             # add -c env=demo for the demo stack
 
 ## Phase state
 
-**Phase 0 is complete**: contracts, schemas, scaffold, guardrails, CI.
-**Phase 1 is next**: the deterministic domain core — Plan, PlanVersion, Moment, Alert, the state
-machine, Circle, consent, resolution. **No AI in Phase 1.**
+**Phase 0 complete**: contracts, schemas, scaffold, guardrails, CI.
+**Phase 1 complete**: deterministic domain core. Pure — no AWS, no model, no ambient clock.
+`docs/PRODUCT-STATES.md` is enforced by a parity test that reads the document.
+**Phase 2 complete**: infrastructure. DynamoDB adapters with conditional writes, EventBridge
+Scheduler, Step Functions escalation, SQS outbox, Cognito, HTTP API. Synthesised and asserted;
+**not yet deployed** — that needs the AWS CLI, credentials and explicit approval.
+**Phase 3 is next**: the Android shell — auth, Home, Plans, Circle, Moment, notifications.
+
+Still no AI. The complete deterministic vertical slice (Phase 4) must work before the model.

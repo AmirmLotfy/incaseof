@@ -54,6 +54,10 @@ class AlertRepository(Protocol):
 
     def save(self, alert: Alert) -> None: ...
 
+    def alert_for_moment(self, moment_id: MomentId) -> Alert | None:
+        """The Alert opened for this Moment, if one was."""
+        ...
+
     def open_for_moment(self, alert: Alert) -> Alert:
         """Open an Alert for a Moment, conditional on none existing.
 

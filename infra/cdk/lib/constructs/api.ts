@@ -1,0 +1,100 @@
+import { Duration, RemovalPolicy } from "aws-cdk-lib";
+import * as apigw from "aws-cdk-lib/aws-apigatewayv2";
+import { HttpJwtAuthorizer } from "aws-cdk-lib/aws-apigatewayv2-authorizers";
+import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
+import type * as cognito from "aws-cdk-lib/aws-cognito";
+import type * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import type * as kms from "aws-cdk-lib/aws-kms";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as logs from "aws-cdk-lib/aws-logs";
+import { Construct } from "constructs";
+import * as path from "node:path";
+import { fileURLToPath } from "node:url";
+import type { IcoEnvironment } from "../environment.js";
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+const ASSET = path.join(here, "..", "..", "assets", "lambda");
+
+export interface ApiProps {
+  readonly environment: IcoEnvironment;
+  readonly userPool: cognito.IUserPool;
+  readonly userPoolClient: cognito.IUserPoolClient;
+  readonly table: dynamodb.ITable;
+  readonly key: kms.IKey;
+}
+
+/**
+ * The public surface.
+ *
+ * An HTTP API rather than REST: cheaper, faster, and this product needs none of what the
+ * REST API adds. Not GraphQL either — the access patterns are few and fixed, and a query
+ * language would mostly add ways to ask for things the policy layer must then refuse.
+ *
+ * Every /v1 route is behind the Cognito authorizer. Responder routes are deliberately
+ * *not*, because a responder has no account; they carry a signed single-Alert token
+ * instead, validated in the handler. Putting them behind the same authorizer would force
+ * a friend to sign up before they could say "I've got her".
+ */
+export class Api extends Construct {
+  readonly httpApi: apigw.HttpApi;
+  readonly handler: lambda.Function;
+
+  constructor(scope: Construct, id: string, props: ApiProps) {
+    super(scope, id);
+
+    this.handler = new lambda.Function(this, "Handler", {
+      runtime: lambda.Runtime.PYTHON_3_12,
+      code: lambda.Code.fromAsset(ASSET),
+      handler: "services.handlers.api.handler",
+      architecture: lambda.Architecture.X86_64,
+      timeout: Duration.seconds(15),
+      environment: {
+        ICO_TABLE_NAME: props.table.tableName,
+        ICO_ENV: props.environment.name,
+        ICO_TIME_SCALE: String(props.environment.demoTimeScale),
+        PYTHONUNBUFFERED: "1",
+      },
+      logGroup: new logs.LogGroup(this, "HandlerLogs", {
+        retention: logs.RetentionDays.ONE_MONTH,
+        removalPolicy: RemovalPolicy.DESTROY,
+      }),
+      tracing: lambda.Tracing.ACTIVE,
+    });
+    props.table.grantReadWriteData(this.handler);
+    props.key.grantEncryptDecrypt(this.handler);
+
+    const authorizer = new HttpJwtAuthorizer(
+      "CognitoAuthorizer",
+      `https://cognito-idp.${process.env.CDK_DEFAULT_REGION ?? "us-east-1"}.amazonaws.com/${props.userPool.userPoolId}`,
+      { jwtAudience: [props.userPoolClient.userPoolClientId] },
+    );
+
+    this.httpApi = new apigw.HttpApi(this, "HttpApi", {
+      description: "In Case of — someone notices.",
+      defaultAuthorizer: authorizer,
+      corsPreflight: {
+        // The responder web app is the only browser origin that calls this.
+        allowMethods: [apigw.CorsHttpMethod.GET, apigw.CorsHttpMethod.POST],
+        allowHeaders: ["authorization", "content-type", "x-ico-source"],
+        allowOrigins: props.environment.name === "prod" ? ["https://incaof.com"] : ["*"],
+        maxAge: Duration.hours(1),
+      },
+    });
+
+    const integration = new HttpLambdaIntegration("ApiIntegration", this.handler);
+
+    // Routes are declared explicitly rather than as a proxy. A proxy route would let a
+    // path reach the handler before anyone decided it should exist, and this is the
+    // surface where "what can be asked for" is a security property.
+    const authenticated: Array<[string, apigw.HttpMethod]> = [
+      ["/v1/moments/{momentId}/confirm", apigw.HttpMethod.POST],
+      ["/v1/alerts/{alertId}/claim", apigw.HttpMethod.POST],
+      ["/v1/alerts/{alertId}/resolve", apigw.HttpMethod.POST],
+      ["/v1/alerts/{alertId}/timeline", apigw.HttpMethod.GET],
+    ];
+
+    for (const [routePath, method] of authenticated) {
+      this.httpApi.addRoutes({ path: routePath, methods: [method], integration });
+    }
+  }
+}

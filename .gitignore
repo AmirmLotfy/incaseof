@@ -43,6 +43,9 @@ android/.cxx/
 
 # ---- CDK ----
 infra/cdk/cdk.out/
+# Staged by scripts/build-lambda.sh; the directory is kept, its contents are not.
+infra/cdk/assets/lambda/*
+!infra/cdk/assets/lambda/.gitkeep
 infra/cdk/node_modules/
 cdk.context.json
 

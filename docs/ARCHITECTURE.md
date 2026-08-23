@@ -169,7 +169,36 @@ and the reliability suite) by replaying scheduler and SQS deliveries.
 
 ---
 
-## 8. Environments
+## 8. The escalation workflow
+
+A Standard workflow, shaped as a loop that holds no opinions:
+
+```
+NextAction ──► decision?
+   ▲            ├── DISPATCH ──► Dispatch ──┐
+   │            ├── WAIT ──────► Wait(n) ───┤
+   └────────────┴── TERMINAL ──► Closed     │
+                └───────────────────────────┘
+```
+
+Every decision is made in Python, where it is unit-testable in milliseconds. The state
+machine only sequences and waits. `Dispatch` loops straight back rather than waiting,
+because a ladder with two rungs at the same offset must fire both without a pause.
+
+**Standard, not Express.** Escalation runs for hours, needs durable execution history for
+the audit timeline, and waits on human callbacks. Express is cheaper and keeps no history,
+which is the wrong trade when the history *is* the product.
+
+`Dispatch` sends nothing. It writes an idempotency-guarded intent to SQS, and a worker
+performs delivery — which is what makes a Step Functions retry harmless.
+
+**Endpoint resolution happens in the worker and nowhere else.** By the time a message
+reaches it, the recipient has already been authorized *by role*; the worker is the single
+function in the system that ever turns a role into a phone number.
+
+---
+
+## 9. Environments
 
 `local` · `dev` · `demo` · (`staging`, `prod` post-hackathon). Demo data never mixes with real
 user data. Each environment is a separate CDK stack instance with its own table and schedules.

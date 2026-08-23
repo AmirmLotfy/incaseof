@@ -8,6 +8,27 @@ Requires `uv`, Node 22+, JDK 17, the Android SDK (platform 37), and the AWS CLI 
 uv sync && npm install && git config core.hooksPath .githooks
 ```
 
+## Agent tooling
+
+The AWS skills and MCP server install from the AWS CLI — no `/plugin` needed:
+
+```bash
+aws configure agent-toolkit --yes
+```
+
+That installs 19 skills into `~/.claude/skills` (CDK, serverless, Cognito, Bedrock and
+AgentCore, observability, boto3) and registers the AWS MCP server. It needs a default
+region set first: `aws configure set region us-east-1`.
+
+Design research uses the Refero skill, installed standalone:
+
+```bash
+npx skills add referodesign/refero_skill --skill refero-design
+```
+
+Its bundled craft references work offline. Live style and screen research additionally
+needs the Refero MCP in `.mcp.json`, which prompts for a browser sign-in on first use.
+
 ## Before you push
 
 ```bash

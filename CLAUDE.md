@@ -84,6 +84,17 @@ cd infra/cdk && npx cdk synth             # add -c env=demo for the demo stack
 ./scripts/preflight.sh                    # everything above, in order
 ```
 
+## Agent tooling (installed, not aspirational)
+
+- **AWS skills and MCP** come from `aws configure agent-toolkit --yes`, not from a
+  `/plugin` command. 19 skills in `~/.claude/skills`, MCP registered in `~/.claude.json`.
+  Needs a region set first. Use them rather than reasoning about AWS from training data.
+- **Refero** is installed standalone via `npx skills add`. Its craft references work
+  offline; live style and screen research needs the MCP in `.mcp.json` and a browser
+  sign-in.
+- `skills-lock.json` pins the Refero skill by content hash. Commit changes to it
+  deliberately.
+
 ## Toolchain notes (verified at scaffold time — do not "fix" these)
 
 - **AGP 9 compiles Kotlin natively.** Applying `org.jetbrains.kotlin.android` is an error. The

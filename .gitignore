@@ -57,3 +57,10 @@ Thumbs.db
 .vscode/
 coverage/
 *.log
+
+# ---- Vendored agent skills ----
+# Installed with `npx skills add referodesign/refero_skill --skill refero-design`.
+# Documentation only — 11 markdown files, no executable code — but it is a tool install
+# rather than project source, and it is one command to restore.
+.agents/
+.claude/skills/refero-design

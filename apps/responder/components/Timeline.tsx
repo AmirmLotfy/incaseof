@@ -19,6 +19,9 @@ export function Timeline({ entries }: { entries: TimelineEntry[] }) {
       {entries.map((entry, index) => (
         <li
           key={`${entry.at}-${index}`}
+          // Asserted on in test/a11y.test.ts. Visual order and DOM order can disagree, and
+          // a timeline that reads backwards to a screen reader tells the story in reverse.
+          data-timeline-at={entry.at}
           style={{
             display: "grid",
             gridTemplateColumns: "5.5rem 1fr",

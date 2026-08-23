@@ -21,6 +21,9 @@ export default function Home() {
     <>
       <Header />
 
+      {/* A named landmark, so a screen reader can skip the header to reach this. */}
+      <main id="main">
+
       {/* §74. Type left, the product's own timeline right. No phone in a gradient cloud. */}
       <section className="shell" style={{ paddingTop: "clamp(3rem, 7vw, 5rem)" }}>
         <div
@@ -302,6 +305,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      </main>
 
       <Footer />
     </>

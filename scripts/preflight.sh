@@ -27,6 +27,8 @@ run "api contracts"        npm run contracts:check --silent
 run "web: typecheck"       npm run typecheck --silent
 run "web: tests"           npm run test -w @incaseof/responder --silent
 run "web: build"           npm run build --silent
+# After the build, because the accessibility gate drives the real production output.
+run "web: accessibility"   node --import tsx --test test/a11y.test.ts
 run "secrets"              python3 scripts/check-secrets.py
 run "phone numbers"        python3 scripts/check-phone-numbers.py
 run "anti-slop"            ./scripts/check-antislop.sh

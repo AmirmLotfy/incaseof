@@ -60,8 +60,6 @@ export function TimelineDevice() {
                 alignItems: "center",
                 gap: "0.75rem",
                 padding: "0.55rem 0",
-                opacity: active ? 1 : 0.35,
-                transition: "opacity 240ms ease",
               }}
             >
               <span
@@ -71,7 +69,12 @@ export function TimelineDevice() {
                 {rung.time}
               </span>
 
-              {/* The marker. A line with a dot on it — the whole visual identity. */}
+              {/* The marker. A line with a dot on it — the whole visual identity.
+                  It also carries the progressive reveal on its own. The row used to fade
+                  to 0.35 opacity, which put Graphite at 1.65:1 against Paper — text stating
+                  the escalation ladder, unreadable to anyone with low vision. Dimming only
+                  works here because this element is decorative and aria-hidden; the words
+                  beside it stay at full contrast. */}
               <span
                 aria-hidden="true"
                 style={{
@@ -79,6 +82,8 @@ export function TimelineDevice() {
                   display: "block",
                   height: "100%",
                   minHeight: "1.5rem",
+                  opacity: active ? 1 : 0.4,
+                  transition: "opacity 240ms ease",
                 }}
               >
                 <span
@@ -108,7 +113,18 @@ export function TimelineDevice() {
                 />
               </span>
 
-              <span style={{ fontSize: "0.9375rem" }}>{rung.label}</span>
+              {/* Hierarchy without dimming: Graphite is 5.76:1 on Paper and Ink is 17.25:1,
+                  so a rung that has not been reached yet reads as secondary while staying
+                  comfortably above AA. */}
+              <span
+                style={{
+                  fontSize: "0.9375rem",
+                  color: active ? "var(--ico-ink)" : "var(--ico-graphite)",
+                  transition: "color 240ms ease",
+                }}
+              >
+                {rung.label}
+              </span>
             </li>
           );
         })}

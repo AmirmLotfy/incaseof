@@ -16,7 +16,15 @@ PLATFORM="x86_64-manylinux2014"
 echo "staging $TARGET"
 rm -rf "$TARGET"
 mkdir -p "$TARGET"
-cp "$TARGET/../lambda/.gitkeep" "$TARGET/" 2>/dev/null || true
+
+# Rewrite the placeholder rather than trying to preserve it across the rm above. It is
+# tracked in git so that `cdk synth` resolves the asset path on a fresh clone, before
+# anything has been built — without it, CI fails every template assertion at once with an
+# error that points at the constructs rather than at the missing directory.
+cat > "$TARGET/.gitkeep" <<'KEEP'
+Populated by scripts/build-lambda.sh. Tracked so `cdk synth` resolves the asset path on a
+fresh clone. Everything else in this directory is generated and gitignored.
+KEEP
 
 # Application code. Tests and caches are not deployment artefacts.
 rsync -a --quiet \

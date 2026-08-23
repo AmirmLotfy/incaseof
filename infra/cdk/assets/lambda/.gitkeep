@@ -1,0 +1,2 @@
+Populated by scripts/build-lambda.sh. Tracked so `cdk synth` resolves the asset path on a
+fresh clone. Everything else in this directory is generated and gitignored.

@@ -149,18 +149,26 @@ def dispatch(ctx: bootstrap.Context, alert_id: AlertId, sequences: list[int]) ->
             alert = alert.record_attempt(step)
             continue
 
-        if ctx.queue is not None:
-            ctx.queue.enqueue(
-                ActionIntent(
-                    alert_id=alert_id,
-                    step_id=step.step_id,
-                    sequence=step.sequence,
-                    action=step.action,
-                    channel=step.action.channel,
-                    target_role=step.target_role,
-                    idempotency_key=key.value,
-                )
+        if ctx.queue is None:
+            # Never silently. Skipping the enqueue here would mark the rung attempted and
+            # contact nobody — the ladder would advance past a person who was never reached,
+            # and nothing would look wrong.
+            raise RuntimeError(
+                "no action queue is configured; refusing to mark rungs attempted without "
+                "dispatching them"
             )
+
+        ctx.queue.enqueue(
+            ActionIntent(
+                alert_id=alert_id,
+                step_id=step.step_id,
+                sequence=step.sequence,
+                action=step.action,
+                channel=step.action.channel,
+                target_role=step.target_role,
+                idempotency_key=key.value,
+            )
+        )
 
         alert = alert.record_attempt(step)
         dispatched.append(step.sequence)

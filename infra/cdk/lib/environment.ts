@@ -16,13 +16,38 @@ export interface IcoEnvironment {
   /** Whether the surface must display a persistent "Demo timing enabled" banner. */
   readonly showsDemoBanner: boolean;
   readonly region: string;
+  /**
+   * Concurrency reserved for the action worker, or undefined to leave it unreserved.
+   *
+   * Reserving caps how many contacts can go out at once — a contact is not something to
+   * parallelise for throughput, and a small ceiling keeps one incident from starving
+   * every other person's escalation.
+   *
+   * Undefined in dev and demo because a *new* AWS account has a total concurrency quota
+   * of 10 and requires 10 to stay unreserved, so reserving any at all fails the deploy
+   * outright. The quota lifts with account age or on request; until then the cap is a
+   * production concern, and low-traffic environments do not need it.
+   */
+  readonly reservedWorkerConcurrency?: number;
 }
 
 export const ENVIRONMENTS: Record<EnvName, IcoEnvironment> = {
   dev: { name: "dev", demoTimeScale: 1.0, showsDemoBanner: false, region: "us-east-1" },
   demo: { name: "demo", demoTimeScale: 0.02, showsDemoBanner: true, region: "us-east-1" },
-  staging: { name: "staging", demoTimeScale: 1.0, showsDemoBanner: false, region: "us-east-1" },
-  prod: { name: "prod", demoTimeScale: 1.0, showsDemoBanner: false, region: "us-east-1" },
+  staging: {
+    name: "staging",
+    demoTimeScale: 1.0,
+    showsDemoBanner: false,
+    region: "us-east-1",
+    reservedWorkerConcurrency: 10,
+  },
+  prod: {
+    name: "prod",
+    demoTimeScale: 1.0,
+    showsDemoBanner: false,
+    region: "us-east-1",
+    reservedWorkerConcurrency: 20,
+  },
 };
 
 /** Any environment that compresses time must say so on screen. */

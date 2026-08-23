@@ -92,9 +92,9 @@ export class Compute extends Construct {
       handler: "services.handlers.action_worker.handler",
       description: "Performs one external action. The only function that resolves an endpoint.",
       timeout: Duration.seconds(60),
-      // One at a time per batch: a contact is not something to parallelise for throughput,
-      // and small batches keep a single failure from delaying unrelated people.
-      reservedConcurrentExecutions: props.environment.name === "prod" ? 20 : 5,
+      // A contact is not something to parallelise for throughput. Where the account
+      // quota allows it, this caps how many can go out at once; see IcoEnvironment.
+      reservedConcurrentExecutions: props.environment.reservedWorkerConcurrency,
     });
 
     this.actionWorker.addEventSource(

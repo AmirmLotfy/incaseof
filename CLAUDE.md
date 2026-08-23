@@ -154,5 +154,15 @@ marketing site with the product's own timeline as the brand device, all nine sec
 **Not connected to a live backend**: both apps run against a labelled local data source
 until the stack is deployed. The banner says so on every surface that shows one.
 
+**Deployed** to `IcoStack-dev` in account 828547077857, us-east-1. API at
+`https://enr3ucs1cd.execute-api.us-east-1.amazonaws.com`. Verified in production: an
+unauthenticated `/v1` route returns 401, a forged responder link returns 403 by real HMAC
+rejection (recorded as `bad_signature` in the audit trail), and garbage and forged tokens
+return byte-identical responses.
+
+**Account constraints worth knowing**: Lambda concurrency quota is 10 (new-account default),
+so no function may reserve any. The account is signed in as **root**, which contradicts
+`.claude/rules/aws.md` — scoping a deployment role is outstanding.
+
 **Phase 7 is next**: polish — real channels, Drill Mode in the app, the trace UI, motion,
 error states, performance, screenshots.

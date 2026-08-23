@@ -294,6 +294,31 @@ describe("environments", () => {
     }
   });
 
+  it("reserves no concurrency in dev or demo", () => {
+    // A new AWS account has a total Lambda concurrency quota of 10 and requires 10 to
+    // remain unreserved, so reserving any amount fails the deploy outright. Production
+    // still caps the worker; low-traffic environments do not need to.
+    for (const env of ["dev", "demo"] as const) {
+      const functions = synth(env).findResources("AWS::Lambda::Function");
+      for (const [name, fn] of Object.entries(functions)) {
+        assert.equal(
+          fn.Properties?.ReservedConcurrentExecutions,
+          undefined,
+          `${name} reserves concurrency in ${env}`,
+        );
+      }
+    }
+  });
+
+  it("still caps the worker in production", () => {
+    const functions = synth("prod").findResources("AWS::Lambda::Function");
+    const worker = Object.values(functions).find((fn) =>
+      fn.Properties?.Handler?.includes?.("action_worker"),
+    );
+    assert.ok(worker, "expected the action worker");
+    assert.equal(worker.Properties?.ReservedConcurrentExecutions, 20);
+  });
+
   it("protects production state from a stack delete", () => {
     const prod = synth("prod").findResources("AWS::DynamoDB::Table");
     for (const table of Object.values(prod)) {

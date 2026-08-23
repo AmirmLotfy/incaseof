@@ -95,6 +95,19 @@ def _unb64(value: str) -> bytes:
     return base64.urlsafe_b64decode(value + "=" * (-len(value) % 4))
 
 
+# HMAC accepts an empty key and produces a perfectly valid signature with it. That would
+# make every responder link forgeable by anyone who knew the scheme, and it would look
+# entirely normal in testing — tokens would issue and verify. So the key length is checked
+# rather than assumed.
+MIN_KEY_BYTES = 32
+
+
+def _require_key(key: bytes) -> bytes:
+    if len(key) < MIN_KEY_BYTES:
+        raise TokenError("signing_key_too_short")
+    return key
+
+
 def _signature(payload: bytes, key: bytes) -> bytes:
     return hmac.new(key, payload, sha256).digest()
 
@@ -115,6 +128,7 @@ def issue(
     write that issues the token — a token whose nonce was never stored cannot be revoked.
     """
     require_aware(now, "now")
+    _require_key(key)
     payload = {
         "v": TOKEN_VERSION,
         "a": str(alert_id),
@@ -135,6 +149,7 @@ def verify(token: str, *, key: bytes, now: datetime) -> ResponderClaims:
     keeps the checks from being accidentally satisfied by a well-formed token.
     """
     require_aware(now, "now")
+    _require_key(key)
 
     try:
         encoded_body, encoded_signature = token.split(".")

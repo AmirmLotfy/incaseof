@@ -17,6 +17,8 @@ const ASSET = path.join(here, "..", "..", "assets", "lambda");
 
 export interface ApiProps {
   readonly environment: IcoEnvironment;
+  /** ARN of the responder-token signing secret. Read at cold start, cached per container. */
+  readonly responderKeySecretArn: string;
   readonly userPool: cognito.IUserPool;
   readonly userPoolClient: cognito.IUserPoolClient;
   readonly table: dynamodb.ITable;
@@ -52,6 +54,7 @@ export class Api extends Construct {
         ICO_TABLE_NAME: props.table.tableName,
         ICO_ENV: props.environment.name,
         ICO_TIME_SCALE: String(props.environment.demoTimeScale),
+        ICO_RESPONDER_KEY_SECRET_ARN: props.responderKeySecretArn,
         PYTHONUNBUFFERED: "1",
       },
       logGroup: new logs.LogGroup(this, "HandlerLogs", {

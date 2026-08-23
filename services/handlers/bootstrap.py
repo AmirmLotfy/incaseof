@@ -114,11 +114,40 @@ def build() -> Context:
         clock=SystemClock(),
         scale=TimeScale(scale_factor) if scale_factor != 1.0 else REAL_TIME,
         scheduler=_scheduler(),
-        queue=SqsActionQueue(
-            client=boto3.client("sqs"), queue_url=_required("ICO_ACTION_QUEUE_URL")
-        ),
+        queue=_queue(),
+        signing_key=_signing_key(),
         decisions=DynamoDecisionLog(table),
     )
+
+
+def _queue() -> ActionQueue | None:
+    """The action queue, when this function is one that dispatches.
+
+    The API handler never enqueues, so requiring the queue URL everywhere made it fail to
+    start on a variable it does not use. Absent here is fine; ``escalation.dispatch``
+    refuses to run without one rather than silently marking rungs attempted.
+    """
+    url = os.environ.get("ICO_ACTION_QUEUE_URL")
+    return SqsActionQueue(client=boto3.client("sqs"), queue_url=url) if url else None
+
+
+@lru_cache(maxsize=1)
+def _signing_key() -> bytes:
+    """The responder-token signing key, from Secrets Manager.
+
+    Cached per container: this is on the path of every responder link open, and fetching
+    a secret per request would add a round trip to somebody's 2am tap.
+
+    Returning empty is safe here only because the token module refuses to sign or verify
+    with a short key — an empty HMAC key produces perfectly valid-looking signatures that
+    anybody could forge.
+    """
+    arn = os.environ.get("ICO_RESPONDER_KEY_SECRET_ARN")
+    if not arn:
+        return b""
+    value = boto3.client("secretsmanager").get_secret_value(SecretId=arn)
+    secret = value.get("SecretString") or ""
+    return secret.encode()
 
 
 def _scheduler() -> MomentScheduler | None:

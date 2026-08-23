@@ -60,6 +60,7 @@ export class IcoStack extends Stack {
 
     const api = new Api(this, "Api", {
       environment: props.environment,
+      responderKeySecretArn: secrets.responderTokenSigningKey.secretArn,
       userPool: identity.userPool,
       userPoolClient: identity.client,
       table: storage.table,

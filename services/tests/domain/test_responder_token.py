@@ -199,6 +199,37 @@ def test_the_error_never_says_which_check_failed() -> None:
     assert len(messages) == 1, f"error messages differ and leak the cause: {messages}"
 
 
+# -- the key itself -----------------------------------------------------------
+
+
+def test_an_empty_signing_key_cannot_issue_a_token() -> None:
+    """HMAC accepts an empty key and produces a valid-looking signature with it.
+
+    Everything would appear to work — tokens would issue, tokens would verify — and every
+    link would be forgeable by anyone who knew the scheme. This was a real gap: the key was
+    never loaded from Secrets Manager and defaulted to b"".
+    """
+    with pytest.raises(TokenError):
+        issue(
+            alert_id=ALERT,
+            responder_id=MAYA,
+            nonce="n",
+            key=b"",
+            now=NOW,
+        )
+
+
+def test_an_empty_signing_key_cannot_verify_a_token() -> None:
+    with pytest.raises(TokenError):
+        verify(a_token(), key=b"", now=NOW)
+
+
+def test_a_short_signing_key_is_refused() -> None:
+    """32 bytes is the floor. A short key is brute-forceable offline from one link."""
+    with pytest.raises(TokenError):
+        issue(alert_id=ALERT, responder_id=MAYA, nonce="n", key=b"short", now=NOW)
+
+
 def test_the_reason_is_still_available_for_the_audit_trail() -> None:
     with pytest.raises(TokenError) as caught:
         verify(a_token(key=OTHER_KEY), key=KEY, now=NOW)

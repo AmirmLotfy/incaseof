@@ -193,6 +193,30 @@ close the loop falsely. That is the single worst failure this product has.
 sandbox) and an SNS delivery-status IAM role. Until then the timeline stops at `ACCEPTED` and
 says so, rather than rounding up to "delivered".
 
+### Channels
+
+A ladder may mix channels — push the subject, then text a sister — so a router maps each rung
+to the provider that serves it. A channel with no provider bound reports
+`CHANNEL_UNAVAILABLE`, never `ACTION_FAILED`: "nothing is wired to this" and "we tried and it
+broke" are different facts, and reporting the second invites somebody to wait for a retry that
+is never coming.
+
+| Channel | Provider | Bound when |
+|---|---|---|
+| SMS | SNS | `ICO_KMS_KEY_ID` is set (endpoint encryption) |
+| PUSH | FCM via SNS mobile push | `ICO_PUSH_PLATFORM_ARN` is set |
+| CALL | Amazon Connect | P1 — reports `CHANNEL_UNAVAILABLE` by design |
+
+Push goes through SNS rather than calling FCM directly, so the Firebase service-account
+credential stays inside AWS: the platform application holds it, and no function in this system
+ever loads, refreshes, or can leak it. What is stored per person is a platform endpoint ARN,
+which is useless without the account it belongs to — a strictly weaker secret than a raw
+registration token.
+
+**A push carries no detail.** Notifications are readable on a locked screen, and in the
+situation this product exists for, the person holding the phone is not reliably its owner. The
+notification says a check is waiting; the app renders who and why after unlock.
+
 ---
 
 ## 8. The escalation workflow

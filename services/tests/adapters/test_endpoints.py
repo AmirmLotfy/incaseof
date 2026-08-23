@@ -12,7 +12,7 @@ import boto3
 import pytest
 from botocore.exceptions import ClientError
 
-from services.adapters.contact import DeliveryStatus, SmsSender
+from services.adapters.contact import ChannelRouter, DeliveryStatus, PushSender, SmsSender
 from services.adapters.endpoints import DynamoEndpointRepository
 from services.domain.circle import CircleMember, MemberStatus
 from services.domain.clock import utc
@@ -259,3 +259,104 @@ def test_the_delivery_result_never_carries_the_number(
 
     assert NUMBER not in str(result)
     assert "900123" not in str(result)
+
+
+class _CapturingSns:
+    """Records what would be published, so the payload itself can be asserted on."""
+
+    def __init__(self) -> None:
+        self.published: list[dict[str, Any]] = []
+
+    def publish(self, **kwargs: Any) -> dict[str, str]:
+        self.published.append(kwargs)
+        return {"MessageId": "push-1"}
+
+
+def _push_endpoint(endpoints: DynamoEndpointRepository) -> None:
+    endpoints.save(
+        endpoint_id="p-1",
+        person_id=MAYA,
+        endpoint_type=EndpointType.PUSH_TOKEN,
+        value="arn:aws:sns:us-east-1:111122223333:endpoint/GCM/ico/abc",
+        status=EndpointStatus.VERIFIED,
+    )
+
+
+def test_a_push_says_nothing_on_the_lock_screen(
+    endpoints: DynamoEndpointRepository,
+) -> None:
+    """A notification is readable without unlocking, by whoever holds the phone.
+
+    In the situation this product exists for, that is not reliably its owner. So the push
+    says a check is waiting and nothing else — no name, no plan, no statement that somebody
+    has not come home. The app renders the real copy after unlock.
+    """
+    _push_endpoint(endpoints)
+    sns = _CapturingSns()
+    sender = PushSender(sns=sns, endpoints=endpoints)
+
+    result = sender.send(
+        alert_id=AlertId("alert-1"),
+        member=a_member(),
+        channel=Channel.PUSH,
+        body="Mona hasn't responded — Evening walk, expected 9:30 PM",
+        link="https://incaof.com/r/token",
+    )
+
+    assert result.status is DeliveryStatus.ACCEPTED
+    payload = str(sns.published[0]["Message"])
+    assert "Mona" not in payload, "the subject's name reached a lock screen"
+    assert "hasn't responded" not in payload
+    assert "token" not in payload, "a responder link reached a lock screen"
+    assert "A check is waiting for you" in payload
+
+
+def test_the_router_keeps_unbound_channels_distinct_from_failures() -> None:
+    """ "Nothing is wired to this" and "we tried and it broke" are different facts.
+
+    Flattening them tells somebody to wait for a retry that is never coming.
+    """
+    router = ChannelRouter(senders={})
+
+    result = router.send(
+        alert_id=AlertId("alert-1"),
+        member=a_member(),
+        channel=Channel.PUSH,
+        body="anything",
+        link=None,
+    )
+
+    assert result.status is DeliveryStatus.CHANNEL_UNAVAILABLE
+    assert not result.succeeded
+
+
+def test_the_router_sends_each_rung_on_its_own_channel(
+    endpoints: DynamoEndpointRepository,
+) -> None:
+    endpoints.save(
+        endpoint_id="e-1",
+        person_id=MAYA,
+        endpoint_type=EndpointType.PHONE,
+        value=NUMBER,
+        status=EndpointStatus.VERIFIED,
+    )
+    _push_endpoint(endpoints)
+    push_sns, sms = _CapturingSns(), boto3.client("sns", region_name="us-east-1")
+    router = ChannelRouter(
+        senders={
+            Channel.SMS: SmsSender(sns=sms, endpoints=endpoints),
+            Channel.PUSH: PushSender(sns=push_sns, endpoints=endpoints),
+        }
+    )
+
+    for channel in (Channel.SMS, Channel.PUSH):
+        assert router.send(
+            alert_id=AlertId("alert-1"),
+            member=a_member(),
+            channel=channel,
+            body="Mona hasn't responded",
+            link=None,
+        ).succeeded
+
+    assert len(push_sns.published) == 1, "the SMS rung was published as a push"
+    assert "TargetArn" in push_sns.published[0]

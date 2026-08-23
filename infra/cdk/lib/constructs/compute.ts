@@ -20,6 +20,14 @@ export interface ComputeProps {
   readonly table: dynamodb.ITable;
   readonly key: kms.IKey;
   readonly actionQueue: sqs.IQueue;
+  /**
+   * SNS platform application for FCM, when one exists.
+   *
+   * Not created by this stack: it carries a Firebase service-account credential, and the
+   * repository's rule is that no secret is ever a CDK context value. Supply the ARN of one
+   * created out of band with the credential in Secrets Manager.
+   */
+  readonly pushPlatformArn?: string;
 }
 
 /**
@@ -51,6 +59,10 @@ export class Compute extends Construct {
         // Endpoint encryption. Without it the worker records CHANNEL_UNAVAILABLE rather
         // than sending, which is the correct behaviour but not the intended one.
         ICO_KMS_KEY_ID: props.key.keyId,
+        // Push is bound only where an SNS platform application exists, which needs
+        // Firebase credentials. Absent, the push rung reports CHANNEL_UNAVAILABLE — a
+        // visible gap in the timeline rather than a rung that silently does nothing.
+        ...(props.pushPlatformArn ? { ICO_PUSH_PLATFORM_ARN: props.pushPlatformArn } : {}),
         // Python buffers stdout by default, which loses the last log lines of a function
         // that times out — exactly the invocation whose logs you need.
         PYTHONUNBUFFERED: "1",

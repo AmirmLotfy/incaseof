@@ -66,14 +66,27 @@ def deliver(ctx: bootstrap.Context, intent: ActionIntent) -> Delivery:
     _record(
         ctx,
         intent,
-        # ACCEPTED, not SENT: the provider has custody. Delivery is a separate event that
-        # only ever arrives from a carrier receipt, because a message id is not an arrival.
-        "ACTION_ACCEPTED" if result.succeeded else "ACTION_FAILED",
+        _event_for(result),
         now,
         reason=result.error_code,
         provider_reference=result.provider_reference,
     )
     return result
+
+
+def _event_for(result: Delivery) -> str:
+    """Name what happened, at the resolution the timeline needs.
+
+    A channel with no provider bound is not a failed send, and flattening the two into
+    ACTION_FAILED reads as "we tried and it broke" — inviting somebody to wait for a retry
+    that is never coming. `CHANNEL_UNAVAILABLE` says the honest thing instead: nothing was
+    attempted on this channel, so do not wait on it.
+    """
+    if result.status is DeliveryStatus.CHANNEL_UNAVAILABLE:
+        return "CHANNEL_UNAVAILABLE"
+    # ACCEPTED, not SENT: the provider has custody. Delivery is a separate event that only
+    # ever arrives from a carrier receipt, because a message id is not an arrival.
+    return "ACTION_ACCEPTED" if result.succeeded else "ACTION_FAILED"
 
 
 def _recipient(ctx: bootstrap.Context, intent: ActionIntent) -> CircleMember | None:

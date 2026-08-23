@@ -18,7 +18,7 @@ from typing import Any
 
 import boto3
 
-from services.adapters.contact import ContactSender, SmsSender
+from services.adapters.contact import ChannelRouter, ContactSender, PushSender, SmsSender
 from services.adapters.dynamo import (
     DynamoActionLog,
     DynamoAlertRepository,
@@ -32,6 +32,7 @@ from services.adapters.endpoints import DynamoEndpointRepository
 from services.adapters.queue import ActionQueue, SqsActionQueue
 from services.adapters.scheduling import EventBridgeMomentScheduler, MomentScheduler
 from services.domain.clock import REAL_TIME, Clock, SystemClock, TimeScale
+from services.domain.plan import Channel
 from services.domain.ports import (
     ActionLog,
     AlertRepository,
@@ -123,19 +124,34 @@ def build(*, schedule_target_arn: str | None = None) -> Context:
 
 
 def _sender(table: Any) -> ContactSender | None:
-    """SMS delivery, when a KMS key is configured for endpoint encryption.
+    """Delivery, on whichever channels are actually configured.
 
-    Absent means the worker records CHANNEL_UNAVAILABLE rather than pretending to send —
-    visible in the timeline instead of silent.
+    Absent altogether means the worker records CHANNEL_UNAVAILABLE rather than pretending
+    to send — visible in the timeline instead of silent. A channel missing from the router
+    reports the same way, so "push is not wired here" and "the text failed" stay distinct
+    facts for whoever reads the timeline at 2am.
     """
     key_id = os.environ.get("ICO_KMS_KEY_ID")
     if not key_id:
         return None
-    return SmsSender(
-        sns=boto3.client("sns"),
-        endpoints=DynamoEndpointRepository(table=table, kms=boto3.client("kms"), key_id=key_id),
-        sender_id=os.environ.get("ICO_SMS_SENDER_ID") or None,
-    )
+
+    sns = boto3.client("sns")
+    endpoints = DynamoEndpointRepository(table=table, kms=boto3.client("kms"), key_id=key_id)
+
+    senders: dict[Channel, Any] = {
+        Channel.SMS: SmsSender(
+            sns=sns,
+            endpoints=endpoints,
+            sender_id=os.environ.get("ICO_SMS_SENDER_ID") or None,
+        )
+    }
+    if os.environ.get("ICO_PUSH_PLATFORM_ARN"):
+        # Push is bound only when a platform application exists. Without Firebase
+        # credentials there is nothing to publish to, and claiming otherwise would put a
+        # rung in the ladder that silently does nothing.
+        senders[Channel.PUSH] = PushSender(sns=sns, endpoints=endpoints)
+
+    return ChannelRouter(senders=senders)
 
 
 def _queue() -> ActionQueue | None:

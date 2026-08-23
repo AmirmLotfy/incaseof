@@ -1,32 +1,34 @@
 /**
- * Phase 0 placeholder.
+ * The responder app has no home page worth having.
  *
- * The real surface here is the Incident Room, reached via a signed single-Alert link
- * (/r/{token}) that works without an account. It is built in Phase 6, after design
- * references are locked.
+ * Every real entry point is a signed single-Alert link. Somebody arriving at the root
+ * either mistyped a URL or is looking around, and neither warrants a marketing page here.
  */
-export default function Home() {
+export const metadata = {
+  title: "In Case of",
+  robots: { index: false, follow: false },
+};
+
+export default function Root() {
   return (
     <main
       style={{
-        maxWidth: "32rem",
+        maxWidth: "var(--measure)",
         margin: "0 auto",
-        padding: "var(--ico-space-7) var(--ico-space-4)",
+        padding: "4rem 1.25rem",
       }}
     >
-      <h1 style={{ fontSize: "1.5rem", fontWeight: 600 }}>In Case of</h1>
-      <p style={{ color: "var(--ico-graphite)", marginTop: "var(--ico-space-2)" }}>
-        Responder links open a single alert. There is nothing to see here.
+      <p className="wordmark">In Case of</p>
+      <h1 className="headline" style={{ marginTop: "1.5rem" }}>
+        Nothing to see here
+      </h1>
+      <p style={{ color: "var(--ico-graphite)", marginTop: "1rem" }}>
+        In Case of sends a private link when somebody needs you. This page isn&rsquo;t one.
       </p>
-      <p
-        className="tabular"
-        style={{
-          marginTop: "var(--ico-space-6)",
-          fontSize: "0.8125rem",
-          color: "var(--ico-graphite)",
-        }}
-      >
-        PHASE 0 · SCAFFOLD ONLY
+      <p style={{ marginTop: "2rem" }}>
+        <a href="https://incaof.com" style={{ color: "var(--ico-primary)" }}>
+          What is In Case of?
+        </a>
       </p>
     </main>
   );

@@ -135,4 +135,13 @@ in EventBridge.
 **Not yet run against the real model**: `GEMINI_API_KEY` is not set, so the live eval suite
 has never executed. The suite and harness exist and the boundary is proven structurally.
 
-**Phase 6 is next**: responder web, then the marketing site, then the judge demo.
+**Phase 6 complete**: the web. The responder Incident Room at `/r/{token}` — no account,
+no sign-up, one action, and an explicit sentence that claiming is not resolving. The
+marketing site with the product's own timeline as the brand device, all nine sections from
+§73–§84. A judge walkthrough at `/demo`.
+
+**Not connected to a live backend**: both apps run against a labelled local data source
+until the stack is deployed. The banner says so on every surface that shows one.
+
+**Phase 7 is next**: polish — real channels, Drill Mode in the app, the trace UI, motion,
+error states, performance, screenshots.

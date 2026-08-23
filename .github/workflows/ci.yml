@@ -48,6 +48,8 @@ jobs:
         run: npm run contracts:check
       - name: Typecheck
         run: npm run typecheck
+      - name: Tests
+        run: npm run test -w @incaseof/responder
       - name: Build
         run: npm run build
 

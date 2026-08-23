@@ -1,22 +1,137 @@
 @import "tailwindcss";
-/* Colour tokens are generated from packages/design-tokens/tokens.json.
-   Never hand-edit them here — `npm run tokens:check` fails on drift. */
+/* Generated from packages/design-tokens/tokens.json. Never hand-edited. */
 @import "@incaseof/design-tokens/css";
 
+/*
+  incaof.com
+
+  The visual direction is "contingency utility": a beautifully made emergency card, a
+  departure board, a civic instruction system. Not an AI product page.
+
+  The brand device is the product's own mechanism — a timeline with a marker on it. That is
+  a stronger identity than any abstract imagery, and it has the useful property of teaching
+  what the product does while somebody looks at it.
+*/
+
+:root {
+  --page: 1240px;
+  --prose: 44rem;
+  --gutter: clamp(1.25rem, 4vw, 2.5rem);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
+  margin: 0;
   background: var(--ico-background);
   color: var(--ico-ink);
   font-family: var(--font-public-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Times are core content here; digits must not reflow as they change. */
-.tabular {
-  font-variant-numeric: tabular-nums;
+.shell {
+  max-width: var(--page);
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+}
+
+/* Mono is for times, status labels and event sequences only — never for prose. */
+.mono {
   font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.eyebrow {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ico-graphite);
+  margin: 0 0 1rem;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  font-weight: 600;
+  margin: 0;
+}
+
+h1 {
+  font-size: clamp(2.5rem, 7vw, 4rem);
+}
+
+h2 {
+  font-size: clamp(1.875rem, 4vw, 2.75rem);
+}
+
+h3 {
+  font-size: 1.25rem;
+  letter-spacing: -0.015em;
+}
+
+p {
+  margin: 0;
+  max-width: var(--prose);
+}
+
+/* Sections are separated by space and rules, not by cards. Not every section is a card. */
+section {
+  padding-block: clamp(4rem, 9vw, 7rem);
+}
+
+.rule {
+  border: 0;
+  border-top: 1px solid var(--ico-stone);
+  margin: 0;
+}
+
+.cta {
+  display: inline-block;
+  min-height: 52px;
+  padding: 0.9rem 1.5rem;
+  border-radius: 14px;
+  background: var(--ico-primary);
+  color: var(--ico-on-primary);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.cta--quiet {
+  background: transparent;
+  color: var(--ico-ink);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  padding-inline: 0;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 3px solid var(--ico-primary);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Wide content scrolls inside its own container. The page body never scrolls sideways. */
+.scroller {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
   *,
   *::before,
   *::after {

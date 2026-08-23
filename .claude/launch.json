@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "responder",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "-w", "@incaseof/responder", "--", "--port", "3101"],
+      "port": 3101
+    },
+    {
+      "name": "marketing",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "-w", "@incaseof/marketing", "--", "--port", "3100"],
+      "port": 3100
+    }
+  ]
+}

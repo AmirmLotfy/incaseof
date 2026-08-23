@@ -25,6 +25,7 @@ run "python: types"        uv run mypy services
 run "design tokens"        npm run tokens:check --silent
 run "api contracts"        npm run contracts:check --silent
 run "web: typecheck"       npm run typecheck --silent
+run "web: tests"           npm run test -w @incaseof/responder --silent
 run "web: build"           npm run build --silent
 run "secrets"              python3 scripts/check-secrets.py
 run "phone numbers"        python3 scripts/check-phone-numbers.py

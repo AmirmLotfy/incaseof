@@ -3,17 +3,120 @@
    Never hand-edit them here — `npm run tokens:check` fails on drift. */
 @import "@incaseof/design-tokens/css";
 
+/*
+  The Incident Room.
+
+  Someone reads this on a lock screen, at night, having just been told that a person they
+  care about has not checked in. Every decision below follows from that: large type, one
+  obvious action, nothing decorative, and no interface that has to be learned.
+*/
+
+:root {
+  --measure: 34rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
+  margin: 0;
   background: var(--ico-background);
   color: var(--ico-ink);
   font-family: var(--font-public-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Times are core content here; digits must not reflow as they change. */
+/* Times are this page's core content. Reflowing digits read as instability. */
 .tabular {
-  font-variant-numeric: tabular-nums;
   font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.wordmark {
+  font-size: 0.8125rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ico-graphite);
+}
+
+.headline {
+  font-size: clamp(1.75rem, 6vw, 2.25rem);
+  line-height: 1.15;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.section-label {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ico-graphite);
+  margin: 0 0 0.75rem;
+}
+
+/* A rule, not a card. Not every section is a card — that habit is what produces bento slop. */
+.rule {
+  border: 0;
+  border-top: 1px solid var(--ico-stone);
+  margin: 2rem 0;
+}
+
+/*
+  Actions.
+
+  56px rather than the 48px floor: this is tapped half-awake, and the extra margin is the
+  difference between reassurance and a mis-tap.
+*/
+.action {
+  display: block;
+  width: 100%;
+  min-height: 56px;
+  border: 0;
+  border-radius: 14px;
+  font: inherit;
+  font-weight: 500;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 1rem;
+}
+
+.action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/*
+  Signal Orange carries INK text, never white: white measures 3.52:1 and fails WCAG AA.
+  Ink on Signal measures 4.98:1 and passes.
+*/
+.action--attention {
+  background: var(--ico-signal);
+  color: var(--ico-on-signal);
+}
+
+.action--resolve {
+  background: var(--ico-primary);
+  color: var(--ico-on-primary);
+}
+
+/* Secondary, and deliberately quieter. "I couldn't reach them" resumes escalation — it is
+   a real outcome, not a failure, so it is not styled as a warning. */
+.action--quiet {
+  background: transparent;
+  color: var(--ico-graphite);
+  border: 1px solid var(--ico-stone);
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 3px solid var(--ico-primary);
+  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {

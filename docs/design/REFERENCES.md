@@ -124,10 +124,59 @@ scale with tabular figures for times (§6), shape scale (§7), motion that expla
 
 ---
 
+## Locked references — Phase 6 (web)
+
+### Incident Room — responder
+**Source:** build contract §21, §14, §20 · **Status:** LOCKED
+
+**What we take:** Person first, then the fact, then what was already tried, then one
+action. `WHAT'S HAPPENED` as a literal timeline of times and events. `WHAT'S NEXT` naming
+who is contacted and when. Once claimed, the screen changes entirely: who is checking, how
+long is left, and the explicit statement that backup contact is paused.
+
+**What we reject:** Any speculation about what is wrong. The page says somebody has not
+responded — never that they may be hurt. No map, no location, no photograph of the subject.
+No account, no sign-up, no cookie banner: this has to work at 2am, on a lock screen, from a
+link in an SMS.
+
+**Interaction:** One primary action. `I'M CHECKING` is deliberately not the same colour as
+a resolution — acknowledging is not resolving, and the interface should not let those two
+feel like the same act.
+
+### Marketing site
+**Source:** build contract §69–§85 · **Status:** LOCKED
+
+**What we take:** The **timeline is the brand device** (§69) — the product's own mechanism
+is the identity, which is stronger than any abstract imagery. Hero is a 55/45 split, type
+left, live product timeline right (§74). Sections are full-width alternating editorial rows
+(§78). The beta CTA is a Signal Orange **rule**, never an orange background (§83). Public
+Sans and IBM Plex Mono, no serif (§71). Max width 1440, content 1240, prose 680–760 (§72).
+
+**What we reject:** A phone floating in a gradient cloud (§74 says so outright). A four-card
+scenario grid (§78 says so outright). Serif-on-beige editorial, which has itself become the
+AI-startup house style. Any invented metric, testimonial, logo or download count (§87).
+
+**Interaction:** The hero teaches the product by running it — "miss the check" advances the
+timeline through the real escalation ladder (§75). No video, no animated typing.
+
+### Privacy / context tiers
+**Source:** build contract §80 · **Status:** LOCKED
+
+**What we take:** Four tiers shown as state, from NORMAL (nothing shared) through to
+LOCATION (off). Pre-authorisation explained by showing it rather than describing it.
+
+**What we reject:** A shield illustration, a padlock, and the word "privacy-first" standing
+on its own. Privacy is shown by what the product does not collect.
+
+---
+
 ## Still requiring research before build
 
-| Surface | Phase | Status |
-|---|---|---|
-| Marketing site — hero, timeline device, section rhythm | 6 | **PENDING** — no specification exists for layout beyond copy |
-| Responder Incident Room | 6 | PARTIAL — §21 gives content, not layout |
-| Privacy / context-tier explainer | 6 | **PENDING** |
+Nothing blocking remains for the surfaces in P0. What Refero would still add, and where it
+would matter most:
+
+| Surface | Why research would still help |
+|---|---|
+| Marketing section rhythm | The contract specifies each section; comparative work would sharpen density, vertical rhythm and where to let the page breathe |
+| Hero timeline motion | Timing and easing are unspecified. Motion explains causality here, and getting it wrong makes the mechanism harder to read, not easier |
+| Incident Room at small sizes | The layout is specified; how it degrades on a 320px lock-screen browser is not |

@@ -259,7 +259,7 @@ def responder_body(ctx: bootstrap.Context, alert: Alert, subject_name: str) -> s
     tried = [
         f"{event['at']!s:.16}  {event['eventType']!s}"
         for event in ctx.audit.for_alert(alert.alert_id)
-        if str(event.get("eventType")) in {"ACTION_QUEUED", "ACTION_SENT"}
+        if str(event.get("eventType")) in {"ACTION_QUEUED", "ACTION_ACCEPTED", "ACTION_DELIVERED"}
     ]
     return compose_responder_message(
         subject_name=subject_name,

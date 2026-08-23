@@ -80,17 +80,38 @@ object Vocabulary {
     fun timelineEvent(event: String): String =
         when (event) {
             "MOMENT_DUE" -> "Check requested"
-            "ACTION_QUEUED" -> "Reminder sent"
-            "ACTION_SENT" -> "Message sent"
+
+            // Queued, sent and delivered are three separate facts, and the timeline keeps
+            // them apart. A carrier taking custody of a text is not a phone receiving it —
+            // and someone reading this is deciding whether to go round in person.
+            "ACTION_QUEUED" -> "Reminder queued"
+
+            "ACTION_ACCEPTED" -> "Text sent"
+
+            "ACTION_DELIVERED" -> "Text delivered"
+
+            "ACTION_UNDELIVERED" -> "Text did not arrive"
+
+            "ACTION_FAILED" -> "Could not send"
+
             "ACTION_SUPPRESSED" -> "Not sent — already resolved"
+
             "CHANNEL_UNAVAILABLE" -> "Call unavailable"
+
             "CONTACT_DENIED" -> "Contact not permitted"
+
             "SUBJECT_CONFIRMED" -> "You confirmed"
+
             "ALERT_CLAIMED" -> "Someone started checking"
+
             "RESPONDER_VERIFIED" -> "Confirmed by your Circle"
+
             "STATE_CIRCLE_ESCALATION" -> "Your Circle was contacted"
+
             "STATE_CHECKING" -> "Someone is checking"
+
             "STATE_RESOLVED" -> "Resolved"
+
             else -> event.lowercase().replace('_', ' ').replaceFirstChar { it.uppercase() }
         }
 }

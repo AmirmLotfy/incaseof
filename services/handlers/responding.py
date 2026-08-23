@@ -112,7 +112,8 @@ def view(ctx: bootstrap.Context, token: str) -> IncidentView:
     tried = [
         str(event.get("eventType"))
         for event in ctx.audit.for_alert(alert.alert_id)
-        if str(event.get("eventType")) in {"ACTION_QUEUED", "ACTION_SENT", "CHANNEL_UNAVAILABLE"}
+        if str(event.get("eventType"))
+        in {"ACTION_QUEUED", "ACTION_ACCEPTED", "ACTION_DELIVERED", "CHANNEL_UNAVAILABLE"}
     ]
 
     return IncidentView(

@@ -46,9 +46,16 @@ export type IncidentError = "INVALID_LINK" | "UNREACHABLE";
  */
 const EVENT_LABELS: Record<string, string> = {
   MOMENT_DUE: "Check requested",
-  ACTION_QUEUED: "Reminder sent",
-  ACTION_SENT: "Message sent",
+  // "Queued" and "sent" and "delivered" are three different facts and the page keeps them
+  // apart. A carrier accepting a message is not the same as a phone receiving one, and
+  // somebody reading this is deciding whether to get in a car — so the timeline only ever
+  // claims the step it can actually evidence.
+  ACTION_QUEUED: "Reminder queued",
+  ACTION_ACCEPTED: "Text sent",
+  ACTION_DELIVERED: "Text delivered",
+  ACTION_UNDELIVERED: "Text did not arrive",
   CHANNEL_UNAVAILABLE: "Call unavailable",
+  ACTION_FAILED: "Could not send",
   ACTION_SUPPRESSED: "Not sent — already resolved",
   STATE_CIRCLE_ESCALATION: "You were contacted",
   ALERT_CLAIMED: "Someone started checking",

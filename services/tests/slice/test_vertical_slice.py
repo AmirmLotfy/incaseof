@@ -239,6 +239,52 @@ def test_a_voice_rung_reports_unavailable_rather_than_failing_silently(
     assert a_slice.sender.to("Maya")
 
 
+def test_a_recurring_plan_queues_its_next_occurrence(a_slice: Slice) -> None:
+    """A daily plan that fires once is indistinguishable from a working one.
+
+    Until the second night — by which point the person believes they are covered and is
+    not. The next Moment is queued when the current one fires.
+    """
+    from services.handlers import planning
+
+    activation = a_slice.create_plan()
+    first = activation.moment
+
+    following = planning.schedule_following_moment(
+        a_slice.ctx,
+        activation.version,
+        after=first.due_at,
+        new_id=a_slice.ids,
+    )
+
+    assert following is not None, "a recurring plan produced no next Moment"
+    assert following.moment_id != first.moment_id
+    assert following.due_at > first.due_at
+    # 21:00 the next evening, not an arbitrary interval later.
+    assert (following.due_at - first.due_at).total_seconds() == 86_400
+
+
+def test_a_one_time_plan_has_no_next_occurrence(a_slice: Slice) -> None:
+    """Finishing is not an error."""
+    from services.handlers import planning
+
+    from .conftest import EVENING_PLAN
+
+    one_time = {
+        **EVENING_PLAN,
+        "trigger": {"kind": "ONE_TIME", "dueAt": "2026-08-26T21:00:00+02:00"},
+    }
+    activation = a_slice.create_plan(one_time)
+
+    with pytest.raises(ValueError, match="expects nothing after"):
+        planning.schedule_following_moment(
+            a_slice.ctx,
+            activation.version,
+            after=activation.moment.due_at,
+            new_id=a_slice.ids,
+        )
+
+
 # -- the responder surface ----------------------------------------------------
 
 
@@ -330,7 +376,7 @@ def test_the_timeline_explains_what_happened(a_slice: Slice) -> None:
     for expected in (
         "MOMENT_DUE",
         "ACTION_QUEUED",
-        "ACTION_SENT",
+        "ACTION_ACCEPTED",
         "ALERT_CLAIMED",
         "RESPONDER_VERIFIED",
     ):

@@ -18,7 +18,7 @@ from typing import Any
 
 import boto3
 
-from services.adapters.contact import ContactSender
+from services.adapters.contact import ContactSender, SmsSender
 from services.adapters.dynamo import (
     DynamoActionLog,
     DynamoAlertRepository,
@@ -28,6 +28,7 @@ from services.adapters.dynamo import (
     DynamoMomentRepository,
     DynamoPlanRepository,
 )
+from services.adapters.endpoints import DynamoEndpointRepository
 from services.adapters.queue import ActionQueue, SqsActionQueue
 from services.adapters.scheduling import EventBridgeMomentScheduler, MomentScheduler
 from services.domain.clock import REAL_TIME, Clock, SystemClock, TimeScale
@@ -95,7 +96,7 @@ class Context:
         return _required("ICO_STATE_MACHINE_ARN")
 
 
-def build() -> Context:
+def build(*, schedule_target_arn: str | None = None) -> Context:
     """Fresh repositories per invocation, sharing one warm table resource.
 
     The Alert repository tracks the revision it last read in order to write conditionally,
@@ -113,10 +114,27 @@ def build() -> Context:
         audit=DynamoAuditLog(table),
         clock=SystemClock(),
         scale=TimeScale(scale_factor) if scale_factor != 1.0 else REAL_TIME,
-        scheduler=_scheduler(),
+        scheduler=_scheduler(schedule_target_arn),
         queue=_queue(),
+        sender=_sender(table),
         signing_key=_signing_key(),
         decisions=DynamoDecisionLog(table),
+    )
+
+
+def _sender(table: Any) -> ContactSender | None:
+    """SMS delivery, when a KMS key is configured for endpoint encryption.
+
+    Absent means the worker records CHANNEL_UNAVAILABLE rather than pretending to send —
+    visible in the timeline instead of silent.
+    """
+    key_id = os.environ.get("ICO_KMS_KEY_ID")
+    if not key_id:
+        return None
+    return SmsSender(
+        sns=boto3.client("sns"),
+        endpoints=DynamoEndpointRepository(table=table, kms=boto3.client("kms"), key_id=key_id),
+        sender_id=os.environ.get("ICO_SMS_SENDER_ID") or None,
     )
 
 
@@ -150,10 +168,15 @@ def _signing_key() -> bytes:
     return secret.encode()
 
 
-def _scheduler() -> MomentScheduler | None:
-    """EventBridge Scheduler, when this environment has one."""
+def _scheduler(target_arn: str | None = None) -> MomentScheduler | None:
+    """EventBridge Scheduler, when this environment has one.
+
+    ``target_arn`` lets a caller supply the function to wake. MomentDue passes its own ARN
+    from the Lambda context, because a function cannot be given its own ARN as an
+    environment variable without creating a CloudFormation dependency cycle.
+    """
     group = os.environ.get("ICO_SCHEDULE_GROUP")
-    target = os.environ.get("ICO_MOMENT_DUE_ARN")
+    target = target_arn or os.environ.get("ICO_MOMENT_DUE_ARN")
     role = os.environ.get("ICO_SCHEDULER_ROLE_ARN")
     if not (group and target and role):
         return None

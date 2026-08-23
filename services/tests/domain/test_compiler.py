@@ -128,6 +128,27 @@ def test_a_ladder_that_reaches_the_circle_before_the_subject_is_refused() -> Non
         compile_plan(document, plan_id=PLAN, version_number=1, new_id=SequentialIds("x"))
 
 
+def test_bare_utc_is_accepted() -> None:
+    """A real IANA identifier, and some devices report it.
+
+    Rejecting it meant a plan built on such a device could not compile at all.
+    """
+    document = load_fixture(Path("packages/test-fixtures/valid/evening-routine.json"))
+    document["timezone"] = "UTC"
+
+    result = compile_plan(document, plan_id=PLAN, version_number=1, new_id=SequentialIds("x"))
+    assert result.version.timezone == "UTC"
+
+
+def test_a_bare_region_name_is_still_refused() -> None:
+    """ "Amsterdam" is not a zone. Accepting it would guess which Amsterdam."""
+    document = load_fixture(Path("packages/test-fixtures/valid/evening-routine.json"))
+    document["timezone"] = "Amsterdam"
+
+    with pytest.raises(PlanValidationError):
+        compile_plan(document, plan_id=PLAN, version_number=1, new_id=SequentialIds("x"))
+
+
 def test_an_unknown_timezone_is_caught_at_compile_time_not_at_nine_pm() -> None:
     document = load_fixture(Path("packages/test-fixtures/valid/evening-routine.json"))
     document["timezone"] = "Africa/Nowhere"

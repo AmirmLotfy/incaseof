@@ -15,15 +15,31 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import StrEnum
-from typing import Protocol
+from typing import Any, Protocol
 
 from services.domain.circle import CircleMember
+from services.domain.contact_endpoint import EndpointType
 from services.domain.ids import AlertId
 from services.domain.plan import Channel
 
 
 class DeliveryStatus(StrEnum):
-    SENT = "SENT"
+    """What we actually know about one message.
+
+    `ACCEPTED` is deliberately not called `SENT`. A carrier returning a message id means it
+    took custody of the message, not that it reached a handset — and the two genuinely come
+    apart. On an SNS account still in the SMS sandbox, publishing to an unverified number
+    returns a perfectly ordinary MessageId and delivers nothing at all.
+
+    That distinction is not pedantry here. A responder reads the timeline to decide whether
+    somebody has already been reached; if it says the sister was contacted when no text
+    arrived, the product has closed the loop falsely, which is the worst thing it can do.
+    `DELIVERED` is therefore reserved for a carrier receipt and is never inferred.
+    """
+
+    ACCEPTED = "ACCEPTED"
+    DELIVERED = "DELIVERED"
+    UNDELIVERED = "UNDELIVERED"
     FAILED = "FAILED"
     CHANNEL_UNAVAILABLE = "CHANNEL_UNAVAILABLE"
 
@@ -36,7 +52,13 @@ class Delivery:
 
     @property
     def succeeded(self) -> bool:
-        return self.status is DeliveryStatus.SENT
+        """The handoff worked. Says nothing about arrival — see `confirmed`."""
+        return self.status in (DeliveryStatus.ACCEPTED, DeliveryStatus.DELIVERED)
+
+    @property
+    def confirmed(self) -> bool:
+        """A carrier receipt says it arrived. Only ever set from a real receipt."""
+        return self.status is DeliveryStatus.DELIVERED
 
 
 class ContactSender(Protocol):
@@ -92,13 +114,87 @@ class RecordingSender:
                 "link": link,
             }
         )
-        return Delivery(status=DeliveryStatus.SENT, provider_reference=f"rec-{len(self.sent)}")
+        return Delivery(status=DeliveryStatus.ACCEPTED, provider_reference=f"rec-{len(self.sent)}")
 
     def to(self, name: str) -> list[dict[str, object]]:
         return [m for m in self.sent if m["recipient"] == name]
 
     def on(self, channel: Channel) -> list[dict[str, object]]:
         return [m for m in self.sent if m["channel"] == channel.value]
+
+
+@dataclass
+class SmsSender:
+    """Delivers over SMS, resolving the endpoint at the moment of sending.
+
+    This is the last link in the chain and the only code that ever holds a readable phone
+    number. It holds one for the duration of a single `publish` call and does not log it,
+    return it, or put it anywhere it could be read again — the audit trail records a
+    redacted form so an operator can confirm *which* endpoint was used without being handed
+    it.
+    """
+
+    sns: Any
+    endpoints: Any
+    sender_id: str | None = None
+
+    def send(
+        self,
+        *,
+        alert_id: AlertId,
+        member: CircleMember | None,
+        channel: Channel,
+        body: str,
+        link: str | None,
+    ) -> Delivery:
+        if channel is not Channel.SMS:
+            # Push and voice bind to their own providers. Reporting rather than pretending
+            # keeps the gap visible in the timeline.
+            return Delivery(status=DeliveryStatus.CHANNEL_UNAVAILABLE)
+
+        if member is None:
+            return Delivery(status=DeliveryStatus.FAILED, error_code="NO_RECIPIENT")
+
+        endpoint = self.endpoints.for_person(member.person_id, EndpointType.PHONE)
+        if endpoint is None:
+            return Delivery(status=DeliveryStatus.FAILED, error_code="NO_ENDPOINT")
+        if not endpoint.is_usable:
+            # An unverified number may belong to somebody else entirely — a typo, or a
+            # number since reassigned. Messaging it would tell a stranger that a specific
+            # person has not come home.
+            return Delivery(status=DeliveryStatus.FAILED, error_code="ENDPOINT_UNVERIFIED")
+
+        text = f"{body}\n\n{link}" if link else body
+
+        try:
+            number = self.endpoints.reveal(endpoint)
+            attributes: dict[str, Any] = {
+                # Transactional, not promotional: a safety message must not be dropped for
+                # cost optimisation, and must not be subject to marketing opt-out lists.
+                "AWS.SNS.SMS.SMSType": {"DataType": "String", "StringValue": "Transactional"},
+            }
+            if self.sender_id:
+                attributes["AWS.SNS.SMS.SenderID"] = {
+                    "DataType": "String",
+                    "StringValue": self.sender_id,
+                }
+
+            response = self.sns.publish(
+                PhoneNumber=number,
+                Message=text,
+                MessageAttributes=attributes,
+            )
+        except Exception as error:
+            # The number must not appear in the message, and provider exceptions have been
+            # known to echo their input.
+            return Delivery(status=DeliveryStatus.FAILED, error_code=type(error).__name__)
+
+        # ACCEPTED, not SENT. SNS has taken the message; whether a handset ever sees it is
+        # a separate fact that arrives later on the delivery-receipt path, if at all.
+        return Delivery(
+            status=DeliveryStatus.ACCEPTED,
+            provider_reference=str(response.get("MessageId", "")),
+        )
 
 
 def compose_responder_message(

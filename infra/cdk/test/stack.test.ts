@@ -266,6 +266,17 @@ describe("least privilege", () => {
     );
   });
 
+  it("gives SMS permission to the worker and to nothing else", () => {
+    // A bug anywhere else must not be able to become a message to somebody's sister.
+    const policies = synth().findResources("AWS::IAM::Policy");
+    const withSms = Object.entries(policies).filter(([, policy]) =>
+      JSON.stringify(policy.Properties?.PolicyDocument ?? {}).includes("sns:Publish"),
+    );
+
+    assert.equal(withSms.length, 1, `${withSms.length} policies can send SMS`);
+    assert.match(withSms[0][0], /ActionWorker/, "SMS permission is on the wrong function");
+  });
+
   it("traces every function, so a slow escalation can be explained", () => {
     const functions = synth().findResources("AWS::Lambda::Function");
     const ours = Object.entries(functions).filter(

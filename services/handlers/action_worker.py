@@ -66,9 +66,12 @@ def deliver(ctx: bootstrap.Context, intent: ActionIntent) -> Delivery:
     _record(
         ctx,
         intent,
-        "ACTION_SENT" if result.succeeded else "ACTION_FAILED",
+        # ACCEPTED, not SENT: the provider has custody. Delivery is a separate event that
+        # only ever arrives from a carrier receipt, because a message id is not an arrival.
+        "ACTION_ACCEPTED" if result.succeeded else "ACTION_FAILED",
         now,
         reason=result.error_code,
+        provider_reference=result.provider_reference,
     )
     return result
 
@@ -102,10 +105,16 @@ def _record(
     event: str,
     at: Any,
     reason: str | None = None,
+    provider_reference: str | None = None,
 ) -> None:
     metadata = {"sequence": str(intent.sequence), "channel": intent.channel.value}
     if reason:
         metadata["reason"] = reason
+    if provider_reference:
+        # The carrier's own id for this message. Recorded so that "we handed it over" can
+        # be checked against the provider later — an unverifiable claim of contact is worth
+        # very little to somebody deciding whether to drive over.
+        metadata["providerReference"] = provider_reference
     ctx.audit.append(
         alert_id=intent.alert_id,
         actor_type="WORKER",

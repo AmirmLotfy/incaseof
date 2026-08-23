@@ -54,9 +54,6 @@ export class IcoStack extends Stack {
     compute.momentDue.addEnvironment("ICO_STATE_MACHINE_ARN", workflow.stateMachine.stateMachineArn);
     workflow.stateMachine.grantStartExecution(compute.momentDue);
 
-    // Only the function that opens Alerts may create and cancel Moment schedules, and only
-    // within this environment's group.
-    compute.momentDue.addEnvironment("ICO_SCHEDULE_GROUP", workflow.scheduleGroup.name ?? "");
 
     const api = new Api(this, "Api", {
       environment: props.environment,
@@ -66,6 +63,27 @@ export class IcoStack extends Stack {
       table: storage.table,
       key: storage.key,
     });
+
+    // Creating a Moment's timer needs three things: the group to put it in, the function
+    // it should wake, and the role Scheduler assumes to do the waking. Wiring only the
+    // group — as this previously did — leaves the scheduler adapter returning null, so no
+    // timers are created at all and nothing looks wrong until a check silently never fires.
+    const scheduleGroup = workflow.scheduleGroup.name ?? "";
+
+    // The API handler schedules the first Moment when a plan is activated, and moves it
+    // when somebody asks for more time.
+    api.handler.addEnvironment("ICO_SCHEDULE_GROUP", scheduleGroup);
+    api.handler.addEnvironment("ICO_MOMENT_DUE_ARN", compute.momentDue.functionArn);
+    api.handler.addEnvironment("ICO_SCHEDULER_ROLE_ARN", workflow.schedulerRole.roleArn);
+    workflow.grantManageSchedules(api.handler);
+
+    // MomentDue queues the *next* occurrence of a recurring plan once one fires, so it
+    // also creates schedules that target itself. It is deliberately not given its own ARN
+    // here: a function referencing its own ARN is a CloudFormation dependency cycle and
+    // the template will not deploy. It reads it from the Lambda invocation context instead.
+    compute.momentDue.addEnvironment("ICO_SCHEDULE_GROUP", scheduleGroup);
+    compute.momentDue.addEnvironment("ICO_SCHEDULER_ROLE_ARN", workflow.schedulerRole.roleArn);
+    workflow.grantManageSchedules(compute.momentDue);
 
     secrets.responderTokenSigningKey.grantRead(api.handler);
     secrets.geminiApiKey.grantRead(api.handler);

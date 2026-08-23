@@ -167,7 +167,7 @@ class LocalIcoRepository(
                     listOf(
                         TimelineEvent(expected, "SYSTEM", "MOMENT_DUE"),
                         TimelineEvent(expected.plus(Duration.ofMinutes(10)), "SYSTEM", "ACTION_QUEUED"),
-                        TimelineEvent(expected.plus(Duration.ofMinutes(20)), "WORKER", "ACTION_SENT"),
+                        TimelineEvent(expected.plus(Duration.ofMinutes(20)), "WORKER", "ACTION_ACCEPTED"),
                     ),
             ),
         )

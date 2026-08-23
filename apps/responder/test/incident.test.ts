@@ -74,7 +74,7 @@ describe("eventLabel", () => {
     const all = [
       "MOMENT_DUE",
       "ACTION_QUEUED",
-      "ACTION_SENT",
+      "ACTION_ACCEPTED",
       "CHANNEL_UNAVAILABLE",
       "STATE_CIRCLE_ESCALATION",
       "ALERT_CLAIMED",

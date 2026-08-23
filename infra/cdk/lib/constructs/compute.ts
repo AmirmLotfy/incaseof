@@ -1,6 +1,7 @@
 import { Duration, RemovalPolicy } from "aws-cdk-lib";
 import type * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import type * as kms from "aws-cdk-lib/aws-kms";
+import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import * as logs from "aws-cdk-lib/aws-logs";
@@ -47,6 +48,9 @@ export class Compute extends Construct {
         ICO_ENV: props.environment.name,
         ICO_TIME_SCALE: String(props.environment.demoTimeScale),
         ICO_ACTION_QUEUE_URL: props.actionQueue.queueUrl,
+        // Endpoint encryption. Without it the worker records CHANNEL_UNAVAILABLE rather
+        // than sending, which is the correct behaviour but not the intended one.
+        ICO_KMS_KEY_ID: props.key.keyId,
         // Python buffers stdout by default, which loses the last log lines of a function
         // that times out — exactly the invocation whose logs you need.
         PYTHONUNBUFFERED: "1",
@@ -81,7 +85,7 @@ export class Compute extends Construct {
     this.dispatch = new lambda.Function(this, "Dispatch", {
       ...shared,
       logGroup: logGroup("Dispatch"),
-      handler: "services.handlers.escalation.dispatch",
+      handler: "services.handlers.escalation.dispatch_handler",
       description: "Turns due rungs into queued, idempotency-guarded action intents.",
       timeout: Duration.seconds(30),
     });
@@ -110,5 +114,21 @@ export class Compute extends Construct {
       props.key.grantEncryptDecrypt(fn);
     }
     props.actionQueue.grantSendMessages(this.dispatch);
+
+    // Only the worker sends. Nothing else in the system has SMS permission, so a bug
+    // elsewhere cannot become a message to somebody's sister.
+    this.actionWorker.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["sns:Publish"],
+        // SMS publishes have no topic ARN to scope to — the destination is a phone
+        // number, and AWS models that as a wildcard resource. The narrowing that matters
+        // is that only this one function holds the permission at all.
+        resources: ["*"],
+        conditions: {
+          // Refuse to publish to a topic. This grant exists for SMS only.
+          Null: { "sns:TopicArn": "true" },
+        },
+      }),
+    );
   }
 }

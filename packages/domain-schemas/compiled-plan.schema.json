@@ -5,11 +5,24 @@
   "description": "The validated, structured output of natural-language plan compilation. This is the ONLY form in which a plan may be activated. Free text is never executed. Produced by the agent, validated deterministically, previewed by a human, and only then turned into a PlanVersion.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["type", "timezone", "trigger", "grace", "steps", "stopConditions", "contextPolicy"],
+  "required": [
+    "type",
+    "timezone",
+    "trigger",
+    "grace",
+    "steps",
+    "stopConditions",
+    "contextPolicy"
+  ],
   "properties": {
     "type": {
       "description": "Which of the four plan templates this compiles to.",
-      "enum": ["ROUTINE", "JOURNEY", "SOLO", "RECOVERY"]
+      "enum": [
+        "ROUTINE",
+        "JOURNEY",
+        "SOLO",
+        "RECOVERY"
+      ]
     },
     "label": {
       "type": "string",
@@ -19,15 +32,23 @@
     },
     "timezone": {
       "type": "string",
-      "description": "IANA timezone. Required: a plan without an explicit zone is ambiguous across DST and travel, which would silently move a safety deadline.",
-      "pattern": "^[A-Za-z_]+/[A-Za-z0-9_+-]+$"
+      "description": "IANA timezone. Required: a plan without an explicit zone is ambiguous across DST and travel, which would silently move a safety deadline. Bare 'UTC' is accepted because it is a real IANA identifier and some devices report it, but a region zone is preferred \u2014 'UTC' does not follow the subject if they travel.",
+      "pattern": "^(UTC|[A-Za-z_]+/[A-Za-z0-9_+-]+)$"
     },
     "trigger": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind"],
+      "required": [
+        "kind"
+      ],
       "properties": {
-        "kind": { "enum": ["RECURRING", "ONE_TIME", "RELATIVE"] },
+        "kind": {
+          "enum": [
+            "RECURRING",
+            "ONE_TIME",
+            "RELATIVE"
+          ]
+        },
         "dueAt": {
           "type": "string",
           "format": "date-time",
@@ -41,7 +62,17 @@
         "daysOfWeek": {
           "type": "array",
           "description": "RECURRING only. Omit for every day.",
-          "items": { "enum": ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"] },
+          "items": {
+            "enum": [
+              "MON",
+              "TUE",
+              "WED",
+              "THU",
+              "FRI",
+              "SAT",
+              "SUN"
+            ]
+          },
           "uniqueItems": true,
           "minItems": 1,
           "maxItems": 7
@@ -60,15 +91,56 @@
         }
       },
       "allOf": [
-        { "if": { "properties": { "kind": { "const": "ONE_TIME" } } }, "then": { "required": ["dueAt"] } },
-        { "if": { "properties": { "kind": { "const": "RECURRING" } } }, "then": { "required": ["timeOfDay"] } },
-        { "if": { "properties": { "kind": { "const": "RELATIVE" } } }, "then": { "required": ["offsetSeconds"] } }
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "ONE_TIME"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "dueAt"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "RECURRING"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "timeOfDay"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "RELATIVE"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "offsetSeconds"
+            ]
+          }
+        }
       ]
     },
     "grace": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["seconds"],
+      "required": [
+        "seconds"
+      ],
       "properties": {
         "seconds": {
           "type": "integer",
@@ -83,7 +155,9 @@
       "description": "The escalation ladder, ordered. Offsets are measured from the end of the grace window.",
       "minItems": 1,
       "maxItems": 12,
-      "items": { "$ref": "#/$defs/escalationStep" }
+      "items": {
+        "$ref": "#/$defs/escalationStep"
+      }
     },
     "stopConditions": {
       "type": "array",
@@ -105,10 +179,22 @@
       "description": "Progressive context release. Everything defaults to NEVER; the user opts in explicitly, in advance.",
       "additionalProperties": false,
       "properties": {
-        "location": { "$ref": "#/$defs/releaseLevel", "default": "NEVER" },
-        "battery": { "$ref": "#/$defs/releaseLevel", "default": "NEVER" },
-        "lastConnection": { "$ref": "#/$defs/releaseLevel", "default": "NEVER" },
-        "networkStatus": { "$ref": "#/$defs/releaseLevel", "default": "NEVER" }
+        "location": {
+          "$ref": "#/$defs/releaseLevel",
+          "default": "NEVER"
+        },
+        "battery": {
+          "$ref": "#/$defs/releaseLevel",
+          "default": "NEVER"
+        },
+        "lastConnection": {
+          "$ref": "#/$defs/releaseLevel",
+          "default": "NEVER"
+        },
+        "networkStatus": {
+          "$ref": "#/$defs/releaseLevel",
+          "default": "NEVER"
+        }
       }
     },
     "leaseSeconds": {
@@ -123,9 +209,17 @@
     "escalationStep": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["sequence", "offsetSeconds", "action"],
+      "required": [
+        "sequence",
+        "offsetSeconds",
+        "action"
+      ],
       "properties": {
-        "sequence": { "type": "integer", "minimum": 1, "maximum": 12 },
+        "sequence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12
+        },
         "offsetSeconds": {
           "type": "integer",
           "description": "Seconds after escalation start. Must be non-decreasing with sequence; validated semantically, not by schema.",
@@ -144,17 +238,50 @@
         },
         "targetRole": {
           "description": "Required for responder-directed actions. The agent selects a ROLE, never a person and never an endpoint.",
-          "enum": ["PRIMARY", "BACKUP", "TERTIARY"]
+          "enum": [
+            "PRIMARY",
+            "BACKUP",
+            "TERTIARY"
+          ]
         }
       },
       "allOf": [
         {
-          "if": { "properties": { "action": { "enum": ["MESSAGE_RESPONDER", "CALL_RESPONDER"] } } },
-          "then": { "required": ["targetRole"] }
+          "if": {
+            "properties": {
+              "action": {
+                "enum": [
+                  "MESSAGE_RESPONDER",
+                  "CALL_RESPONDER"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "targetRole"
+            ]
+          }
         },
         {
-          "if": { "properties": { "action": { "enum": ["PUSH_SUBJECT", "SMS_SUBJECT", "CALL_SUBJECT"] } } },
-          "then": { "not": { "required": ["targetRole"] } }
+          "if": {
+            "properties": {
+              "action": {
+                "enum": [
+                  "PUSH_SUBJECT",
+                  "SMS_SUBJECT",
+                  "CALL_SUBJECT"
+                ]
+              }
+            }
+          },
+          "then": {
+            "not": {
+              "required": [
+                "targetRole"
+              ]
+            }
+          }
         }
       ]
     },

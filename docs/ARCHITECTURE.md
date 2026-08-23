@@ -164,8 +164,34 @@ and the reliability suite) by replaying scheduler and SQS deliveries.
 | Channel provider fails | Fallback channel attempted; failure recorded as an ActionAttempt |
 | Responder disappears | Checking lease expires, ownership released, workflow resumes |
 | Step Functions retry | Safe — all steps idempotent |
+| Carrier accepts but never delivers | Recorded as `ACTION_ACCEPTED`, never as delivered — see below |
 
 **No safety-critical path is ever blocked behind the model.**
+
+### Accepted is not delivered
+
+A carrier returning a message id means it has taken custody of a message, not that a handset
+received one. The two come apart in practice, and silently: an SNS account still in the SMS
+sandbox returns an ordinary `MessageId` when publishing to an unverified number and delivers
+nothing at all. This project's own dev account behaves exactly that way today.
+
+So the system never infers arrival from a successful provider call:
+
+| Event | Means | Evidence |
+|---|---|---|
+| `ACTION_QUEUED` | An intent is on the outbox | Our own write |
+| `ACTION_ACCEPTED` | The carrier took the message, with a provider reference | Provider response |
+| `ACTION_DELIVERED` | A handset received it | Carrier receipt only |
+| `ACTION_UNDELIVERED` | The carrier gave up | Carrier receipt only |
+
+`ACTION_DELIVERED` is never written by the send path — only by a delivery receipt. Both
+clients label these separately, because a responder reads the timeline to decide whether
+somebody has already been reached, and a timeline claiming contact that did not happen would
+close the loop falsely. That is the single worst failure this product has.
+
+**Not yet wired:** carrier receipts require production SNS access (the account is in the SMS
+sandbox) and an SNS delivery-status IAM role. Until then the timeline stops at `ACCEPTED` and
+says so, rather than rounding up to "delivered".
 
 ---
 

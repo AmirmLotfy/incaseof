@@ -1,4 +1,4 @@
-import { Duration } from "aws-cdk-lib";
+import { ArnFormat, Duration, Stack } from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
 import type * as lambda from "aws-cdk-lib/aws-lambda";
 import * as logs from "aws-cdk-lib/aws-logs";
@@ -112,5 +112,46 @@ export class Workflow extends Construct {
       description: "Assumed by EventBridge Scheduler to announce that a Moment came due.",
     });
     props.momentDue.grantInvoke(this.schedulerRole);
+  }
+
+  /**
+   * Let a function create and cancel Moment timers.
+   *
+   * Scoped to this environment's schedule group, and to passing only the scheduler role —
+   * `iam:PassRole` unscoped would let any of these functions hand any role to Scheduler,
+   * which is a privilege-escalation path rather than a scheduling permission.
+   */
+  grantManageSchedules(grantee: iam.IGrantable): void {
+    const group = this.scheduleGroup.name ?? "";
+    Stack.of(this);
+
+    grantee.grantPrincipal.addToPrincipalPolicy(
+      new iam.PolicyStatement({
+        actions: [
+          "scheduler:CreateSchedule",
+          "scheduler:UpdateSchedule",
+          "scheduler:DeleteSchedule",
+          "scheduler:GetSchedule",
+        ],
+        resources: [
+          Stack.of(this).formatArn({
+            service: "scheduler",
+            resource: "schedule",
+            resourceName: `${group}/*`,
+            arnFormat: ArnFormat.SLASH_RESOURCE_NAME,
+          }),
+        ],
+      }),
+    );
+
+    grantee.grantPrincipal.addToPrincipalPolicy(
+      new iam.PolicyStatement({
+        actions: ["iam:PassRole"],
+        resources: [this.schedulerRole.roleArn],
+        conditions: {
+          StringEquals: { "iam:PassedToService": "scheduler.amazonaws.com" },
+        },
+      }),
+    );
   }
 }

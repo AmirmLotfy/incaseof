@@ -31,6 +31,11 @@ rsync -a --quiet \
   --exclude '__pycache__' --exclude 'tests' --exclude '*.pyc' \
   services "$TARGET/"
 
+# The JSON Schema is loaded at import time by services/domain/compiler.py, so it is code
+# as far as the package is concerned. Omitting it does not fail the build — it fails at
+# cold start, inside whichever Lambda first imports the compiler.
+rsync -a --quiet packages/domain-schemas "$TARGET/packages/"
+
 # Runtime dependencies, listed explicitly rather than exported from pyproject.
 #
 # The project depends on the whole agent stack — strands, google-genai and their transitive
@@ -53,5 +58,13 @@ uv pip install \
   --python-version "$PYTHON_VERSION" \
   --only-binary :all: \
   --quiet
+
+# Fail loudly here rather than at cold start in production.
+for required in services/domain/compiler.py packages/domain-schemas/compiled-plan.schema.json; do
+  if [ ! -f "$TARGET/$required" ]; then
+    echo "ERROR: $required is missing from the package" >&2
+    exit 1
+  fi
+done
 
 printf 'staged %s (%s)\n' "$TARGET" "$(du -sh "$TARGET" | cut -f1)"

@@ -56,7 +56,7 @@ class VocabularyTest {
                 PlanType.entries.forEach { add(Vocabulary.planType(it)) }
                 listOf(
                     "MOMENT_DUE",
-                    "ACTION_SENT",
+                    "ACTION_ACCEPTED",
                     "SUBJECT_CONFIRMED",
                     "ALERT_CLAIMED",
                     "STATE_CIRCLE_ESCALATION",

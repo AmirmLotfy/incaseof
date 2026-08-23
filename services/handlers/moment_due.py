@@ -11,6 +11,7 @@ second delivery harmless.
 from __future__ import annotations
 
 import json
+import logging
 import os
 from typing import Any
 
@@ -20,6 +21,8 @@ from services.domain.alert import Alert, AlertState
 from services.domain.escalation import Ladder, LadderState
 from services.domain.ids import AlertId, IdFactory, MomentId, uuid_factory
 from services.handlers import bootstrap
+
+log = logging.getLogger(__name__)
 
 
 def open_alert(
@@ -71,21 +74,67 @@ def open_alert(
     return alert, opened
 
 
-def handler(event: dict[str, Any], _context: Any = None) -> dict[str, Any]:
-    ctx = bootstrap.build()
-    alert, opened = open_alert(ctx, MomentId(event["momentId"]))
+def handler(event: dict[str, Any], context: Any = None) -> dict[str, Any]:
+    # Its own ARN comes from the invocation context. It cannot be an environment variable:
+    # a function referencing its own ARN is a CloudFormation dependency cycle.
+    own_arn = getattr(context, "invoked_function_arn", None)
+    ctx = bootstrap.build(schedule_target_arn=own_arn)
+
+    moment_id = MomentId(event["momentId"])
+    alert, opened = open_alert(ctx, moment_id)
 
     if alert is None:
-        return {"status": "NO_SUCH_MOMENT", "momentId": event["momentId"]}
+        return {"status": "NO_SUCH_MOMENT", "momentId": moment_id}
     if not opened:
         return {"status": "ALREADY_OPEN", "alertId": alert.alert_id}
 
-    _start_escalation(alert.alert_id)
-    return {"status": "OPENED", "alertId": alert.alert_id}
+    # Queue the next occurrence before escalating. A recurring plan that only ever fires
+    # once is indistinguishable from a working one until the second night, and by then the
+    # person believes they are covered.
+    following = _queue_next_occurrence(ctx, moment_id)
+
+    _start_escalation(ctx, alert.alert_id)
+    return {
+        "status": "OPENED",
+        "alertId": alert.alert_id,
+        "nextMomentId": following.moment_id if following else None,
+    }
 
 
-def _start_escalation(alert_id: AlertId) -> None:
+def _queue_next_occurrence(ctx: bootstrap.Context, moment_id: MomentId) -> Any:
+    """Schedule the next Moment for a recurring plan.
+
+    A one-time plan has no next Moment, which is the plan finishing rather than an error.
+    A failure here must not take down the Alert that just opened: the person in front of us
+    matters more than tomorrow's check, and the reconciliation sweeper catches a Moment
+    that was never scheduled.
+    """
+    try:
+        # Imported inside the guard on purpose. An import error is precisely the failure
+        # this protects against: planning pulls in the compiler, which reads a schema file
+        # at import time, and a packaging mistake there would otherwise take down the Alert
+        # that just opened.
+        from services.handlers import planning
+
+        moment = ctx.moments.get(moment_id)
+        if moment is None:
+            return None
+        version = ctx.plans.get_version(moment.version_id)
+        if version is None:
+            return None
+
+        return planning.schedule_following_moment(ctx, version, after=moment.due_at)
+    except Exception:
+        log.warning("could not queue the next occurrence for %s", moment_id, exc_info=True)
+        return None
+
+
+def _start_escalation(ctx: bootstrap.Context, alert_id: AlertId) -> None:
     """Hand off to Step Functions.
+
+    ``ctx`` is unused today but kept in the signature: the state-machine ARN belongs on the
+    context alongside every other piece of configuration, and reading it from the
+    environment here is the outlier.
 
     The execution name is derived from the Alert, so even a duplicate that somehow got past
     the conditional write cannot start a second escalation — Step Functions rejects a

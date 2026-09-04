@@ -1,8 +1,10 @@
 package com.incaof.app.feature.circle
 
+import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,10 +15,17 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -33,6 +42,7 @@ import com.incaof.app.domain.ResponderRole
 import com.incaof.app.domain.Vocabulary
 import com.incaof.app.feature.home.userMessage
 import com.incaof.app.ui.components.Notice
+import com.incaof.app.ui.components.PrimaryAction
 import com.incaof.app.ui.components.StatusMarker
 import com.incaof.app.ui.components.TabularLabel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,6 +55,9 @@ class CircleViewModel(
 ) : ViewModel() {
     private val _state = MutableStateFlow<CircleUiState>(CircleUiState.Loading)
     val state: StateFlow<CircleUiState> = _state.asStateFlow()
+
+    private val _invite = MutableStateFlow(CircleInviteUiState())
+    val invite: StateFlow<CircleInviteUiState> = _invite.asStateFlow()
 
     init {
         refresh()
@@ -59,7 +72,38 @@ class CircleViewModel(
                 )
         }
     }
+
+    fun invite(displayName: String, relationship: String, role: ResponderRole) {
+        val name = displayName.trim()
+        if (name.isEmpty()) {
+            _invite.value = CircleInviteUiState(error = "Enter the person’s name.")
+            return
+        }
+        viewModelScope.launch {
+            _invite.value = CircleInviteUiState(busy = true)
+            repository.inviteCircleMember(name, relationship.trim().ifEmpty { null }, role).fold(
+                onSuccess = { inviteUrl ->
+                    _invite.value =
+                        CircleInviteUiState(
+                            notice =
+                                "Invitation created. Share the scoped link; " +
+                                    "they must accept before any plan can rely on them.",
+                            inviteUrl = inviteUrl,
+                        )
+                    refresh()
+                },
+                onFailure = { _invite.value = CircleInviteUiState(error = it.userMessage()) },
+            )
+        }
+    }
 }
+
+data class CircleInviteUiState(
+    val busy: Boolean = false,
+    val notice: String? = null,
+    val error: String? = null,
+    val inviteUrl: String? = null,
+)
 
 sealed interface CircleUiState {
     data object Loading : CircleUiState
@@ -83,7 +127,12 @@ sealed interface CircleUiState {
  * green dot beside a person's name implies a kind of monitoring that does not happen.
  */
 @Composable
-fun CircleScreen(state: CircleUiState, modifier: Modifier = Modifier) {
+fun CircleScreen(
+    state: CircleUiState,
+    inviteState: CircleInviteUiState = CircleInviteUiState(),
+    onInvite: (String, String, ResponderRole) -> Unit = { _, _, _ -> },
+    modifier: Modifier = Modifier,
+) {
     when (state) {
         CircleUiState.Loading -> {
             Column(
@@ -102,6 +151,11 @@ fun CircleScreen(state: CircleUiState, modifier: Modifier = Modifier) {
                 modifier = modifier.fillMaxSize(),
                 contentPadding = PaddingValues(24.dp),
             ) {
+                item {
+                    InviteMember(inviteState, onInvite)
+                    Spacer(Modifier.height(24.dp))
+                    HorizontalDivider(color = LocalIcoColors.current.stone)
+                }
                 items(state.members, key = { it.id }) { member ->
                     MemberRow(member)
                     HorizontalDivider(color = LocalIcoColors.current.stone)
@@ -109,6 +163,75 @@ fun CircleScreen(state: CircleUiState, modifier: Modifier = Modifier) {
             }
         }
     }
+}
+
+@Composable
+private fun InviteMember(
+    state: CircleInviteUiState,
+    onInvite: (String, String, ResponderRole) -> Unit,
+) {
+    val context = LocalContext.current
+    var name by remember { mutableStateOf("") }
+    var relationship by remember { mutableStateOf("") }
+    var role by remember { mutableStateOf(ResponderRole.PRIMARY) }
+    Text("Invite someone", style = MaterialTheme.typography.titleLarge)
+    Spacer(Modifier.height(8.dp))
+    Text(
+        "They receive a scoped consent link. Their contact details are never exposed to the agent.",
+        color = LocalIcoColors.current.graphite,
+    )
+    Spacer(Modifier.height(12.dp))
+    OutlinedTextField(
+        value = name,
+        onValueChange = { name = it },
+        label = { Text("Name") },
+        enabled = !state.busy,
+        modifier = Modifier.fillMaxWidth(),
+    )
+    Spacer(Modifier.height(8.dp))
+    OutlinedTextField(
+        value = relationship,
+        onValueChange = { relationship = it },
+        label = { Text("Relationship (optional)") },
+        enabled = !state.busy,
+        modifier = Modifier.fillMaxWidth(),
+    )
+    Spacer(Modifier.height(8.dp))
+    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        ResponderRole.entries.forEach { option ->
+            TextButton(onClick = { role = option }, enabled = !state.busy) {
+                Text(if (role == option) "● ${Vocabulary.role(option)}" else Vocabulary.role(option))
+            }
+        }
+    }
+    state.error?.let { Notice(it) }
+    state.notice?.let { Notice(it) }
+    state.inviteUrl?.let { inviteUrl ->
+        TextButton(
+            onClick = {
+                context.startActivity(
+                    Intent.createChooser(
+                        Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(
+                                Intent.EXTRA_TEXT,
+                                "I’d like you to join my In Case Of Circle. Review and accept here: $inviteUrl",
+                            )
+                        },
+                        "Share consent link",
+                    ),
+                )
+            },
+        ) {
+            Text("Share consent link")
+        }
+    }
+    Spacer(Modifier.height(8.dp))
+    PrimaryAction(
+        label = if (state.busy) "Creating invitation…" else "Create invitation",
+        onClick = { onInvite(name, relationship, role) },
+        enabled = !state.busy,
+    )
 }
 
 @Composable

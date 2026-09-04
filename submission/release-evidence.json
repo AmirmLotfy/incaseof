@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "status": "NOT_ACCEPTED",
+  "sourceCommitAtStart": "6ef1e7119ffc34cd3f20fb4cd27db4a0e56aa13b",
+  "acceptedCommit": null,
+  "tag": null,
+  "verifiedAt": "2026-09-04T14:37:27Z",
+  "aws": {
+    "accountIdRedacted": true,
+    "deploymentPrincipal": "ephemeral least-privileged IAM user; deleted after deployment",
+    "stackName": "IcoStack-demo",
+    "stackStatus": "UPDATE_ROLLBACK_COMPLETE",
+    "region": "us-east-1",
+    "apiId": "84t16g8eoe",
+    "agentCoreRuntimeId": "ico_demo_compiler-6NwvbhBK5L",
+    "agentCoreRuntimeVersion": "1",
+    "agentCoreRuntimeStatus": "READY",
+    "agentCoreGatewayId": "ico-demo-gateway-bz8rejtzur",
+    "policyEngineId": "ico_demo_policy-b0h8t4ph27",
+    "stateMachineName": "WorkflowEscalation797C0498-vkUJVS19c0Dm",
+    "cloudWatchDashboard": "ico-demo-health",
+    "alarmSummary": {
+      "ok": 8,
+      "alarm": 0,
+      "insufficientData": 0
+    },
+    "fcm": {
+      "platformApplicationEnabled": true,
+      "registeredEndpointEnabled": true,
+      "api37MessageId": "c10723f5-9d2b-578c-91d1-40e145dc9104",
+      "androidNotificationId": 1001,
+      "physicalDeviceVerified": false
+    },
+    "edgeHostingStatus": "BLOCKED_ACCOUNT_VERIFICATION",
+    "agentCoreQuotaRequests": {
+      "activeSessionWorkloads": {
+        "requestId": "451f1b8fde074b51bcb3aacaa2042ba8vNxnmcUj",
+        "status": "APPROVED"
+      },
+      "versionsPerAgent": {
+        "requestId": "b38dff125c3e4b1493e58c7fca4ed88bEgBdMI37",
+        "caseId": "178851871600399",
+        "status": "CASE_OPENED"
+      }
+    }
+  },
+  "urls": {
+    "marketing": null,
+    "webApp": null,
+    "demo": null,
+    "directApi": "https://84t16g8eoe.execute-api.us-east-1.amazonaws.com",
+    "canonicalApi": null,
+    "apk": null
+  },
+  "android": {
+    "applicationId": "com.incaof.app",
+    "releaseBuilt": true,
+    "versionCode": 2,
+    "versionName": "0.2.0",
+    "minSdk": 26,
+    "targetSdk": 37,
+    "sha256": "db118074e6df54477212f2155674360a04a7b3eb69e2aacd168f6785d6cc60b3",
+    "signingCertificateSha256": "f12d1890545e420f5a2e10fa1475f21c2fa5463028f57fc3643daa1bc42bbd62",
+    "signatureSchemes": ["v2", "v3"],
+    "localFallbackMarkersPresent": false,
+    "api26": "PASSED_SIGNED_INSTALL_LAUNCH_AND_3_OF_3_CONNECTED_TESTS",
+    "api37": "PASSED_SIGNED_INSTALL_LAUNCH_3_OF_3_CONNECTED_TESTS_AND_LIVE_FCM",
+    "physicalDevice": "NOT_RUN"
+  },
+  "canary": {
+    "sourceModelId": "us.amazon.nova-2-lite-v1:0",
+    "deployedModelId": "us.anthropic.claude-sonnet-4-6",
+    "runtimeInitializationReached": true,
+    "runtimeReadyForRequest": false,
+    "runtimeInvocationId": null,
+    "traceId": null,
+    "workflowExecutionArn": null,
+    "safeSinkReference": null,
+    "resolvedAlertId": null,
+    "blockers": [
+      "Existing runtime v1 fails isolated startup because its artifact imports services.handlers; corrected source is not deployed until the version quota case is approved.",
+      "Direct Bedrock inference returns Operation not allowed pending AWS account verification."
+    ]
+  },
+  "gates": [
+    {
+      "name": "unified-preflight",
+      "status": "PASSED",
+      "verifiedAt": "2026-09-04T10:57:00Z",
+      "details": "17/17 gates; 375 Python tests; 43 CDK assertions; 42 API routes in parity; 12 Playwright accessibility cases"
+    }
+  ],
+  "artifacts": {
+    "architecturePngSha256": "07261fbe70c5be2a02f9088d3ccf5dd0577aaa49cf1a2c5278c412e3d2ef0509",
+    "architecturePdfSha256": "9345cdc26146b61bd23fb5c8ecec2ef083d460cae37bf3b93f64df1f8c637331",
+    "projectImage": null,
+    "screenshots": [
+      "android/captures/api26-release-home.png",
+      "android/captures/api37-release-home.png",
+      "android/captures/api37-release-authenticated-home.png",
+      "android/captures/api37-fcm-notification.png"
+    ]
+  },
+  "videoUrl": null,
+  "builderIdSupplied": false,
+  "notes": [
+    "This is a truthful partial evidence manifest, not an acceptance record.",
+    "Do not publish canonical demo or production-ready claims until every null and blocker required by the submission gate is resolved."
+  ]
+}

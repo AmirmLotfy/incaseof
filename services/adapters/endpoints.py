@@ -31,6 +31,17 @@ else:
 
 
 class EndpointRepository(Protocol):
+    def save(
+        self,
+        *,
+        endpoint_id: str,
+        person_id: PersonId,
+        endpoint_type: EndpointType,
+        value: str,
+        status: EndpointStatus = EndpointStatus.UNVERIFIED,
+        verified_at: datetime | None = None,
+    ) -> ContactEndpoint: ...
+
     def for_person(
         self, person_id: PersonId, endpoint_type: EndpointType
     ) -> ContactEndpoint | None: ...
@@ -38,6 +49,10 @@ class EndpointRepository(Protocol):
     def reveal(self, endpoint: ContactEndpoint) -> str:
         """Decrypt, for the single purpose of sending. Never log the result."""
         ...
+
+    def delete(
+        self, person_id: PersonId, endpoint_type: EndpointType, endpoint_id: str
+    ) -> bool: ...
 
 
 @dataclass
@@ -123,6 +138,15 @@ class DynamoEndpointRepository:
             EncryptionContext=self._context(endpoint.person_id, endpoint.endpoint_type),
         )
         return str(result["Plaintext"].decode())
+
+    def delete(self, person_id: PersonId, endpoint_type: EndpointType, endpoint_id: str) -> bool:
+        current = self.for_person(person_id, endpoint_type)
+        if current is None or current.endpoint_id != endpoint_id:
+            return False
+        self.table.delete_item(
+            Key={"pk": keys.person(person_id), "sk": f"ENDPOINT#{endpoint_type.value}"}
+        )
+        return True
 
     @staticmethod
     def _context(person_id: PersonId, endpoint_type: EndpointType) -> dict[str, str]:

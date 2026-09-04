@@ -16,9 +16,8 @@ private const val TAG = "IcoMessaging"
  */
 class IcoMessagingService : FirebaseMessagingService() {
     override fun onMessageReceived(message: RemoteMessage) {
-        val momentId = message.data["momentId"] ?: return
-        val planLabel = message.data["planLabel"] ?: getString(com.incaof.app.R.string.check_in)
-        IcoNotifications.showMomentDue(this, momentId, planLabel)
+        val alertId = message.data["alertId"] ?: return
+        IcoNotifications.showAlertDue(this, alertId)
     }
 
     /**
@@ -28,7 +27,10 @@ class IcoMessagingService : FirebaseMessagingService() {
      * exists. Logging only the fact of rotation, never the token itself: a push token is a
      * capability to send this person notifications.
      */
+    @Suppress("OVERRIDE_DEPRECATION")
     override fun onNewToken(token: String) {
-        Log.i(TAG, "push token rotated")
+        val repository = (application as com.incaof.app.IcoApplication).container.repository
+        PushRegistration.register(this, repository, token)
+        Log.i(TAG, "push token rotated and registration requested")
     }
 }

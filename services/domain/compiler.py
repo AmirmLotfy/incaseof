@@ -60,6 +60,50 @@ class CompilationResult:
     warnings: tuple[str, ...] = ()
 
 
+def document_from_version(version: PlanVersion) -> dict[str, Any]:
+    """Return the canonical CompiledPlan document shown to and resubmitted by a human.
+
+    Persistence-only identifiers never cross this boundary. Round-tripping the returned
+    document through :func:`compile_plan` therefore repeats every deterministic validator
+    immediately before a draft is created.
+    """
+    trigger: dict[str, Any] = {"kind": version.trigger.kind.value}
+    if version.trigger.due_at is not None:
+        trigger["dueAt"] = version.trigger.due_at.isoformat()
+    if version.trigger.time_of_day is not None:
+        trigger["timeOfDay"] = version.trigger.time_of_day
+    if version.trigger.days_of_week:
+        trigger["daysOfWeek"] = list(version.trigger.days_of_week)
+    if version.trigger.interval_seconds is not None:
+        trigger["intervalSeconds"] = version.trigger.interval_seconds
+    if version.trigger.offset_seconds is not None:
+        trigger["offsetSeconds"] = version.trigger.offset_seconds
+
+    document: dict[str, Any] = {
+        "type": version.plan_type.value,
+        "timezone": version.timezone,
+        "trigger": trigger,
+        "grace": {"seconds": version.grace_seconds},
+        "steps": [
+            {
+                "sequence": step.sequence,
+                "offsetSeconds": step.offset_seconds,
+                "action": step.action.value,
+                **({"targetRole": step.target_role.value} if step.target_role is not None else {}),
+            }
+            for step in version.steps
+        ],
+        "stopConditions": [condition.value for condition in sorted(version.stop_conditions)],
+        "contextPolicy": {
+            signal.value: level.value for signal, level in version.context_policy.levels.items()
+        },
+        "leaseSeconds": version.lease_seconds,
+    }
+    if version.label:
+        document["label"] = version.label
+    return document
+
+
 def _load_schema() -> dict[str, Any]:
     schema: dict[str, Any] = json.loads(SCHEMA_PATH.read_text())
     return schema

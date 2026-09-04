@@ -15,13 +15,28 @@ import { IcoStack } from "../lib/incaseof-stack.js";
  * remove in a refactor without any other test noticing.
  */
 
+const synthesized = new Map<keyof typeof ENVIRONMENTS, Template>();
+
 function synth(env: keyof typeof ENVIRONMENTS = "dev"): Template {
-  const app = new App();
+  const existing = synthesized.get(env);
+  if (existing) return existing;
+  const app = new App({
+    context: env === "demo"
+      ? {
+          hostedZoneId: "Z1234567890",
+          hostedZoneName: "incaof.com",
+          existingApiDomainRegionalName: "d-existing.execute-api.us-east-1.amazonaws.com",
+          existingApiDomainHostedZoneId: "ZEXISTING",
+        }
+      : {},
+  });
   const stack = new IcoStack(app, `IcoStack-${env}`, {
     environment: ENVIRONMENTS[env],
     env: { account: "123456789012", region: "us-east-1" },
   });
-  return Template.fromStack(stack);
+  const template = Template.fromStack(stack);
+  synthesized.set(env, template);
+  return template;
 }
 
 describe("storage", () => {
@@ -46,6 +61,14 @@ describe("storage", () => {
     synth().hasResourceProperties("AWS::DynamoDB::Table", {
       GlobalSecondaryIndexes: Match.arrayWith([
         Match.objectLike({ IndexName: "gsi1-moments-due" }),
+      ]),
+    });
+  });
+
+  it("indexes product state by validated Cognito subject", () => {
+    synth().hasResourceProperties("AWS::DynamoDB::Table", {
+      GlobalSecondaryIndexes: Match.arrayWith([
+        Match.objectLike({ IndexName: "gsi2-person" }),
       ]),
     });
   });
@@ -109,6 +132,24 @@ describe("workflow", () => {
   });
 });
 
+describe("observability", () => {
+  it("covers the API, workflow, scheduler, AgentCore and action DLQ", () => {
+    const template = synth("demo");
+    template.resourceCountIs("AWS::CloudWatch::Dashboard", 1);
+    const alarms = JSON.stringify(template.findResources("AWS::CloudWatch::Alarm"));
+    for (const required of [
+      "AWS/Lambda",
+      "AWS/States",
+      "AWS/SQS",
+      "AWS/Scheduler",
+      "InCaseOf/AgentCore",
+    ]) {
+      assert.match(alarms, new RegExp(required.replace("/", "\\/")), `missing ${required}`);
+    }
+    template.resourceCountIs("AWS::Logs::MetricFilter", 2);
+  });
+});
+
 describe("identity", () => {
   it("requires a long password", () => {
     synth().hasResourceProperties("AWS::Cognito::UserPool", {
@@ -142,6 +183,62 @@ describe("identity", () => {
       PreventUserExistenceErrors: "ENABLED",
     });
   });
+
+  it("uses authorization code with PKCE-compatible public web client settings", () => {
+    synth().hasResourceProperties("AWS::Cognito::UserPoolClient", {
+      AllowedOAuthFlows: ["code"],
+      GenerateSecret: false,
+      CallbackURLs: Match.arrayWith(["https://incaof.com/app/"]),
+    });
+  });
+});
+
+describe("hosting", () => {
+  it("keeps both static origins private behind CloudFront and WAF", () => {
+    const template = synth("demo");
+    template.resourceCountIs("AWS::S3::Bucket", 2);
+    for (const bucket of Object.values(template.findResources("AWS::S3::Bucket"))) {
+      assert.deepEqual(bucket.Properties?.PublicAccessBlockConfiguration, {
+        BlockPublicAcls: true,
+        BlockPublicPolicy: true,
+        IgnorePublicAcls: true,
+        RestrictPublicBuckets: true,
+      });
+    }
+    template.resourceCountIs("AWS::CloudFront::Distribution", 1);
+    template.resourceCountIs("AWS::WAFv2::WebACL", 1);
+    template.hasResourceProperties("AWS::CloudFront::Distribution", {
+      DistributionConfig: Match.objectLike({
+        Aliases: Match.arrayWith(["incaof.com", "www.incaof.com"]),
+        HttpVersion: "http2and3",
+        WebACLId: Match.anyValue(),
+      }),
+    });
+  });
+
+  it("maps the canonical website and API records in Route 53", () => {
+    const template = synth("demo");
+    template.resourceCountIs("AWS::CertificateManager::Certificate", 1);
+    template.resourceCountIs("AWS::ApiGatewayV2::DomainName", 0);
+    template.resourceCountIs("AWS::ApiGatewayV2::ApiMapping", 1);
+    template.resourceCountIs("AWS::Route53::RecordSet", 2);
+  });
+
+  it("does not provision a legacy Gemini API key secret", () => {
+    const secrets = JSON.stringify(synth("demo").findResources("AWS::SecretsManager::Secret"));
+    assert.doesNotMatch(secrets, /gemini|google ai studio/i);
+  });
+
+  it("can deploy the demo core while an account-level CloudFront verification block is open", () => {
+    const app = new App({ context: { skipEdgeHosting: "true" } });
+    const stack = new IcoStack(app, "IcoStack-demo-core", {
+      environment: ENVIRONMENTS.demo,
+      env: { account: "123456789012", region: "us-east-1" },
+    });
+    const template = Template.fromStack(stack);
+    template.resourceCountIs("AWS::CloudFront::Distribution", 0);
+    template.hasOutput("EdgeHostingStatus", { Value: "BLOCKED_ACCOUNT_VERIFICATION" });
+  });
 });
 
 describe("api", () => {
@@ -150,7 +247,7 @@ describe("api", () => {
     assert.ok(Object.keys(routes).length >= 9, "expected the v1 routes");
     for (const [name, route] of Object.entries(routes)) {
       const key = String(route.Properties?.RouteKey);
-      if (key.includes("/r/")) continue; // responder routes, checked below
+      if (key.includes("/r/") || key.includes("/i/") || key.includes("/demo/")) continue;
       assert.equal(
         route.Properties?.AuthorizationType,
         "JWT",
@@ -170,12 +267,21 @@ describe("api", () => {
       .sort();
 
     assert.deepEqual(open, [
+      "GET /i/{signedToken}",
       "GET /r/{signedToken}",
+      "POST /v1/i/{signedToken}/accept",
+      "POST /v1/i/{signedToken}/decline",
       "POST /v1/r/{signedToken}/claim",
       "POST /v1/r/{signedToken}/extend",
       "POST /v1/r/{signedToken}/resolve",
       "POST /v1/r/{signedToken}/unable",
     ]);
+
+    const demoRoutes = Object.values(synth("demo").findResources("AWS::ApiGatewayV2::Route"))
+      .filter((route) => route.Properties?.AuthorizationType !== "JWT")
+      .map((route) => String(route.Properties?.RouteKey));
+    assert.ok(demoRoutes.includes("POST /v1/demo/session"));
+    assert.equal(demoRoutes.filter((route) => route.includes("/v1/demo/")).length, 9);
   });
 
   it("scopes every unauthenticated route to a single token", () => {
@@ -188,6 +294,13 @@ describe("api", () => {
         /\{signedToken\}/,
         "an unauthenticated route takes no token",
       );
+    }
+
+    const demoRoutes = synth("demo").findResources("AWS::ApiGatewayV2::Route");
+    for (const route of Object.values(demoRoutes)) {
+      const key = String(route.Properties?.RouteKey);
+      if (route.Properties?.AuthorizationType === "JWT" || key.includes("/demo/")) continue;
+      assert.match(key, /\{signedToken\}/);
     }
   });
 
@@ -227,6 +340,120 @@ describe("api", () => {
         "no catch-all routes",
       );
     }
+  });
+});
+
+describe("agentcore", () => {
+  it("allows the API to invoke the exact runtime with validated user context", () => {
+    const policies = JSON.stringify(synth().findResources("AWS::IAM::Policy"));
+    assert.match(policies, /bedrock-agentcore:InvokeAgentRuntimeForUser/);
+    assert.match(policies, /bedrock-agentcore:InvokeAgentRuntime/);
+    assert.match(policies, /AgentCoreRuntime8EF1CF90/);
+  });
+
+  it("deploys a managed Python runtime and uses its automatic DEFAULT endpoint", () => {
+    const template = synth();
+    template.hasResourceProperties("AWS::BedrockAgentCore::Runtime", {
+      ProtocolConfiguration: "HTTP",
+      NetworkConfiguration: { NetworkMode: "PUBLIC" },
+      LifecycleConfiguration: {
+        IdleRuntimeSessionTimeout: 60,
+        MaxLifetime: 3600,
+      },
+      AgentRuntimeArtifact: {
+        CodeConfiguration: Match.objectLike({
+          EntryPoint: ["main.py"],
+          Runtime: "PYTHON_3_12",
+        }),
+      },
+    });
+    template.resourceCountIs("AWS::BedrockAgentCore::RuntimeEndpoint", 0);
+    template.hasOutput("AgentCoreRuntimeQualifier", { Value: "DEFAULT" });
+  });
+
+  it("keeps the runtime side-effect free and scopes Bedrock to Amazon Nova 2 Lite", () => {
+    const template = synth();
+    const serialized = JSON.stringify(template.findResources("AWS::IAM::Policy"));
+    assert.match(serialized, /us\.amazon\.nova-2-lite-v1:0/);
+    assert.match(serialized, /amazon\.nova-2-lite-v1:0/);
+    assert.doesNotMatch(serialized, /anthropic|gemini/i);
+
+    const runtimeRoles = template.findResources("AWS::IAM::Role", {
+      Properties: {
+        AssumeRolePolicyDocument: Match.objectLike({
+          Statement: Match.arrayWith([
+            Match.objectLike({ Principal: { Service: "bedrock-agentcore.amazonaws.com" } }),
+          ]),
+        }),
+      },
+    });
+    assert.ok(Object.keys(runtimeRoles).length >= 2, "expected runtime and gateway service roles");
+
+    const runtimeRoleIds = Object.keys(runtimeRoles);
+    const policies = template.findResources("AWS::IAM::Policy");
+    const runtimePolicy = Object.values(policies).find(
+      (policy) =>
+        runtimeRoleIds.some((id) => JSON.stringify(policy.Properties?.Roles ?? []).includes(id)) &&
+        JSON.stringify(policy).includes("us.amazon.nova-2-lite-v1:0"),
+    );
+    const policyText = JSON.stringify(runtimePolicy);
+    assert.doesNotMatch(policyText, /dynamodb:|scheduler:|sqs:|sns:/i);
+  });
+
+  it("attaches a default-deny policy engine to the role-only Gateway in ENFORCE mode", () => {
+    const template = synth();
+    template.resourceCountIs("AWS::BedrockAgentCore::PolicyEngine", 1);
+    template.resourceCountIs("AWS::BedrockAgentCore::Policy", 3);
+    template.hasResourceProperties("AWS::BedrockAgentCore::Gateway", {
+      AuthorizerType: "AWS_IAM",
+      ProtocolType: "MCP",
+      PolicyEngineConfiguration: Match.objectLike({ Mode: "ENFORCE" }),
+    });
+    template.hasResourceProperties("AWS::BedrockAgentCore::Policy", {
+      EnforcementMode: "ACTIVE",
+      ValidationMode: "FAIL_ON_ANY_FINDINGS",
+    });
+    const agentPolicies = template.findResources("AWS::BedrockAgentCore::Policy");
+    assert.equal(
+      Object.values(agentPolicies).filter(
+        (policy) => policy.Properties?.ValidationMode === "FAIL_ON_ANY_FINDINGS",
+      ).length,
+      2,
+    );
+    assert.equal(
+      Object.values(agentPolicies).filter(
+        (policy) => policy.Properties?.ValidationMode === "IGNORE_ALL_FINDINGS",
+      ).length,
+      1,
+    );
+    const policies = JSON.stringify(agentPolicies);
+    assert.match(policies, /forbid/);
+    assert.match(policies, /propose_contact_role/);
+    const targets = JSON.stringify(
+      template.findResources("AWS::BedrockAgentCore::GatewayTarget"),
+    );
+    assert.match(targets, /propose_contact_role/);
+    assert.doesNotMatch(targets, /phone|email|url/i);
+
+    const iamRoles = template.findResources("AWS::IAM::Role");
+    const gatewayRoleEntry = Object.entries(iamRoles).find(([, role]) =>
+      (JSON.stringify(role.Properties?.Policies) ?? "").includes(
+        "bedrock-agentcore:GetPolicyEngine",
+      ),
+    );
+    assert.ok(gatewayRoleEntry, "expected an inline AgentCore Gateway policy");
+    const [, gatewayRole] = gatewayRoleEntry;
+    const gatewayPolicyText = JSON.stringify(gatewayRole.Properties?.Policies);
+    assert.match(gatewayPolicyText, /PolicyEngineArn/);
+    assert.match(gatewayPolicyText, /gateway\/\*/);
+    assert.match(gatewayPolicyText, /kms:Decrypt/);
+    assert.match(gatewayPolicyText, /kms:GrantIsForAWSResource/);
+    assert.doesNotMatch(
+      gatewayPolicyText,
+      /kms:ViaService/,
+      "CreateGateway policy-engine validation assumes this role and calls KMS directly",
+    );
+    assert.doesNotMatch(gatewayPolicyText, /Resource":"\*"/);
   });
 });
 
@@ -302,6 +529,16 @@ describe("environments", () => {
     );
     for (const fn of ours) {
       assert.equal(fn.Properties?.Environment?.Variables?.ICO_TIME_SCALE, "0.02");
+    }
+  });
+
+  it("redirects external delivery only in the public demo environment", () => {
+    for (const [env, expected] of [["dev", undefined], ["demo", "SAFE_SINK"], ["prod", undefined]] as const) {
+      const functions = synth(env).findResources("AWS::Lambda::Function");
+      const worker = Object.values(functions).find((fn) =>
+        fn.Properties?.Handler?.includes?.("action_worker"),
+      );
+      assert.equal(worker?.Properties?.Environment?.Variables?.ICO_DELIVERY_MODE, expected);
     }
   });
 

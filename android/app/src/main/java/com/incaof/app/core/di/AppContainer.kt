@@ -28,6 +28,12 @@ class AppContainer(
     val hasBackend: Boolean =
         BuildConfig.COGNITO_POOL_ID.isNotBlank() && BuildConfig.COGNITO_CLIENT_ID.isNotBlank()
 
+    init {
+        check(hasBackend || BuildConfig.ALLOW_LOCAL_DATA) {
+            "This release has no Cognito backend configuration and cannot use local data."
+        }
+    }
+
     val auth: AuthRepository = if (hasBackend) CognitoAuthRepository() else LocalAuthRepository()
 
     val repository: IcoRepository =

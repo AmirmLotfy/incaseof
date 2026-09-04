@@ -23,7 +23,8 @@ from .agent_decision import AgentDecision
 from .alert import Alert
 from .circle import Circle, ConsentGrant
 from .idempotency import IdempotencyKey
-from .ids import AlertId, CircleId, MomentId, PersonId, PlanId, PlanVersionId
+from .ids import AlertId, CircleId, InvitationId, MomentId, PersonId, PlanId, PlanVersionId
+from .invitation import CircleInvitation
 from .moment import ExpectedMoment
 from .plan import Plan, PlanVersion
 
@@ -33,10 +34,16 @@ class PlanRepository(Protocol):
 
     def get_version(self, version_id: PlanVersionId) -> PlanVersion | None: ...
 
+    def latest_version(self, plan_id: PlanId) -> PlanVersion | None: ...
+
     def save_plan(self, plan: Plan) -> None: ...
 
     def save_version(self, version: PlanVersion) -> None:
         """Persist a version. Versions are immutable; re-saving one is a programming error."""
+        ...
+
+    def list_for_subject(self, subject_person_id: PersonId) -> tuple[Plan, ...]:
+        """Plans owned by a subject, ordered deterministically."""
         ...
 
     def activate(self, plan_id: PlanId, version_id: PlanVersionId, at: datetime) -> Plan: ...
@@ -45,7 +52,22 @@ class PlanRepository(Protocol):
 class MomentRepository(Protocol):
     def get(self, moment_id: MomentId) -> ExpectedMoment | None: ...
 
-    def save(self, moment: ExpectedMoment) -> None: ...
+    def save(
+        self,
+        moment: ExpectedMoment,
+        *,
+        subject_person_id: PersonId | None = None,
+    ) -> None: ...
+
+    def next_for_subject(
+        self, subject_person_id: PersonId, instant: datetime
+    ) -> ExpectedMoment | None:
+        """The subject's next outstanding Moment, including overdue work."""
+        ...
+
+    def outstanding_for_subject(
+        self, subject_person_id: PersonId
+    ) -> tuple[ExpectedMoment, ...]: ...
 
     def due_before(self, instant: datetime) -> tuple[ExpectedMoment, ...]:
         """Moments whose due time has passed and which are still unresolved."""
@@ -55,13 +77,20 @@ class MomentRepository(Protocol):
 class AlertRepository(Protocol):
     def get(self, alert_id: AlertId) -> Alert | None: ...
 
+    def list_for_subject(self, subject_person_id: PersonId) -> tuple[Alert, ...]: ...
+
     def save(self, alert: Alert) -> None: ...
 
     def alert_for_moment(self, moment_id: MomentId) -> Alert | None:
         """The Alert opened for this Moment, if one was."""
         ...
 
-    def open_for_moment(self, alert: Alert) -> Alert:
+    def open_for_moment(
+        self,
+        alert: Alert,
+        *,
+        subject_person_id: PersonId | None = None,
+    ) -> Alert:
         """Open an Alert for a Moment, conditional on none existing.
 
         Returns the *existing* Alert if one is already open for that Moment, rather than
@@ -74,6 +103,10 @@ class AlertRepository(Protocol):
 class CircleRepository(Protocol):
     def get(self, circle_id: CircleId) -> Circle | None: ...
 
+    def for_owner(self, owner_person_id: PersonId) -> Circle | None:
+        """The Circle owned by this person, if one exists."""
+        ...
+
     def consents_for(self, plan_id: PlanId) -> dict[PersonId, ConsentGrant]:
         """Consent grants covering this plan, keyed by responder."""
         ...
@@ -81,6 +114,12 @@ class CircleRepository(Protocol):
     def save_circle(self, circle: Circle) -> None: ...
 
     def save_consent(self, consent: ConsentGrant) -> None: ...
+
+
+class InvitationRepository(Protocol):
+    def get(self, invitation_id: InvitationId) -> CircleInvitation | None: ...
+
+    def save(self, invitation: CircleInvitation) -> None: ...
 
 
 class ActionLog(Protocol):

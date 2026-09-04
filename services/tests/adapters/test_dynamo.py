@@ -217,7 +217,7 @@ def test_activation_records_when_without_touching_the_ladder(table: Any) -> None
         Plan(
             plan_id=PLAN,
             subject_person_id=MONA,
-            circle_id="circle-1",
+            circle_id=CircleId("circle-1"),
             plan_type=version.plan_type,
         )
     )

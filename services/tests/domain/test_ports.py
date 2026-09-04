@@ -17,7 +17,7 @@ from services.adapters.memory import (
     InMemoryPlanRepository,
 )
 from services.domain.idempotency import key_for
-from services.domain.ids import AlertId, MomentId, PlanId, StepId
+from services.domain.ids import AlertId, CircleId, MomentId, PersonId, PlanId, StepId
 from services.domain.plan import Plan
 
 from .conftest import DUE_AT, make_alert, make_version
@@ -108,8 +108,8 @@ def test_activating_records_when_without_disturbing_a_live_alert() -> None:
     repo.save_version(version)
     repo.plans[PlanId("plan-1")] = Plan(
         plan_id=PlanId("plan-1"),
-        subject_person_id="person-mona",
-        circle_id="circle-1",
+        subject_person_id=PersonId("person-mona"),
+        circle_id=CircleId("circle-1"),
         plan_type=version.plan_type,
     )
 

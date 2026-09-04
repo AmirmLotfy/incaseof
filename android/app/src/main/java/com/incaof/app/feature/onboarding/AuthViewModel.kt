@@ -37,6 +37,39 @@ class AuthViewModel(
         }
     }
 
+    fun signUp(email: String, password: String) {
+        perform("Couldn’t create the account. Check the details and try again.") {
+            auth.signUp(email, password)
+        }
+    }
+
+    fun confirmSignUp(email: String, code: String) {
+        perform("That confirmation code didn’t work. Request a new one and try again.") {
+            auth.confirmSignUp(email, code)
+        }
+    }
+
+    fun requestPasswordReset(email: String) {
+        perform("Couldn’t request a reset. Check the email and try again.") {
+            auth.requestPasswordReset(email)
+        }
+    }
+
+    fun confirmPasswordReset(email: String, code: String, newPassword: String) {
+        perform("That reset could not be completed. Check the code and password.") {
+            auth.confirmPasswordReset(email, code, newPassword)
+        }
+    }
+
+    private fun perform(message: String, operation: suspend () -> Result<Unit>) {
+        viewModelScope.launch {
+            _busy.value = true
+            _error.value = null
+            operation().onFailure { _error.value = message }
+            _busy.value = false
+        }
+    }
+
     fun signOut() {
         viewModelScope.launch { auth.signOut() }
     }

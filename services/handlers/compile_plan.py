@@ -12,10 +12,15 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from typing import Any
 
-from services.agent.agent import DEFAULT_MODEL, build_agent, compile_plan_from_utterance
-from services.agent.gateway import Gateway
+import boto3
+from botocore.config import Config
+
+from services.adapters.agentcore import AgentCoreCompiler
+from services.agent.config import MODEL_ID, PROMPT_SCHEMA_VERSION
+from services.domain.compiler import compile_plan, document_from_version
 from services.domain.errors import PlanValidationError
 from services.domain.ids import CircleId, PersonId, PlanId, uuid_factory
 from services.handlers import bootstrap
@@ -40,18 +45,69 @@ def compile_for(
     agent: Any = None,
 ) -> dict[str, Any]:
     """Compile, or explain why not. Never raises past this boundary."""
+    roles = _circle_roles(ctx, circle_id)
+
+    runtime_arn = os.environ.get("ICO_AGENTCORE_RUNTIME_ARN")
+    if runtime_arn and agent is None:
+        try:
+            runtime = AgentCoreCompiler(
+                client=boto3.client(
+                    "bedrock-agentcore",
+                    config=Config(retries={"max_attempts": 3, "mode": "adaptive"}),
+                ),
+                runtime_arn=runtime_arn,
+                qualifier=os.environ.get("ICO_AGENTCORE_QUALIFIER", "DEFAULT"),
+            )
+            returned = runtime.compile(
+                utterance=utterance,
+                subject_person_id=subject_person_id,
+                timezone=timezone,
+                circle_roles=roles,
+            )
+            document = returned.get("compiledPlan")
+            if not isinstance(document, dict):
+                raise PlanValidationError("AgentCore returned no compiled plan")
+            # AgentCore output is untrusted. Re-run every deterministic validator in the
+            # API process before the document can even be previewed.
+            validated = compile_plan(
+                document,
+                plan_id=PlanId(uuid_factory()),
+                version_number=1,
+            )
+            return _preview(
+                validated.version,
+                warnings=tuple(returned.get("warnings") or validated.warnings),
+                trace=returned.get("trace") if isinstance(returned.get("trace"), dict) else {},
+            )
+        except PlanValidationError as error:
+            return {
+                "status": 422,
+                "body": {
+                    "title": "That description couldn't be turned into a plan",
+                    "detail": str(error),
+                    "templates": TEMPLATES,
+                },
+            }
+        except Exception as error:
+            log.warning("AgentCore compilation failed: %s", type(error).__name__)
+            return _unavailable("Couldn't build your plan just now. Choose a template instead.")
+
+    # Local/test path. The deployed API is configured with an AgentCore Runtime ARN and
+    # never imports the agent framework into the Lambda artifact.
+    from services.agent.agent import build_agent, compile_plan_from_utterance
+    from services.agent.gateway import Gateway
+
     gateway = Gateway(
         ctx=ctx,
         subject_person_id=subject_person_id,
         circle_id=circle_id,
-        model_id=DEFAULT_MODEL,
+        model_id=MODEL_ID,
     )
-    roles = gateway.circle_roles().data.get("roles", [])
 
     try:
         built = agent if agent is not None else build_agent(gateway)
     except RuntimeError as error:
-        # No key configured. Say so plainly rather than pretending the feature exists.
+        # No usable model/runtime configuration. Say so plainly rather than pretending.
         log.warning("agent unavailable: %s", error)
         return _unavailable("The assistant isn't available. Choose a template instead.")
 
@@ -78,13 +134,29 @@ def compile_for(
         log.warning("compilation failed: %s", type(error).__name__)
         return _unavailable("Couldn't build your plan just now. Choose a template instead.")
 
-    version = preview.result.version
+    return _preview(preview.result.version, warnings=preview.warnings)
+
+
+def _circle_roles(ctx: bootstrap.Context, circle_id: CircleId | None) -> list[dict[str, str]]:
+    circle = ctx.circles.get(circle_id) if circle_id else None
+    if circle is None:
+        return []
+    return [{"role": member.role.value, "status": member.status.value} for member in circle.members]
+
+
+def _preview(
+    version: Any,
+    *,
+    warnings: tuple[str, ...],
+    trace: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     return {
         "status": 200,
         "body": {
             # Said out loud on the wire. Nothing here is live.
             "active": False,
             "requiresConfirmation": True,
+            "compiledPlan": document_from_version(version),
             "plan": {
                 "label": version.label,
                 "type": version.plan_type.value,
@@ -104,7 +176,12 @@ def compile_for(
                     for signal, level in version.context_policy.levels.items()
                 },
             },
-            "warnings": list(preview.warnings),
+            "warnings": list(warnings),
+            "trace": {
+                "modelId": MODEL_ID,
+                "schemaVersion": PROMPT_SCHEMA_VERSION,
+                **(trace or {}),
+            },
         },
     }
 

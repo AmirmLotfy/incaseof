@@ -28,7 +28,9 @@ private const val TAG = "MomentAction"
 class MomentActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != IcoNotifications.ACTION_CONFIRM) return
-        val momentId = intent.getStringExtra(IcoNotifications.EXTRA_MOMENT_ID) ?: return
+        val suppliedMomentId = intent.getStringExtra(IcoNotifications.EXTRA_MOMENT_ID)
+        val alertId = intent.getStringExtra(IcoNotifications.EXTRA_ALERT_ID)
+        if (suppliedMomentId == null && alertId == null) return
 
         // Dismiss immediately. The tap has been registered, and leaving the notification up
         // while the network call completes reads as though it did not work.
@@ -39,6 +41,20 @@ class MomentActionReceiver : BroadcastReceiver() {
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                val momentId =
+                    suppliedMomentId
+                        ?: app.container.repository.momentIdForAlert(checkNotNull(alertId)).getOrElse { error ->
+                            Log.w(TAG, "alert lookup failed: ${error.javaClass.simpleName}")
+                            withContext(Dispatchers.Main) {
+                                Toast
+                                    .makeText(
+                                        context,
+                                        context.getString(R.string.confirm_failed),
+                                        Toast.LENGTH_LONG,
+                                    ).show()
+                            }
+                            return@launch
+                        }
                 val result =
                     app.container.repository.confirmMoment(
                         momentId = momentId,

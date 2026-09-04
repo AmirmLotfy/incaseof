@@ -33,6 +33,7 @@ from services.domain.ids import (
     AlertId,
     CircleId,
     ConsentId,
+    InvitationId,
     MembershipId,
     MomentId,
     PersonId,
@@ -40,6 +41,7 @@ from services.domain.ids import (
     PlanVersionId,
     StepId,
 )
+from services.domain.invitation import CircleInvitation, InvitationStatus
 from services.domain.moment import ExpectedMoment, MomentStatus
 from services.domain.plan import (
     ActionType,
@@ -58,6 +60,34 @@ from services.domain.plan import (
 from services.domain.resolution import Resolution, ResolutionSource
 
 Item = dict[str, Any]
+
+
+def invitation_to(invitation: CircleInvitation) -> Item:
+    return {
+        "invitationId": invitation.invitation_id,
+        "circleId": invitation.circle_id,
+        "ownerPersonId": invitation.owner_person_id,
+        "responderPersonId": invitation.responder_person_id,
+        "membershipId": invitation.membership_id,
+        "planIds": list(invitation.plan_ids),
+        "expiresAt": _iso(invitation.expires_at),
+        "status": invitation.status.value,
+    }
+
+
+def invitation_from(item: Item) -> CircleInvitation:
+    expires_at = _dt(item["expiresAt"])
+    assert expires_at is not None  # noqa: S101
+    return CircleInvitation(
+        invitation_id=InvitationId(item["invitationId"]),
+        circle_id=CircleId(item["circleId"]),
+        owner_person_id=PersonId(item["ownerPersonId"]),
+        responder_person_id=PersonId(item["responderPersonId"]),
+        membership_id=MembershipId(item["membershipId"]),
+        plan_ids=tuple(PlanId(value) for value in item.get("planIds", [])),
+        expires_at=expires_at,
+        status=InvitationStatus(item["status"]),
+    )
 
 
 def _num(value: float | int) -> Decimal:
@@ -185,8 +215,8 @@ def plan_from(item: Item) -> Plan:
     active = item.get("activeVersionId")
     return Plan(
         plan_id=PlanId(item["planId"]),
-        subject_person_id=item["subjectPersonId"],
-        circle_id=item["circleId"],
+        subject_person_id=PersonId(item["subjectPersonId"]),
+        circle_id=CircleId(item["circleId"]),
         plan_type=PlanType(item["planType"]),
         active_version_id=PlanVersionId(active) if active else None,
         paused=bool(item.get("paused", False)),
@@ -203,6 +233,8 @@ def moment_to(moment: ExpectedMoment) -> Item:
         "dueAt": _iso(moment.due_at),
         "graceUntil": _iso(moment.grace_until),
         "status": moment.status.value,
+        "isDrill": moment.is_drill,
+        "timeScale": _num(moment.time_scale),
     }
 
 
@@ -216,6 +248,8 @@ def moment_from(item: Item) -> ExpectedMoment:
         due_at=due_at,
         grace_until=grace_until,
         status=MomentStatus(item["status"]),
+        is_drill=bool(item.get("isDrill", False)),
+        time_scale=_float(item.get("timeScale", 1.0)),
     )
 
 

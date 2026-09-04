@@ -15,6 +15,7 @@ from datetime import datetime
 from services.domain.ids import (
     AlertId,
     CircleId,
+    InvitationId,
     MembershipId,
     MomentId,
     PersonId,
@@ -35,6 +36,13 @@ from services.domain.ids import (
 GSI1 = "gsi1-moments-due"
 GSI1_PK = "gsi1pk"
 GSI1_SK = "gsi1sk"
+
+# Owner-scoped listing index. Public handlers never scan the shared table and never
+# infer ownership from caller-controlled ids. The partition is the validated Cognito
+# subject; sort-key prefixes keep Plans, Circles and Moments independently queryable.
+GSI2 = "gsi2-person"
+GSI2_PK = "gsi2pk"
+GSI2_SK = "gsi2sk"
 
 
 def person(person_id: PersonId) -> str:
@@ -71,6 +79,14 @@ def alert(alert_id: AlertId) -> str:
     return f"ALERT#{alert_id}"
 
 
+def invitation(invitation_id: InvitationId) -> str:
+    return f"INVITATION#{invitation_id}"
+
+
+def owner_invitation(invitation_id: InvitationId) -> str:
+    return f"INVITATION#{invitation_id}"
+
+
 def consent_sk(responder_id: PersonId) -> str:
     return f"CONSENT#{responder_id}"
 
@@ -90,6 +106,26 @@ def due_bucket(due_at: datetime) -> str:
 
 def due_sort(due_at: datetime, moment_id: MomentId) -> str:
     return f"{due_at.isoformat()}#{moment_id}"
+
+
+def owner_partition(person_id: PersonId) -> str:
+    return person(person_id)
+
+
+def owner_plan(plan_id: PlanId) -> str:
+    return f"PLAN#{plan_id}"
+
+
+def owner_circle(circle_id: CircleId) -> str:
+    return f"CIRCLE#{circle_id}"
+
+
+def owner_moment(due_at: datetime, moment_id: MomentId) -> str:
+    return f"MOMENT#{due_at.isoformat()}#{moment_id}"
+
+
+def owner_alert(opened_at: datetime, alert_id: AlertId) -> str:
+    return f"ALERT#{opened_at.isoformat()}#{alert_id}"
 
 
 META = "META"

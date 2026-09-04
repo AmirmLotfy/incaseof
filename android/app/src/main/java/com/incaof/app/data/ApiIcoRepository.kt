@@ -1,9 +1,13 @@
 package com.incaof.app.data
 
 import com.incaof.app.core.network.CircleMemberDto
+import com.incaof.app.core.network.CompilePlanRequest
+import com.incaof.app.core.network.CreatePlanRequest
 import com.incaof.app.core.network.IcoApi
+import com.incaof.app.core.network.InviteCircleRequest
 import com.incaof.app.core.network.MomentDto
 import com.incaof.app.core.network.PlanDto
+import com.incaof.app.core.network.RegisterDeviceRequest
 import com.incaof.app.core.network.TimelineDto
 import com.incaof.app.domain.Alert
 import com.incaof.app.domain.AlertState
@@ -18,6 +22,8 @@ import com.incaof.app.domain.ResolvedMoment
 import com.incaof.app.domain.ResponderRole
 import com.incaof.app.domain.StepAction
 import com.incaof.app.domain.TimelineEvent
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import retrofit2.Response
 import java.time.Instant
 
@@ -25,6 +31,41 @@ import java.time.Instant
 class ApiIcoRepository(
     private val api: IcoApi,
 ) : IcoRepository {
+    override suspend fun compilePlan(description: String, timezone: String): Result<CompiledPlanDraft> =
+        runCatching {
+            val response = api.compilePlan(CompilePlanRequest(description, timezone)).requireBody()
+            CompiledPlanDraft(
+                compiledPlanJson = response.compiledPlan.toString(),
+                preview =
+                    Plan(
+                        id = "preview",
+                        label = response.plan.label,
+                        type = runCatching { PlanType.valueOf(response.plan.type) }.getOrDefault(PlanType.ROUTINE),
+                        cadence = response.compiledPlan["trigger"]?.toString().orEmpty(),
+                        timeOfDay = "",
+                        active = false,
+                        steps =
+                            response.plan.steps.map {
+                                EscalationStep(
+                                    it.sequence,
+                                    it.offsetSeconds,
+                                    runCatching { StepAction.valueOf(it.action) }.getOrDefault(StepAction.PUSH_SUBJECT),
+                                    it.targetRole?.let { role ->
+                                        runCatching { ResponderRole.valueOf(role) }.getOrNull()
+                                    },
+                                )
+                            },
+                    ),
+                warnings = response.warnings,
+            )
+        }
+
+    override suspend fun createPlan(draft: CompiledPlanDraft): Result<Plan> =
+        runCatching {
+            val document = Json.parseToJsonElement(draft.compiledPlanJson) as JsonObject
+            api.createPlan(CreatePlanRequest(document)).requireBody().toDomain()
+        }
+
     override suspend fun nextMoment(): Result<Moment?> =
         runCatching {
             val response = api.nextMoment()
@@ -36,7 +77,11 @@ class ApiIcoRepository(
 
     override suspend fun plans(): Result<List<Plan>> =
         runCatching {
-            api.plans().requireBody().map { it.toDomain() }
+            api
+                .plans()
+                .requireBody()
+                .plans
+                .map { it.toDomain() }
         }
 
     override suspend fun plan(planId: String): Result<Plan> =
@@ -44,27 +89,76 @@ class ApiIcoRepository(
             api.plan(planId).requireBody().toDomain()
         }
 
+    override suspend fun activatePlan(planId: String): Result<Plan> =
+        planMutation { key -> api.activatePlan(planId, key) }
+
+    override suspend fun pausePlan(planId: String): Result<Plan> =
+        planMutation { key -> api.pausePlan(planId, key) }
+
+    override suspend fun resumePlan(planId: String): Result<Plan> =
+        planMutation { key -> api.resumePlan(planId, key) }
+
     override suspend fun circle(): Result<List<CircleMember>> =
         runCatching {
-            api.circle().requireBody().map { it.toDomain() }
+            api
+                .circle()
+                .requireBody()
+                .members
+                .map { it.toDomain() }
+        }
+
+    override suspend fun inviteCircleMember(
+        displayName: String,
+        relationship: String?,
+        role: ResponderRole,
+    ): Result<String> =
+        runCatching {
+            val invitation =
+                api
+                    .inviteCircleMember(
+                        InviteCircleRequest(displayName, relationship, role.name),
+                        java.util.UUID
+                            .randomUUID()
+                            .toString(),
+                    ).requireBody()
+            invitation.inviteUrl
         }
 
     override suspend fun history(): Result<List<ResolvedMoment>> =
         runCatching {
-            // History is derived from resolved Moments; the dedicated endpoint lands with the
-            // History surface in Phase 4. Returning empty is honest — the screen says so.
-            emptyList()
+            api.history().requireBody().history.map {
+                ResolvedMoment(
+                    id = it.id,
+                    planLabel = it.planLabel,
+                    resolvedAt = Instant.parse(it.resolvedAt),
+                    resolvedBy = it.resolvedBy,
+                    method = it.method,
+                )
+            }
         }
 
     override suspend fun timeline(alertId: String): Result<Alert> =
         runCatching {
-            api.timeline(alertId).requireBody().toDomain()
+            val summary = api.alert(alertId).requireBody()
+            val audit = api.timeline(alertId).requireBody()
+            Alert(
+                id = summary.alertId,
+                state = runCatching { AlertState.valueOf(summary.state) }.getOrDefault(AlertState.SCHEDULED),
+                planLabel = summary.planLabel,
+                expectedAt = summary.openedAt?.let { Instant.parse(it) } ?: Instant.EPOCH,
+                ownerName = summary.leaseOwner,
+                leaseExpiresAt = summary.leaseExpiresAt?.let { Instant.parse(it) },
+                timeline = audit.toDomain().timeline,
+            )
         }
+
+    override suspend fun momentIdForAlert(alertId: String): Result<String> =
+        runCatching { api.alert(alertId).requireBody().momentId }
 
     override suspend fun confirmMoment(momentId: String, idempotencyKey: String, source: ConfirmSource): Result<Unit> =
         runCatching {
             api.confirmMoment(momentId, source.wireValue, idempotencyKey).requireBody()
-            Unit
+            return@runCatching
         }
 
     override suspend fun extendMoment(momentId: String, seconds: Int): Result<Moment> =
@@ -74,8 +168,42 @@ class ApiIcoRepository(
                     momentId,
                     com.incaof.app.core.network
                         .ExtendRequest(seconds),
+                    java.util.UUID
+                        .randomUUID()
+                        .toString(),
                 ).requireBody()
                 .toDomain()
+        }
+
+    override suspend fun testPlan(planId: String): Result<Unit> =
+        runCatching {
+            api
+                .testPlan(
+                    planId,
+                    java.util.UUID
+                        .randomUUID()
+                        .toString(),
+                ).requireBody()
+            return@runCatching
+        }
+
+    override suspend fun registerDevice(deviceId: String, registrationToken: String): Result<Unit> =
+        runCatching {
+            val registered =
+                api.registerDevice(RegisterDeviceRequest(deviceId, registrationToken)).requireBody()
+            require(registered.deviceId == deviceId) { "device registration response mismatch" }
+            return@runCatching
+        }
+
+    private suspend fun planMutation(
+        request: suspend (String) -> Response<PlanDto>,
+    ): Result<Plan> =
+        runCatching {
+            request(
+                java.util.UUID
+                    .randomUUID()
+                    .toString(),
+            ).requireBody().toDomain()
         }
 }
 
@@ -99,6 +227,9 @@ internal fun MomentDto.toDomain() =
         dueAt = Instant.parse(dueAt),
         graceUntil = Instant.parse(graceUntil),
         alertState = alertState?.let { runCatching { AlertState.valueOf(it) }.getOrNull() },
+        alertId = alertId,
+        isDrill = isDrill,
+        timeScale = timeScale,
     )
 
 internal fun PlanDto.toDomain() =
@@ -109,6 +240,7 @@ internal fun PlanDto.toDomain() =
         cadence = cadence,
         timeOfDay = timeOfDay,
         active = active,
+        paused = paused,
         steps =
             steps.map {
                 EscalationStep(
@@ -137,12 +269,12 @@ internal fun PlanDto.toDomain() =
 
 internal fun CircleMemberDto.toDomain() =
     CircleMember(
-        id = id,
+        id = memberId,
         displayName = displayName,
         relationship = relationship,
         role = runCatching { ResponderRole.valueOf(role) }.getOrDefault(ResponderRole.PRIMARY),
-        accepted = accepted,
-        phoneVerified = phoneVerified,
+        accepted = status == "ACCEPTED",
+        phoneVerified = false,
     )
 
 internal fun TimelineDto.toDomain() =

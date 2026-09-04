@@ -66,8 +66,8 @@ Concretely:
 ## Built with
 
 - **Strands Agents SDK** — the agent runtime
-- **Gemini 3.7 Flash** — natural-language plan compilation and intent interpretation
-- **Amazon Bedrock AgentCore** — agent hosting and the policy gateway
+- **Amazon Nova 2 Lite through Amazon Bedrock** — natural-language plan compilation without a model API key
+- **Amazon Bedrock AgentCore** — Strands runtime, role-only Gateway and Cedar policy enforcement
 - **AWS Step Functions** — durable escalation workflows
 - **EventBridge Scheduler** — safety timers that do not depend on a device
 - **DynamoDB** — authoritative state
@@ -92,6 +92,7 @@ docs/        product, architecture, domain, security and design contracts
 
 | Document | What it governs |
 |---|---|
+| [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md) | Evidence-backed capability, release and deployment status |
 | [`docs/PRD.md`](docs/PRD.md) | Product definition, principles, scope, Definition of Done |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Runtime topology, outbox, idempotency, failure behaviour |
 | [`docs/ERD.md`](docs/ERD.md) | Domain model and the DynamoDB physical design |
@@ -100,7 +101,66 @@ docs/        product, architecture, domain, security and design contracts
 | [`docs/SECURITY.md`](docs/SECURITY.md) | Threat model, responder tokens, data protection |
 | [`docs/API.md`](docs/API.md) | HTTP surface |
 | [`docs/DEMO.md`](docs/DEMO.md) | Demo time compression and submission |
+| [`docs/HACKATHON.md`](docs/HACKATHON.md) | Devpost submission narrative and track qualification |
+| [`docs/DEMO-VIDEO-SCRIPT.md`](docs/DEMO-VIDEO-SCRIPT.md) | 4:30 video pitch storyboard and narration |
 | [`docs/design/DESIGN.md`](docs/design/DESIGN.md) | Design system, palette, accessibility floor |
+
+---
+
+## Architecture & Security Boundary
+
+```mermaid
+flowchart TD
+    subgraph Human["Human Layer (Subject & Responders)"]
+        User["Subject (Android / Notification)"]
+        Resp["Circle Member / Responder (Web / SMS)"]
+    end
+
+    subgraph Interpret["AI Interpretation Layer"]
+        AgentCore["Strands on AgentCore Runtime<br/>Amazon Nova 2 Lite via Bedrock"]
+    end
+
+    subgraph Auth["Authorization Layer"]
+        Cedar["Cedar Policy Engine<br/>& Gateway Firewall"]
+    end
+
+    subgraph State["Deterministic State & Execution Layer"]
+        SFN["AWS Step Functions<br/>(Standard Workflow)"]
+        DDB[("Amazon DynamoDB<br/>Conditional Writes + PITR")]
+        EB["Amazon EventBridge<br/>Scheduler Timers"]
+        SQS["Amazon SQS + KMS<br/>Action Outbox"]
+    end
+
+    User -->|"1. Natural Utterance"| AgentCore
+    AgentCore -->|"2. Typed Draft / Abstract Roles"| Cedar
+    Cedar -->|"3. ALLOW / DENY"| SFN
+    SFN -->|"4. Deterministic State Transition"| DDB
+    EB -->|"Trigger Due Moment"| SFN
+    SFN -->|"Queue Notification"| SQS
+    SQS -->|"Signed Single-Alert Link"| Resp
+    Resp -->|"Claim (10m Lease) / Resolve"| Cedar
+```
+
+### Escalation State Machine: *Acknowledged ≠ Resolved*
+
+```mermaid
+stateDiagram-v2
+    [*] --> SCHEDULED: Plan Activated
+    SCHEDULED --> DUE: EventBridge Timer Fires
+    DUE --> GRACE: Push Notification Sent
+    GRACE --> RESOLVED: Subject Taps "I'm okay"
+    GRACE --> SELF_CONTACT: Grace Window Lapsed
+    SELF_CONTACT --> RESOLVED: Subject Confirms (App / SMS)
+    SELF_CONTACT --> CIRCLE_ESCALATION: Subject Unreachable
+
+    CIRCLE_ESCALATION --> CHECKING: Responder Claims Alert (10m Lease)
+    CHECKING --> RESOLVED: Responder Verifies Direct Contact
+    CHECKING --> CIRCLE_ESCALATION: Lease Expires without Contact
+
+    CIRCLE_ESCALATION --> ESCALATION_EXHAUSTED: All Circle Rungs Contacted
+    RESOLVED --> [*]: Loop Closed (Terminal)
+    ESCALATION_EXHAUSTED --> [*]: Emergency Logged (Terminal)
+```
 
 ---
 
@@ -123,6 +183,10 @@ npm install && npm run build --workspaces
 ```bash
 cd android && ./gradlew assembleDebug
 ```
+
+Signed demo builds require protected Firebase and keystore inputs and cannot fall back to local
+data. See [Android demo release](docs/ANDROID-RELEASE.md) for the reproducible build, verification
+and judge-installation steps.
 
 Copy `.env.example` to `.env` for local configuration. **Never commit `.env`** — a pre-commit hook
 blocks it, along with hardcoded phone numbers and detected secrets.

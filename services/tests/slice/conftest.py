@@ -290,6 +290,8 @@ def a_slice() -> Iterator[Slice]:
                     {"AttributeName": "sk", "AttributeType": "S"},
                     {"AttributeName": keys.GSI1_PK, "AttributeType": "S"},
                     {"AttributeName": keys.GSI1_SK, "AttributeType": "S"},
+                    {"AttributeName": keys.GSI2_PK, "AttributeType": "S"},
+                    {"AttributeName": keys.GSI2_SK, "AttributeType": "S"},
                 ],
                 GlobalSecondaryIndexes=[
                     {
@@ -299,7 +301,15 @@ def a_slice() -> Iterator[Slice]:
                             {"AttributeName": keys.GSI1_SK, "KeyType": "RANGE"},
                         ],
                         "Projection": {"ProjectionType": "ALL"},
-                    }
+                    },
+                    {
+                        "IndexName": keys.GSI2,
+                        "KeySchema": [
+                            {"AttributeName": keys.GSI2_PK, "KeyType": "HASH"},
+                            {"AttributeName": keys.GSI2_SK, "KeyType": "RANGE"},
+                        ],
+                        "Projection": {"ProjectionType": "ALL"},
+                    },
                 ],
                 BillingMode="PAY_PER_REQUEST",
             )

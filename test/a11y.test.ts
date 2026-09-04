@@ -15,6 +15,7 @@
 import assert from "node:assert/strict";
 import { after, before, describe, it } from "node:test";
 import { spawn, type ChildProcess } from "node:child_process";
+import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { AxeBuilder } from "@axe-core/playwright";
 import { chromium, type Browser, type Page } from "playwright";
@@ -45,10 +46,9 @@ async function reachable(url: string, attempts = 60): Promise<void> {
 }
 
 function serve(app: string, port: number): ChildProcess {
-  // `next start`, not `next dev`. Under the dev server hydration does not complete here,
-  // so every control stays inert — which made the "claimed state" check silently re-test
-  // the unclaimed one and pass. A production build is also what people actually load.
-  return spawn("npx", ["next", "start", "--port", String(port)], {
+  // Serve the exported output with the same clean-path and signed-token rewrites used by
+  // CloudFront. This tests the artifact people actually receive, not a development server.
+  return spawn("node", [fileURLToPath(new URL("./static-server.mjs", import.meta.url)), "out", String(port)], {
     // fileURLToPath, not .pathname: the repository path contains a space, which .pathname
     // hands back percent-encoded and spawn then treats as a literal directory name.
     cwd: fileURLToPath(new URL(`../apps/${app}`, import.meta.url)),
@@ -61,7 +61,10 @@ before(async () => {
   server = serve("responder", PORT);
   marketing = serve("marketing", MARKETING_PORT);
   await Promise.all([reachable(BASE), reachable(MARKETING)]);
-  browser = await chromium.launch();
+  const macChrome = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+  browser = existsSync(macChrome)
+    ? await chromium.launch({ executablePath: macChrome })
+    : await chromium.launch();
 });
 
 after(async () => {
@@ -76,6 +79,45 @@ async function newPage(): Promise<Page> {
   return context.newPage();
 }
 
+async function mockIncidentApi(page: Page, invalid = false): Promise<void> {
+  const expected = new Date(Date.now() - 23 * 60_000);
+  const at = (minutes: number) => new Date(expected.getTime() + minutes * 60_000).toISOString();
+  await page.route("**/runtime-config.json", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({ apiUrl: "https://api.test.invalid" }),
+  }));
+  await page.route("https://api.test.invalid/r/**", (route) => {
+    if (invalid) return route.fulfill({ status: 403, contentType: "application/json", body: "{}" });
+    return route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        alertId: "alert-test",
+        subjectName: "Mona",
+        planLabel: "Evening check",
+        expectedAt: expected.toISOString(),
+        state: "CIRCLE_ESCALATION",
+        tried: [
+          { at: at(0), event: "MOMENT_DUE" },
+          { at: at(10), event: "ACTION_QUEUED" },
+          { at: at(20), event: "CHANNEL_UNAVAILABLE" },
+        ],
+        ownerName: null,
+        leaseExpiresAt: null,
+        canClaim: true,
+        canResolve: false,
+        nextContact: { name: "Omar", at: at(35) },
+      }),
+    });
+  });
+  await page.route("https://api.test.invalid/v1/r/**", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({ state: "CIRCLE_ESCALATION" }),
+  }));
+}
+
 async function violations(page: Page) {
   const result = await new AxeBuilder({ page }).withTags(STANDARD).analyze();
   return result.violations.map(
@@ -86,8 +128,9 @@ async function violations(page: Page) {
 describe("responder web accessibility", () => {
   it("the Incident Room has no WCAG AA violations", async () => {
     const page = await newPage();
+    await mockIncidentApi(page);
     await page.goto(`${BASE}/r/sample`);
-    await page.waitForSelector("main");
+    await page.getByRole("button", { name: /checking/i }).waitFor();
 
     const found = await violations(page);
     assert.deepEqual(found, [], `\n    ${found.join("\n    ")}\n`);
@@ -98,6 +141,7 @@ describe("responder web accessibility", () => {
     // The state a responder is actually in while deciding what to do, and the one with the
     // countdown — so the one most likely to have a live-region or contrast problem.
     const page = await newPage();
+    await mockIncidentApi(page);
     await page.goto(`${BASE}/r/sample`);
     await page.waitForSelector("main");
     await page.getByRole("button", { name: /checking/i }).click();
@@ -110,8 +154,9 @@ describe("responder web accessibility", () => {
 
   it("the invalid-link page has none", async () => {
     const page = await newPage();
+    await mockIncidentApi(page, true);
     await page.goto(`${BASE}/r/invalid`);
-    await page.waitForSelector("main");
+    await page.getByRole("heading", { name: /isn’t valid/i }).waitFor();
 
     const found = await violations(page);
     assert.deepEqual(found, [], `\n    ${found.join("\n    ")}\n`);
@@ -122,8 +167,9 @@ describe("responder web accessibility", () => {
     // WCAG 2.2 target size, and the reason the Android rules say 48dp. A responder taps
     // this half-awake; a control that needs aim is a control that gets mis-hit.
     const page = await newPage();
+    await mockIncidentApi(page);
     await page.goto(`${BASE}/r/sample`);
-    await page.waitForSelector("main");
+    await page.getByRole("button", { name: /checking/i }).waitFor();
 
     const small: string[] = [];
     let checked = 0;
@@ -158,8 +204,9 @@ describe("responder web accessibility", () => {
     // Visual order and DOM order can disagree, and a timeline that reads backwards to
     // TalkBack tells the story in reverse — which is worse than not telling it.
     const page = await newPage();
+    await mockIncidentApi(page);
     await page.goto(`${BASE}/r/sample`);
-    await page.waitForSelector("main");
+    await page.locator("[data-timeline-at]").first().waitFor();
 
     const times = await page.locator("[data-timeline-at]").evaluateAll((nodes) =>
       nodes.map((n) => n.getAttribute("data-timeline-at") ?? ""),
@@ -175,8 +222,9 @@ describe("responder web accessibility", () => {
     // colour-blindness and a greyscale screenshot. Anything painted in a state colour must
     // also say something in words.
     const page = await newPage();
+    await mockIncidentApi(page);
     await page.goto(`${BASE}/r/sample`);
-    await page.waitForSelector("main");
+    await page.getByRole("button", { name: /checking/i }).waitFor();
 
     const mute = await page.evaluate(() => {
       const state = ["--ico-signal", "--ico-critical", "--ico-resolved"]

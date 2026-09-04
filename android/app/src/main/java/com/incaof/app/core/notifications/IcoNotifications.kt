@@ -34,6 +34,7 @@ object IcoNotifications {
 
     const val ACTION_CONFIRM = "com.incaof.app.action.CONFIRM_MOMENT"
     const val EXTRA_MOMENT_ID = "momentId"
+    const val EXTRA_ALERT_ID = "alertId"
     const val EXTRA_PLAN_LABEL = "planLabel"
 
     fun createChannels(context: Context) {
@@ -60,16 +61,31 @@ object IcoNotifications {
      * anything is wrong (docs/design/COPY.md §3).
      */
     fun showMomentDue(context: Context, momentId: String, planLabel: String) {
+        showDue(context, momentId = momentId, alertId = null, planLabel = planLabel)
+    }
+
+    /** A provider push carries only an Alert id; sensitive labels are fetched after unlock. */
+    fun showAlertDue(context: Context, alertId: String) {
+        showDue(
+            context,
+            momentId = null,
+            alertId = alertId,
+            planLabel = context.getString(R.string.app_name),
+        )
+    }
+
+    private fun showDue(context: Context, momentId: String?, alertId: String?, planLabel: String) {
         val confirm =
             Intent(context, MomentActionReceiver::class.java).apply {
                 action = ACTION_CONFIRM
-                putExtra(EXTRA_MOMENT_ID, momentId)
+                momentId?.let { putExtra(EXTRA_MOMENT_ID, it) }
+                alertId?.let { putExtra(EXTRA_ALERT_ID, it) }
                 putExtra(EXTRA_PLAN_LABEL, planLabel)
             }
         val confirmPending =
             PendingIntent.getBroadcast(
                 context,
-                momentId.hashCode(),
+                (momentId ?: alertId).hashCode(),
                 confirm,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
             )
@@ -80,7 +96,8 @@ object IcoNotifications {
                 0,
                 Intent(context, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                    putExtra(EXTRA_MOMENT_ID, momentId)
+                    momentId?.let { putExtra(EXTRA_MOMENT_ID, it) }
+                    alertId?.let { putExtra(EXTRA_ALERT_ID, it) }
                 },
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
             )

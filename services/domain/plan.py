@@ -16,7 +16,7 @@ from enum import StrEnum
 
 from .clock import require_aware
 from .errors import PlanValidationError
-from .ids import PlanId, PlanVersionId, StepId
+from .ids import CircleId, PersonId, PlanId, PlanVersionId, StepId
 
 MAX_STEPS = 12
 DEFAULT_LEASE_SECONDS = 600
@@ -283,8 +283,8 @@ class Plan:
     """The mutable container. Its protection lives in versions, not here."""
 
     plan_id: PlanId
-    subject_person_id: str
-    circle_id: str
+    subject_person_id: PersonId
+    circle_id: CircleId
     plan_type: PlanType
     active_version_id: PlanVersionId | None = None
     paused: bool = False

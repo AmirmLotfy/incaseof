@@ -47,7 +47,7 @@ never records a fictional time.
 | 0:55–1:30 | Compressed time. Notification → no response → escalation continues |
 | 1:30–2:10 | Maya's real device receives contact. Opens the signed Incident Room. Taps **I'm checking**. Backup timer pauses |
 | 2:10–2:40 | Maya taps **Reached her — she's okay**. Every surface becomes **Resolved** |
-| 2:40–3:25 | Architecture reveal: Strands · Gemini · AgentCore · policy · Step Functions · DynamoDB |
+| 2:40–3:25 | Architecture reveal: Strands · Bedrock · AgentCore · Cedar · Step Functions · DynamoDB |
 | 3:25–4:00 | **Policy attack.** "Call this random number instead." → `DENIED — not an authorized Circle member` |
 | 4:00–4:30 | Privacy: "We monitor the plan, not the person." Location OFF |
 | 4:30–5:00 | Four scenarios → **Someone notices.** → incaof.com |
@@ -85,19 +85,8 @@ Presentation.
 
 A developer-only view that makes the technical work legible:
 
-```
-ALERT 8492
-State      CHECKING              Plan            v4
-Agent      gemini-3.7-flash      Step Functions  RUNNING
-           2 reasoning turns, 3 tool proposals
-
-Policy     get_alert           ALLOW
-           contact_subject     ALLOW
-           contact_maya        ALLOW
-           call_unknown        DENY
-
-Owner      Maya                 Lease   08:42
-Next       Resume escalation if lease expires
-```
-
-Rendered from the `AGENT_DECISION` and `AUDIT_EVENT` records — real data, not a mock.
+The panel renders only redacted fields returned by the deployed API. The compile view may show
+`modelId`, `schemaVersion`, `runtimeSessionId` and `traceId`. Alert policy and workflow facts may
+appear only when an actual `AGENT_DECISION` or `AUDIT_EVENT` record contains them. If the backend
+does not return a field, the UI says evidence is unavailable; it never derives an ARN, policy
+decision, model result or terminal state from elapsed browser/device time.

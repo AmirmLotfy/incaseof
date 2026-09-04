@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "status": "NOT_ACCEPTED",
+  "acceptedCommit": null,
+  "tag": null,
+  "verifiedAt": null,
+  "aws": {
+    "deploymentPrincipalArn": null,
+    "stackName": null,
+    "region": null,
+    "agentCoreRuntimeArn": null,
+    "agentCoreGatewayUrl": null,
+    "policyEngineArn": null,
+    "stateMachineArn": null,
+    "cloudWatchDashboard": null
+  },
+  "urls": {
+    "marketing": null,
+    "webApp": null,
+    "demo": null,
+    "api": null,
+    "apk": null
+  },
+  "android": {
+    "applicationId": null,
+    "versionCode": null,
+    "sha256": null,
+    "signingCertificateSha256": null,
+    "api26": "NOT_RUN",
+    "api37": "NOT_RUN",
+    "physicalDevice": "NOT_RUN"
+  },
+  "canary": {
+    "modelId": "us.amazon.nova-2-lite-v1:0",
+    "runtimeInvocationId": null,
+    "traceId": null,
+    "workflowExecutionArn": null,
+    "safeSinkReference": null,
+    "resolvedAlertId": null
+  },
+  "gates": [],
+  "screenshots": [],
+  "videoUrl": null,
+  "builderIdSupplied": false,
+  "notes": ["Copy this template to release-evidence.json only after live acceptance."]
+}

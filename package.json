@@ -2,7 +2,7 @@
   "name": "incaseof",
   "version": "0.1.0",
   "private": true,
-  "description": "In Case of \u2014 someone notices.",
+  "description": "In Case of — someone notices.",
   "license": "Apache-2.0",
   "workspaces": [
     "apps/marketing",
@@ -28,6 +28,7 @@
     "@axe-core/playwright": "4.13.0",
     "axe-core": "4.13.0",
     "playwright": "1.62.1",
-    "tsx": "4.23.12"
+    "tsx": "4.23.12",
+    "typescript-eslint": "^8.69.0"
   }
 }

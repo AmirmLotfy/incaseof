@@ -104,7 +104,7 @@ The agent may *suggest* a plan change. Changing the plan requires explicit human
 The user must always be able to answer: What happened? Why? Who was contacted? What happens next?
 
 ### 4.7 Fail safely
-If Gemini fails, escalation continues. If the app is killed, escalation continues. If a Lambda
+If the AgentCore compiler fails, escalation continues. If the app is killed, escalation continues. If a Lambda
 retries, nobody receives duplicate calls. If a channel fails, a fallback is attempted. If a
 responder disappears, the workflow resumes.
 
@@ -184,7 +184,7 @@ language to deterministic interface is the core differentiator.
 
 **Compilation pipeline — the preview step is never skipped:**
 ```
-Gemini output → schema validation → semantic validation → contact authorization validation →
+Model output → schema validation → semantic validation → contact authorization validation →
 safety validation → simulation → human preview → explicit confirmation → Plan Version created
 ```
 
@@ -242,7 +242,7 @@ Committed in full. See "Schedule risk" below.
 | One-time Plan | ✓ |
 | Recurring Plan | ✓ |
 | Natural language compilation | ✓ |
-| Gemini 3.7 Flash | ✓ |
+| Strands on AgentCore with Amazon Nova 2 Lite through Bedrock | ✓ |
 | Strands Agent | ✓ |
 | AgentCore Runtime | ✓ |
 | AgentCore Gateway / Policy | ✓ |
@@ -336,7 +336,7 @@ The project is not done until **all** of these are true:
 
 ```
 ✓ User can create a Plan using natural language.
-✓ Gemini output becomes validated structured data.
+✓ AgentCore output becomes validated structured data.
 ✓ User sees exactly what will happen before activation.
 ✓ Expected Moment fires if the Android app is terminated.
 ✓ Android check notification works.
@@ -352,7 +352,7 @@ The project is not done until **all** of these are true:
 ✓ Duplicate event delivery does not duplicate external actions.
 ✓ Unauthorized Circle contact is rejected.
 ✓ Unauthorized context release is rejected.
-✓ Gemini outage does not prevent deterministic escalation.
+✓ Model outage does not prevent deterministic escalation.
 ✓ Full audit timeline is available.
 ✓ Drill Mode runs the same production workflow.
 ✓ Android app passes accessibility review.

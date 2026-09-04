@@ -15,6 +15,16 @@ import retrofit2.http.Path
  * client calling a route that was never deployed fails at the worst possible moment.
  */
 interface IcoApi {
+    @POST("v1/plans/compile")
+    suspend fun compilePlan(
+        @Body request: CompilePlanRequest,
+    ): Response<CompilePlanResponseDto>
+
+    @POST("v1/plans")
+    suspend fun createPlan(
+        @Body request: CreatePlanRequest,
+    ): Response<PlanDto>
+
     @GET("v1/moments/next")
     suspend fun nextMoment(): Response<MomentDto>
 
@@ -35,24 +45,68 @@ interface IcoApi {
     suspend fun extendMoment(
         @Path("momentId") momentId: String,
         @Body request: ExtendRequest,
+        @Header("Idempotency-Key") idempotencyKey: String,
     ): Response<MomentDto>
 
     @GET("v1/plans")
-    suspend fun plans(): Response<List<PlanDto>>
+    suspend fun plans(): Response<PlansResponseDto>
 
     @GET("v1/plans/{planId}")
     suspend fun plan(
         @Path("planId") planId: String,
     ): Response<PlanDto>
 
+    @POST("v1/plans/{planId}/activate")
+    suspend fun activatePlan(
+        @Path("planId") planId: String,
+        @Header("Idempotency-Key") idempotencyKey: String,
+    ): Response<PlanDto>
+
+    @POST("v1/plans/{planId}/pause")
+    suspend fun pausePlan(
+        @Path("planId") planId: String,
+        @Header("Idempotency-Key") idempotencyKey: String,
+    ): Response<PlanDto>
+
+    @POST("v1/plans/{planId}/resume")
+    suspend fun resumePlan(
+        @Path("planId") planId: String,
+        @Header("Idempotency-Key") idempotencyKey: String,
+    ): Response<PlanDto>
+
+    @POST("v1/plans/{planId}/test")
+    suspend fun testPlan(
+        @Path("planId") planId: String,
+        @Header("Idempotency-Key") idempotencyKey: String,
+    ): Response<DrillResponseDto>
+
     @GET("v1/circle")
-    suspend fun circle(): Response<List<CircleMemberDto>>
+    suspend fun circle(): Response<CircleResponseDto>
+
+    @POST("v1/circle/invitations")
+    suspend fun inviteCircleMember(
+        @Body request: InviteCircleRequest,
+        @Header("Idempotency-Key") idempotencyKey: String,
+    ): Response<InvitationResponseDto>
+
+    @GET("v1/history")
+    suspend fun history(): Response<HistoryResponseDto>
+
+    @POST("v1/devices")
+    suspend fun registerDevice(
+        @Body request: RegisterDeviceRequest,
+    ): Response<RegisterDeviceResponseDto>
 
     @POST("v1/alerts/{alertId}/claim")
     suspend fun claimAlert(
         @Path("alertId") alertId: String,
         @Header("Idempotency-Key") idempotencyKey: String,
     ): Response<ClaimResponseDto>
+
+    @GET("v1/alerts/{alertId}")
+    suspend fun alert(
+        @Path("alertId") alertId: String,
+    ): Response<AlertSummaryDto>
 
     @GET("v1/alerts/{alertId}/timeline")
     suspend fun timeline(

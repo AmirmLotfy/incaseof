@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1600" viewBox="0 0 2400 1600">
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0 0 L12 6 L0 12 Z" fill="#646B66"/></marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="7" stdDeviation="10" flood-color="#171A18" flood-opacity=".10"/></filter>
+    <style>
+      .title{font:700 54px 'Arial',sans-serif;fill:#171A18}.subtitle{font:400 24px 'Arial',sans-serif;fill:#646B66}
+      .lane{font:700 19px 'Arial',sans-serif;letter-spacing:2px;fill:#646B66}.h{font:700 25px 'Arial',sans-serif;fill:#171A18}.b{font:400 19px 'Arial',sans-serif;fill:#464C48}.small{font:400 16px 'Arial',sans-serif;fill:#646B66}
+      .box{fill:#fff;stroke:#C9CEC9;stroke-width:2;rx:20;filter:url(#shadow)}.aws{fill:#FFF5EC;stroke:#E85B2A}.ai{fill:#EAF5F1;stroke:#3A7665}.data{fill:#F1F2EF;stroke:#646B66}
+      .flow{fill:none;stroke:#646B66;stroke-width:4;marker-end:url(#arrow)}.dash{fill:none;stroke:#9AA19C;stroke-width:3;stroke-dasharray:10 9;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="2400" height="1600" fill="#F6F5F0"/>
+  <rect x="80" y="68" width="82" height="82" rx="18" fill="#171A18"/>
+  <rect x="94" y="92" width="8" height="34" rx="2" fill="#F6F5F0"/>
+  <path d="M126 95 C114 95 108 101 108 109 C108 117 114 123 126 123" stroke="#F6F5F0" stroke-width="7" stroke-linecap="round" fill="none"/>
+  <circle cx="142" cy="109" r="15" stroke="#F6F5F0" stroke-width="7" fill="none"/><circle cx="142" cy="109" r="5" fill="#E85B2A"/>
+  <text x="188" y="111" class="title">In Case Of - ICO</text><text x="188" y="146" class="subtitle">Governed contingency utility on AWS - monitor the plan, not the person</text>
+
+  <text x="90" y="235" class="lane">PEOPLE AND SURFACES</text>
+  <rect class="box" x="90" y="270" width="330" height="150"/><text x="125" y="321" class="h">Android app</text><text x="125" y="354" class="b">Create, consent, activate</text><text x="125" y="384" class="b">confirm, extend, Drill</text>
+  <rect class="box" x="470" y="270" width="330" height="150"/><text x="505" y="321" class="h">Web app</text><text x="505" y="354" class="b">Cognito PKCE session</text><text x="505" y="384" class="b">same plan lifecycle</text>
+  <rect class="box" x="850" y="270" width="330" height="150"/><text x="885" y="321" class="h">Judge demo</text><text x="885" y="354" class="b">Synthetic tenant</text><text x="885" y="384" class="b">accelerated safe workflow</text>
+  <rect class="box" x="1230" y="270" width="330" height="150"/><text x="1265" y="321" class="h">Responder</text><text x="1265" y="354" class="b">Scoped signed link</text><text x="1265" y="384" class="b">claim lease and resolve</text>
+
+  <text x="90" y="500" class="lane">EDGE, IDENTITY AND API</text>
+  <rect class="box aws" x="90" y="535" width="410" height="160"/><text x="125" y="586" class="h">CloudFront + WAF</text><text x="125" y="620" class="b">Private S3 static origins</text><text x="125" y="652" class="small">HSTS, CSP, clean-path rewrites</text>
+  <rect class="box aws" x="565" y="535" width="370" height="160"/><text x="600" y="586" class="h">Amazon Cognito</text><text x="600" y="620" class="b">Public mobile and web clients</text><text x="600" y="652" class="small">SRP and authorization code + PKCE</text>
+  <rect class="box aws" x="1000" y="535" width="430" height="160"/><text x="1035" y="586" class="h">Amazon API Gateway</text><text x="1035" y="620" class="b">Explicit routes + throttles</text><text x="1035" y="652" class="small">Cognito JWT or narrow signed token</text>
+  <rect class="box aws" x="1495" y="535" width="410" height="160"/><text x="1530" y="586" class="h">API Lambda facade</text><text x="1530" y="620" class="b">Tenant and consent checks</text><text x="1530" y="652" class="small">Typed validation + idempotency</text>
+
+  <text x="90" y="785" class="lane">AI INTERPRETATION - SIDE EFFECT FREE</text>
+  <rect class="box ai" x="90" y="820" width="425" height="180"/><text x="125" y="872" class="h">AgentCore Runtime</text><text x="125" y="906" class="b">Strands plan compiler</text><text x="125" y="938" class="small">IAM / SigV4, validated subject context</text><text x="125" y="965" class="small">No state, schedule, or contact grants</text>
+  <rect class="box ai" x="580" y="820" width="390" height="180"/><text x="615" y="872" class="h">Amazon Bedrock</text><text x="615" y="906" class="b">Amazon Nova 2 Lite</text><text x="615" y="938" class="small">AWS execution-role credentials</text><text x="615" y="965" class="small">No model API key in clients</text>
+  <rect class="box ai" x="1035" y="820" width="420" height="180"/><text x="1070" y="872" class="h">Gateway + Policy</text><text x="1070" y="906" class="b">Role-only tool vocabulary</text><text x="1070" y="938" class="small">Cedar ENFORCE, default deny</text><text x="1070" y="965" class="small">Forbid-wins authorization</text>
+  <rect class="box ai" x="1520" y="820" width="385" height="180"/><text x="1555" y="872" class="h">Deterministic guard</text><text x="1555" y="906" class="b">Schema, time, safety</text><text x="1555" y="938" class="small">Model proposes a typed draft</text><text x="1555" y="965" class="small">Software authorizes every action</text>
+
+  <text x="90" y="1090" class="lane">DETERMINISTIC WORKFLOW AND DATA</text>
+  <rect class="box aws" x="90" y="1125" width="350" height="175"/><text x="125" y="1176" class="h">EventBridge</text><text x="125" y="1210" class="b">Expected Moment schedules</text><text x="125" y="1242" class="small">At-least-once and cancellable</text>
+  <rect class="box aws" x="495" y="1125" width="395" height="175"/><text x="530" y="1176" class="h">Step Functions</text><text x="530" y="1210" class="b">Standard escalation loop</text><text x="530" y="1242" class="small">wait, dispatch, lease, close</text>
+  <rect class="box aws" x="945" y="1125" width="330" height="175"/><text x="980" y="1176" class="h">SQS + worker</text><text x="980" y="1210" class="b">Idempotent attempts</text><text x="980" y="1242" class="small">DLQ + safe demo sink</text>
+  <rect class="box data" x="1330" y="1125" width="350" height="175"/><text x="1365" y="1176" class="h">DynamoDB</text><text x="1365" y="1210" class="b">Plans, Alerts, audit</text><text x="1365" y="1242" class="small">PITR, owner indexes, KMS</text>
+  <rect class="box aws" x="1735" y="1125" width="365" height="175"/><text x="1770" y="1176" class="h">SNS / FCM</text><text x="1770" y="1210" class="b">Release-only delivery</text><text x="1770" y="1242" class="small">Endpoints resolved in worker only</text>
+
+  <rect class="box data" x="90" y="1390" width="2010" height="115"/><text x="125" y="1437" class="h">CloudWatch + X-Ray</text><text x="125" y="1473" class="b">API p99/error rate - Lambda - AgentCore latency/failures - workflow - Scheduler - DLQ; traces and redacted audit evidence</text>
+
+  <path class="dash" d="M255 420 V470 H750 V520"/><path class="dash" d="M635 420 V465 H295 V520"/><path class="dash" d="M1015 420 V450 H295 V520"/><path class="dash" d="M1395 420 V435 H295 V520"/>
+  <path class="flow" d="M935 650 H985"/><path class="flow" d="M1430 615 H1480"/>
+  <path class="flow" d="M1700 695 V760 H302 V805"/><path class="flow" d="M515 910 H565"/><path class="dash" d="M970 910 H1020"/><path class="dash" d="M1455 910 H1505"/>
+  <path class="flow" d="M1700 695 V1060 H265 V1110"/><path class="flow" d="M440 1212 H480"/><path class="flow" d="M890 1212 H930"/><path class="flow" d="M1275 1212 H1315"/><path class="dash" d="M1680 1212 H1720"/>
+  <path class="dash" d="M1095 1390 V1320"/>
+  <text x="2140" y="1444" class="small">implemented locally</text><rect x="2110" y="1428" width="18" height="18" rx="4" fill="#3A7665"/>
+  <text x="2140" y="1475" class="small">requires live verification</text><rect x="2110" y="1459" width="18" height="18" rx="4" fill="#E85B2A"/>
+</svg>

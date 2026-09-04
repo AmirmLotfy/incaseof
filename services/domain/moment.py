@@ -42,12 +42,16 @@ class ExpectedMoment:
     due_at: datetime
     grace_until: datetime
     status: MomentStatus = MomentStatus.SCHEDULED
+    is_drill: bool = False
+    time_scale: float = 1.0
 
     def __post_init__(self) -> None:
         require_aware(self.due_at, "due_at")
         require_aware(self.grace_until, "grace_until")
         if self.grace_until < self.due_at:
             raise PlanValidationError("grace cannot end before the moment is due")
+        if not 0 < self.time_scale <= 1.0:
+            raise PlanValidationError("moment time_scale must be in (0, 1]")
 
     def is_due(self, now: datetime) -> bool:
         return now >= self.due_at
@@ -199,10 +203,14 @@ def moment_for(
     version_id: PlanVersionId,
     due_at: datetime,
     grace_seconds: int,
+    is_drill: bool = False,
+    time_scale: float = 1.0,
 ) -> ExpectedMoment:
     return ExpectedMoment(
         moment_id=moment_id,
         version_id=version_id,
         due_at=due_at,
         grace_until=due_at + timedelta(seconds=grace_seconds),
+        is_drill=is_drill,
+        time_scale=time_scale,
     )

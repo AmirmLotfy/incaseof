@@ -45,4 +45,8 @@ class ViewModelFactory(
                 error("Unknown view model ${modelClass.name}")
             }
         } as T
+
+    fun createDrillViewModel(plan: com.incaof.app.domain.Plan): com.incaof.app.feature.drill.DrillViewModel =
+        com.incaof.app.feature.drill
+            .DrillViewModel(container.repository, plan)
 }

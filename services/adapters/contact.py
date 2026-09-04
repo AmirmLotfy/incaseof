@@ -124,6 +124,31 @@ class RecordingSender:
         return [m for m in self.sent if m["channel"] == channel.value]
 
 
+@dataclass(frozen=True, slots=True)
+class SafeDemoSender:
+    """Accept a demo delivery without resolving or contacting any real endpoint.
+
+    This is an explicit provider boundary for the public judge tenant, not a fallback. The
+    real Scheduler, workflow, queue, worker, authorization, idempotency and audit path all
+    run; only the final external side effect is redirected to a named, non-contacting sink.
+    """
+
+    def send(
+        self,
+        *,
+        alert_id: AlertId,
+        member: CircleMember | None,
+        channel: Channel,
+        body: str,
+        link: str | None,
+    ) -> Delivery:
+        del member, body, link
+        if not channel.is_available_in_p0:
+            return Delivery(status=DeliveryStatus.CHANNEL_UNAVAILABLE)
+        reference = f"safe-sink:{alert_id}:{channel.value}"
+        return Delivery(status=DeliveryStatus.ACCEPTED, provider_reference=reference)
+
+
 @dataclass
 class SmsSender:
     """Delivers over SMS, resolving the endpoint at the moment of sending.

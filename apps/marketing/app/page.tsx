@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { ContextTiers } from "@/components/ContextTiers";
+import { IcoLogo } from "@/components/IcoLogo";
 import { Contrast, Mechanism, Row, Said } from "@/components/Sections";
 import { TimelineDevice } from "@/components/Timeline";
 
@@ -45,18 +47,35 @@ export default function Home() {
               style={{
                 marginTop: "2rem",
                 display: "flex",
-                gap: "1.25rem",
+                gap: "1rem",
                 alignItems: "center",
                 flexWrap: "wrap",
               }}
             >
-              <a className="cta" href="#beta">
-                Join the Android beta
+              <a
+                className="cta"
+                href="/demo"
+              >
+                Try the live demo
               </a>
-              <a className="cta cta--quiet" href="#how">
-                See how it works
+              <a className="cta cta--quiet" href="/app">
+                Open the web app
+              </a>
+              <a className="cta cta--quiet" href="/downloads/in-case-of.apk" download>
+                Download Android demo
               </a>
             </div>
+
+            <p
+              className="mono"
+              style={{
+                marginTop: "0.85rem",
+                fontSize: "0.75rem",
+                color: "var(--ico-graphite)",
+              }}
+            >
+              Signed hackathon demo · Android 8.0+ · direct APK, not a Play Store release.
+            </p>
 
             <p
               className="mono"
@@ -285,23 +304,75 @@ export default function Home() {
       {/* §83. A Signal Orange rule across the top — never an orange background. */}
       <section id="beta" style={{ borderTop: "3px solid var(--ico-signal)" }}>
         <div className="shell">
-          <h2>Set the plan once. Get on with your life.</h2>
-          <p style={{ marginTop: "1.5rem", color: "var(--ico-graphite)" }}>
-            In Case of is in development for the Agents for Humans hackathon. The Android
-            beta isn’t open yet.
-          </p>
           <div
             style={{
-              marginTop: "2rem",
-              display: "flex",
-              gap: "1.25rem",
+              display: "grid",
+              gap: "clamp(2rem, 6vw, 5rem)",
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 20rem), 1fr))",
               alignItems: "center",
-              flexWrap: "wrap",
             }}
           >
-            <a className="cta" href="https://github.com/AmirmLotfy/incaseof">
-              View the project on GitHub
-            </a>
+            <div>
+              <h2>Set the plan once. Get on with your life.</h2>
+              <p style={{ marginTop: "1.5rem", color: "var(--ico-graphite)" }}>
+                Try the public Agents for Humans hackathon demo on the web, or install the
+                same ICO experience on Android. The APK is signed and verified on Android
+                8.0 through Android 17.
+              </p>
+              <div
+                style={{
+                  marginTop: "2rem",
+                  display: "flex",
+                  gap: "1rem",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                }}
+              >
+                <a className="cta" href="/demo">
+                  Try the live demo
+                </a>
+                <a className="cta cta--quiet" href="/app">
+                  Open the web app
+                </a>
+                <a className="cta cta--quiet" href="/downloads/in-case-of.apk" download>
+                  Download Android demo
+                </a>
+              </div>
+              <p
+                className="mono"
+                style={{ marginTop: "1rem", fontSize: "0.75rem", color: "var(--ico-graphite)" }}
+              >
+                Direct APK · not a Play Store release ·{" "}
+                <a href="/downloads/in-case-of.apk.sha256">verify SHA-256</a>
+              </p>
+            </div>
+
+            <div
+              style={{
+                justifySelf: "center",
+                borderTop: "2px solid var(--ico-ink)",
+                paddingTop: "1rem",
+                width: "min(100%, 15rem)",
+              }}
+            >
+              <p className="eyebrow">Android demo</p>
+              <a
+                href="/downloads/in-case-of.apk"
+                download
+                aria-label="Download the signed In Case of Android hackathon demo"
+                style={{ display: "inline-block", marginTop: "1rem" }}
+              >
+                <Image
+                  src="/images/android-download-qr.svg"
+                  width={192}
+                  height={192}
+                  alt="QR code for the signed Android demo download"
+                />
+              </a>
+              <p style={{ marginTop: "0.75rem", color: "var(--ico-graphite)", fontSize: "0.875rem" }}>
+                Scan on Android, then allow installation from your browser when prompted.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -325,13 +396,18 @@ function Header() {
           flexWrap: "wrap",
         }}
       >
-        <span style={{ fontWeight: 600, letterSpacing: "-0.02em" }}>in case of</span>
+        <a href="/" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }} aria-label="In Case Of Home">
+          <IcoLogo size={36} />
+        </a>
         <span style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
           <a href="#how" style={linkStyle}>
             How it works
           </a>
-          <a href="#beta" style={linkStyle}>
-            The project
+          <a href="/demo" style={linkStyle}>
+            Judge Demo
+          </a>
+          <a href="/app" style={linkStyle}>
+            Web App
           </a>
         </span>
       </nav>

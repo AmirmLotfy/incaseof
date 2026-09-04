@@ -34,11 +34,13 @@ from services.domain.idempotency import IdempotencyKey
 from services.domain.ids import (
     AlertId,
     CircleId,
+    InvitationId,
     MomentId,
     PersonId,
     PlanId,
     PlanVersionId,
 )
+from services.domain.invitation import CircleInvitation
 from services.domain.moment import ExpectedMoment, MomentStatus
 from services.domain.plan import Plan, PlanVersion
 
@@ -110,10 +112,38 @@ class DynamoPlanRepository:
         ).get("Item")
         return codec.version_from(_doc(item)) if item else None
 
+    def latest_version(self, plan_id: PlanId) -> PlanVersion | None:
+        from boto3.dynamodb.conditions import Key
+
+        response = self.table.query(
+            KeyConditionExpression=Key("pk").eq(keys.plan(plan_id))
+            & Key("sk").begins_with("VERSION#"),
+            ScanIndexForward=False,
+            Limit=1,
+        )
+        items = response.get("Items", [])
+        return codec.version_from(_doc(items[0])) if items else None
+
     def save_plan(self, plan: Plan) -> None:
         self.table.put_item(
-            Item={"pk": keys.plan(plan.plan_id), "sk": keys.META, "data": codec.plan_to(plan)}
+            Item={
+                "pk": keys.plan(plan.plan_id),
+                "sk": keys.META,
+                "data": codec.plan_to(plan),
+                keys.GSI2_PK: keys.owner_partition(plan.subject_person_id),
+                keys.GSI2_SK: keys.owner_plan(plan.plan_id),
+            }
         )
+
+    def list_for_subject(self, subject_person_id: PersonId) -> tuple[Plan, ...]:
+        from boto3.dynamodb.conditions import Key
+
+        response = self.table.query(
+            IndexName=keys.GSI2,
+            KeyConditionExpression=Key(keys.GSI2_PK).eq(keys.owner_partition(subject_person_id))
+            & Key(keys.GSI2_SK).begins_with("PLAN#"),
+        )
+        return tuple(codec.plan_from(_doc(item)) for item in response.get("Items", []))
 
     def save_version(self, version: PlanVersion) -> None:
         """Write a version once. Re-saving is refused, not merged.
@@ -175,7 +205,20 @@ class DynamoMomentRepository:
         item = self.table.get_item(Key={"pk": keys.moment(moment_id), "sk": keys.META}).get("Item")
         return codec.moment_from(_doc(item)) if item else None
 
-    def save(self, moment: ExpectedMoment) -> None:
+    def save(
+        self,
+        moment: ExpectedMoment,
+        *,
+        subject_person_id: PersonId | None = None,
+    ) -> None:
+        if subject_person_id is None:
+            existing = self.table.get_item(
+                Key={"pk": keys.moment(moment.moment_id), "sk": keys.META}
+            ).get("Item")
+            if existing:
+                owner = existing.get(keys.GSI2_PK)
+                if isinstance(owner, str) and owner.startswith("PERSON#"):
+                    subject_person_id = PersonId(owner.removeprefix("PERSON#"))
         item: dict[str, Any] = {
             "pk": keys.moment(moment.moment_id),
             "sk": keys.META,
@@ -186,7 +229,32 @@ class DynamoMomentRepository:
         if moment.status in {MomentStatus.SCHEDULED, MomentStatus.DUE}:
             item[keys.GSI1_PK] = keys.due_bucket(moment.due_at)
             item[keys.GSI1_SK] = keys.due_sort(moment.due_at, moment.moment_id)
+        if subject_person_id is not None:
+            item[keys.GSI2_PK] = keys.owner_partition(subject_person_id)
+            item[keys.GSI2_SK] = keys.owner_moment(moment.due_at, moment.moment_id)
         self.table.put_item(Item=item)
+
+    def next_for_subject(
+        self, subject_person_id: PersonId, instant: datetime
+    ) -> ExpectedMoment | None:
+        del instant  # overdue moments are intentionally returned before future moments
+        moments = self.outstanding_for_subject(subject_person_id)
+        return min(moments, key=lambda moment: moment.due_at, default=None)
+
+    def outstanding_for_subject(self, subject_person_id: PersonId) -> tuple[ExpectedMoment, ...]:
+        from boto3.dynamodb.conditions import Key
+
+        response = self.table.query(
+            IndexName=keys.GSI2,
+            KeyConditionExpression=Key(keys.GSI2_PK).eq(keys.owner_partition(subject_person_id))
+            & Key(keys.GSI2_SK).begins_with("MOMENT#"),
+        )
+        decoded = tuple(codec.moment_from(_doc(item)) for item in response.get("Items", []))
+        return tuple(
+            moment
+            for moment in sorted(decoded, key=lambda candidate: candidate.due_at)
+            if moment.status in {MomentStatus.SCHEDULED, MomentStatus.DUE}
+        )
 
     def due_before(self, instant: datetime) -> tuple[ExpectedMoment, ...]:
         """Reconciliation sweep: outstanding Moments whose time has passed.
@@ -215,6 +283,7 @@ class DynamoMomentRepository:
 class DynamoAlertRepository:
     table: Table
     _revisions: dict[AlertId, int] = field(default_factory=dict)
+    _owners: dict[AlertId, PersonId] = field(default_factory=dict)
 
     def get(self, alert_id: AlertId) -> Alert | None:
         item = self.table.get_item(Key={"pk": keys.alert(alert_id), "sk": keys.META}).get("Item")
@@ -222,7 +291,27 @@ class DynamoAlertRepository:
             return None
         alert = codec.alert_from(_doc(item))
         self._revisions[alert.alert_id] = _revision(item)
+        owner = item.get(keys.GSI2_PK)
+        if isinstance(owner, str) and owner.startswith("PERSON#"):
+            self._owners[alert.alert_id] = PersonId(owner.removeprefix("PERSON#"))
         return alert
+
+    def list_for_subject(self, subject_person_id: PersonId) -> tuple[Alert, ...]:
+        from boto3.dynamodb.conditions import Key
+
+        response = self.table.query(
+            IndexName=keys.GSI2,
+            KeyConditionExpression=Key(keys.GSI2_PK).eq(keys.owner_partition(subject_person_id))
+            & Key(keys.GSI2_SK).begins_with("ALERT#"),
+            ScanIndexForward=False,
+        )
+        alerts = []
+        for item in response.get("Items", []):
+            alert = codec.alert_from(_doc(item))
+            self._revisions[alert.alert_id] = _revision(item)
+            self._owners[alert.alert_id] = subject_person_id
+            alerts.append(alert)
+        return tuple(alerts)
 
     def save(self, alert: Alert) -> None:
         """Write, conditional on nobody else having written since we read.
@@ -238,6 +327,10 @@ class DynamoAlertRepository:
             "data": codec.alert_to(alert),
             "revision": expected + 1,
         }
+        owner = self._owners.get(alert.alert_id)
+        if owner is not None:
+            item[keys.GSI2_PK] = keys.owner_partition(owner)
+            item[keys.GSI2_SK] = keys.owner_alert(alert.opened_at, alert.alert_id)
         try:
             self.table.put_item(
                 Item=item,
@@ -252,7 +345,12 @@ class DynamoAlertRepository:
             raise
         self._revisions[alert.alert_id] = expected + 1
 
-    def open_for_moment(self, alert: Alert) -> Alert:
+    def open_for_moment(
+        self,
+        alert: Alert,
+        *,
+        subject_person_id: PersonId | None = None,
+    ) -> Alert:
         """Open an Alert for a Moment, conditional on none existing.
 
         A single transaction writes the Alert and a lock keyed on the Moment. A duplicate
@@ -284,6 +382,16 @@ class DynamoAlertRepository:
                                 "sk": keys.META,
                                 "data": codec.alert_to(alert),
                                 "revision": 1,
+                                **(
+                                    {
+                                        keys.GSI2_PK: keys.owner_partition(subject_person_id),
+                                        keys.GSI2_SK: keys.owner_alert(
+                                            alert.opened_at, alert.alert_id
+                                        ),
+                                    }
+                                    if subject_person_id is not None
+                                    else {}
+                                ),
                             },
                         }
                     },
@@ -296,6 +404,8 @@ class DynamoAlertRepository:
                     return existing
             raise
         self._revisions[alert.alert_id] = 1
+        if subject_person_id is not None:
+            self._owners[alert.alert_id] = subject_person_id
         return alert
 
     def alert_for_moment(self, moment_id: MomentId) -> Alert | None:
@@ -328,12 +438,29 @@ class DynamoCircleRepository:
         )
         return codec.circle_from(_doc(meta), members)
 
+    def for_owner(self, owner_person_id: PersonId) -> Circle | None:
+        from boto3.dynamodb.conditions import Key
+
+        response = self.table.query(
+            IndexName=keys.GSI2,
+            KeyConditionExpression=Key(keys.GSI2_PK).eq(keys.owner_partition(owner_person_id))
+            & Key(keys.GSI2_SK).begins_with("CIRCLE#"),
+            Limit=1,
+        )
+        items = response.get("Items", [])
+        if not items:
+            return None
+        circle_id = CircleId(_text(items[0], "pk").removeprefix("CIRCLE#"))
+        return self.get(circle_id)
+
     def save_circle(self, circle: Circle) -> None:
         self.table.put_item(
             Item={
                 "pk": keys.circle(circle.circle_id),
                 "sk": keys.META,
                 "data": codec.circle_to(circle),
+                keys.GSI2_PK: keys.owner_partition(circle.owner_person_id),
+                keys.GSI2_SK: keys.owner_circle(circle.circle_id),
             }
         )
         for member in circle.members:
@@ -361,6 +488,28 @@ class DynamoCircleRepository:
                 "pk": keys.plan(consent.plan_id),
                 "sk": keys.consent_sk(consent.responder_person_id),
                 "data": codec.consent_to(consent),
+            }
+        )
+
+
+@dataclass
+class DynamoInvitationRepository:
+    table: Table
+
+    def get(self, invitation_id: InvitationId) -> CircleInvitation | None:
+        item = self.table.get_item(Key={"pk": keys.invitation(invitation_id), "sk": keys.META}).get(
+            "Item"
+        )
+        return codec.invitation_from(_doc(item)) if item else None
+
+    def save(self, invitation: CircleInvitation) -> None:
+        self.table.put_item(
+            Item={
+                "pk": keys.invitation(invitation.invitation_id),
+                "sk": keys.META,
+                "data": codec.invitation_to(invitation),
+                keys.GSI2_PK: keys.owner_partition(invitation.owner_person_id),
+                keys.GSI2_SK: keys.owner_invitation(invitation.invitation_id),
             }
         )
 

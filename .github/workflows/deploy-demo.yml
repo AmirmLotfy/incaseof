@@ -1,0 +1,96 @@
+name: Deploy demo
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-demo
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    name: Deploy accepted demo
+    runs-on: ubuntu-latest
+    environment: demo
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: uv sync --frozen
+      - name: Configure short-lived AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ vars.AWS_DEMO_DEPLOY_ROLE_ARN }}
+          aws-region: us-east-1
+      - name: Refuse root credentials
+        run: |
+          arn="$(aws sts get-caller-identity --query Arn --output text)"
+          [[ "$arn" != *":root" ]]
+      - name: Build exact deployable artifacts
+        run: |
+          ./scripts/build-lambda.sh
+          ./scripts/build-agentcore-runtime.sh
+      - name: Verify release gates
+        run: ./scripts/preflight.sh
+      - name: Deploy demo infrastructure
+        working-directory: infra/cdk
+        run: >-
+          npx cdk deploy IcoStack-demo
+          --require-approval never
+          -c env=demo
+          -c hostedZoneId=${{ vars.ICO_HOSTED_ZONE_ID }}
+          -c hostedZoneName=incaof.com
+          -c pushPlatformArn=${{ vars.ICO_FCM_PLATFORM_ARN }}
+      - name: Build and verify signed Android demo
+        env:
+          ICO_ANDROID_KEYSTORE_B64: ${{ secrets.ICO_ANDROID_KEYSTORE_B64 }}
+          ICO_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ICO_ANDROID_KEYSTORE_PASSWORD }}
+          ICO_ANDROID_KEY_ALIAS: ${{ secrets.ICO_ANDROID_KEY_ALIAS }}
+          ICO_ANDROID_KEY_PASSWORD: ${{ secrets.ICO_ANDROID_KEY_PASSWORD }}
+          ICO_FIREBASE_GOOGLE_SERVICES_B64: ${{ secrets.ICO_FIREBASE_GOOGLE_SERVICES_B64 }}
+        run: |
+          secure_dir="$RUNNER_TEMP/ico-android"
+          mkdir -p "$secure_dir" apps/marketing/public/downloads
+          chmod 700 "$secure_dir"
+          printf '%s' "$ICO_ANDROID_KEYSTORE_B64" | base64 --decode > "$secure_dir/ico-release.jks"
+          printf '%s' "$ICO_FIREBASE_GOOGLE_SERVICES_B64" | base64 --decode > android/app/google-services.json
+          chmod 600 "$secure_dir/ico-release.jks" android/app/google-services.json
+          env \
+            ICO_ANDROID_KEYSTORE_PATH="$secure_dir/ico-release.jks" \
+            ICO_ANDROID_KEYSTORE_PASSWORD="$ICO_ANDROID_KEYSTORE_PASSWORD" \
+            ICO_ANDROID_KEY_ALIAS="$ICO_ANDROID_KEY_ALIAS" \
+            ICO_ANDROID_KEY_PASSWORD="$ICO_ANDROID_KEY_PASSWORD" \
+            ./android/gradlew -p android --no-build-cache --no-configuration-cache \
+              assembleRelease lintRelease ktlintCheck \
+              -Pico.apiBaseUrl=https://api.incaof.com/ \
+              -Pico.cognitoPoolId=${{ vars.ICO_COGNITO_POOL_ID }} \
+              -Pico.cognitoClientId=${{ vars.ICO_COGNITO_CLIENT_ID }} \
+              -Pico.cognitoRegion=us-east-1
+          apk=android/app/build/outputs/apk/release/app-release.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$apk"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk" | grep "package: name='com.incaof.app'"
+          install -m 0644 "$apk" apps/marketing/public/downloads/in-case-of.apk
+          (cd apps/marketing/public/downloads && sha256sum in-case-of.apk > in-case-of.apk.sha256)
+          npm --workspace @incaseof/marketing run assets:qr
+      - name: Publish static clients
+        env:
+          ICO_STACK_NAME: IcoStack-demo
+          ICO_PUBLIC_API_URL: https://api.incaof.com
+        run: ./scripts/deploy-web.sh
+      - name: Retain signed APK for release evidence
+        uses: actions/upload-artifact@v5
+        with:
+          name: in-case-of-android-demo
+          path: |
+            apps/marketing/public/downloads/in-case-of.apk
+            apps/marketing/public/downloads/in-case-of.apk.sha256
+          if-no-files-found: error
+          retention-days: 30

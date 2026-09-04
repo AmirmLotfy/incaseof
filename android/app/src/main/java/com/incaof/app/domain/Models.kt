@@ -79,6 +79,9 @@ data class Moment(
     val dueAt: Instant,
     val graceUntil: Instant,
     val alertState: AlertState?,
+    val alertId: String? = null,
+    val isDrill: Boolean = false,
+    val timeScale: Double = 1.0,
 ) {
     /** True when In Case of is currently waiting on this person. */
     val isWaitingOnMe: Boolean
@@ -92,6 +95,7 @@ data class Plan(
     val cadence: String,
     val timeOfDay: String,
     val active: Boolean,
+    val paused: Boolean = false,
     val steps: List<EscalationStep> = emptyList(),
     val contextPolicy: List<ContextRelease> = emptyList(),
     val circle: List<CircleMember> = emptyList(),

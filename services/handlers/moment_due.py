@@ -18,6 +18,7 @@ from typing import Any
 import boto3
 
 from services.domain.alert import Alert, AlertState
+from services.domain.clock import TimeScale
 from services.domain.escalation import Ladder, LadderState
 from services.domain.ids import AlertId, IdFactory, MomentId, uuid_factory
 from services.handlers import bootstrap
@@ -48,6 +49,10 @@ def open_alert(
             f"moment {moment_id} pins version {moment.version_id}, which no longer exists"
         )
 
+    plan = ctx.plans.get_plan(version.plan_id)
+    if plan is None:
+        raise RuntimeError(f"version {version.version_id} points at missing plan {version.plan_id}")
+
     now = ctx.now()
     candidate = Alert(
         alert_id=AlertId(new_id()),
@@ -57,10 +62,13 @@ def open_alert(
         opened_at=moment.due_at,
         ladder=Ladder(
             version=version,
-            state=LadderState(started_at=moment.grace_until, scale=ctx.scale),
+            state=LadderState(
+                started_at=moment.grace_until,
+                scale=TimeScale(moment.time_scale),
+            ),
         ),
     )
-    alert = ctx.alerts.open_for_moment(candidate)
+    alert = ctx.alerts.open_for_moment(candidate, subject_person_id=plan.subject_person_id)
     opened = alert.alert_id == candidate.alert_id
 
     if opened:

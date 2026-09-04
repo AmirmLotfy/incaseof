@@ -1,291 +1,227 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { idempotencyKey, type CompileResult, type MomentSummary } from "@/lib/api";
+import { publicApiUrl } from "@/lib/runtime";
+import { TraceInspector } from "@/components/TraceInspector";
 
-/**
- * The judge demo. Build contract §86.
- *
- * An honest thing to be clear about: this is a **browser walkthrough of the mechanism**, not
- * the product running. The real Drill Mode runs the production workflow server-side on a
- * compressed clock — see docs/DEMO.md and services/tests/slice/test_drill_mode.py. That
- * needs a deployed stack; this needs a browser.
- *
- * What it does share with the product is the sequence: the same ladder, the same states, the
- * same rule that acknowledging is not resolving. The banner says what it is, because a
- * surface showing something other than live data and not saying so is misleading.
- */
-
-type Phase =
-  | "idle"
-  | "waiting"
-  | "self_contact"
-  | "circle"
-  | "checking"
-  | "resolved"
-  | "exhausted";
-
-interface Event {
-  time: string;
-  label: string;
-  actor: "system" | "you" | "circle";
+interface DemoSession {
+  sessionToken: string;
+  expiresInSeconds: number;
+  subjectDisplayName: string;
+  synthetic: true;
 }
 
-const LADDER = [
-  { at: 0, label: "Check requested", actor: "system" as const },
-  { at: 10, label: "Reminder sent", actor: "system" as const },
-  { at: 20, label: "Message sent", actor: "system" as const },
-  { at: 25, label: "Maya contacted", actor: "system" as const },
-  { at: 40, label: "Omar contacted", actor: "system" as const },
-];
+interface CreatedPlan {
+  planId: string;
+  label: string;
+}
+
+interface TimelineEvent {
+  at: string;
+  actor: string;
+  event: string;
+  metadata: Record<string, unknown>;
+}
+
+type Stage = "unconfigured" | "idle" | "preview" | "draft" | "running" | "alert" | "failed";
 
 export function Demo() {
-  const [phase, setPhase] = useState<Phase>("idle");
-  const [events, setEvents] = useState<Event[]>([]);
-  const [rung, setRung] = useState(0);
+  const [baseUrl, setBaseUrl] = useState<string | null>(null);
+  const [checked, setChecked] = useState(false);
+  const [session, setSession] = useState<DemoSession | null>(null);
+  const [stage, setStage] = useState<Stage>("idle");
+  const [preview, setPreview] = useState<CompileResult | null>(null);
+  const [plan, setPlan] = useState<CreatedPlan | null>(null);
+  const [moment, setMoment] = useState<MomentSummary | null>(null);
+  const [events, setEvents] = useState<TimelineEvent[]>([]);
+  const [responderUrl, setResponderUrl] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const pollRef = useRef<number | null>(null);
 
-  const stamp = useCallback((minutes: number) => {
-    const base = new Date();
-    base.setHours(21, 0, 0, 0);
-    return new Date(base.getTime() + minutes * 60_000).toLocaleTimeString(undefined, {
-      hour: "numeric",
-      minute: "2-digit",
+  useEffect(() => {
+    void publicApiUrl().then((url) => {
+      setBaseUrl(url);
+      setChecked(true);
+      if (!url) setStage("unconfigured");
     });
+    return () => {
+      if (pollRef.current) window.clearInterval(pollRef.current);
+    };
   }, []);
 
-  const add = useCallback(
-    (label: string, actor: Event["actor"], minutes: number) =>
-      setEvents((previous) => [...previous, { time: stamp(minutes), label, actor }]),
-    [stamp],
-  );
-
-  function activate() {
-    setPhase("waiting");
-    setEvents([]);
-    setRung(0);
+  async function request<T>(
+    path: string,
+    init: RequestInit = {},
+    auth: string | null | undefined = session?.sessionToken,
+  ): Promise<T> {
+    if (!baseUrl) throw new Error("The live demo API is not configured.");
+    const response = await fetch(`${baseUrl}${path}`, {
+      ...init,
+      cache: "no-store",
+      headers: {
+        accept: "application/json",
+        ...(auth ? { authorization: `Bearer ${auth}` } : {}),
+        ...(init.body ? { "content-type": "application/json" } : {}),
+        ...(init.headers ?? {}),
+      },
+    });
+    const body = (await response.json().catch(() => ({}))) as Record<string, unknown>;
+    if (!response.ok) throw new Error(String(body.title ?? "The live demo request failed."));
+    return body as T;
   }
 
-  function advance() {
-    const next = LADDER[rung];
-    if (!next) return;
-    add(next.label, next.actor, next.at);
-    const upcoming = rung + 1;
-    setRung(upcoming);
-    if (upcoming >= LADDER.length) setPhase("exhausted");
-    else if (upcoming >= 4) setPhase("circle");
-    else setPhase("self_contact");
+  async function run(operation: () => Promise<void>) {
+    setBusy(true);
+    setError("");
+    try {
+      await operation();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "The live demo did not complete.");
+      setStage("failed");
+    } finally {
+      setBusy(false);
+    }
   }
 
-  function confirm() {
-    add("You confirmed — resolved", "you", 22);
-    setPhase("resolved");
+  async function start() {
+    await run(async () => {
+      const nextSession = await request<DemoSession>("/v1/demo/session", { method: "POST" }, null);
+      setSession(nextSession);
+      const compiled = await request<CompileResult>(
+        "/v1/demo/plans/compile",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            utterance: "Mona should check in every evening at 9 PM. Remind her, then ask Maya, then Omar.",
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          }),
+        },
+        nextSession.sessionToken,
+      );
+      setPreview(compiled);
+      setStage("preview");
+    });
   }
 
-  function claim() {
-    add("Maya is checking — backup paused", "circle", 27);
-    setPhase("checking");
+  async function saveDraft() {
+    if (!preview) return;
+    await run(async () => {
+      const created = await request<CreatedPlan>("/v1/demo/plans", {
+        method: "POST",
+        body: JSON.stringify({ compiledPlan: preview.compiledPlan, ownerDisplayName: "Mona" }),
+      });
+      setPlan(created);
+      setStage("draft");
+    });
   }
 
-  function verify() {
-    add("Maya confirmed — resolved", "circle", 31);
-    setPhase("resolved");
+  async function startDrill() {
+    if (!plan) return;
+    await run(async () => {
+      const started = await request<{ moment: MomentSummary }>(`/v1/demo/plans/${plan.planId}/test`, {
+        method: "POST",
+        headers: { "idempotency-key": idempotencyKey() },
+      });
+      setMoment(started.moment);
+      setStage("running");
+      pollRef.current = window.setInterval(() => void poll(), 2000);
+    });
   }
 
-  const closed = phase === "resolved" || phase === "exhausted";
+  async function poll() {
+    try {
+      const next = await request<MomentSummary>("/v1/demo/moments/next");
+      setMoment(next);
+      if (!next.alertId) return;
+      const timeline = await request<{ events: TimelineEvent[] }>(`/v1/demo/alerts/${next.alertId}/timeline`);
+      setEvents(timeline.events);
+      setStage("alert");
+      try {
+        const link = await request<{ responderUrl: string }>(`/v1/demo/alerts/${next.alertId}/responder-link`);
+        setResponderUrl(link.responderUrl);
+      } catch {
+        // The policy boundary may not yet have reached the Circle rung. Polling continues.
+      }
+    } catch {
+      // Scheduler and workflow state converge asynchronously; retain the last verified state.
+    }
+  }
+
+  if (!checked) return <DemoState title="Connecting to the demo environment…" />;
+  if (stage === "unconfigured") {
+    return (
+      <DemoState
+        title="The live judge demo is not deployed on this host."
+        body="No browser simulation is substituted. Publish runtime-config.json after the demo stack is accepted."
+      />
+    );
+  }
 
   return (
     <div>
-      <Banner />
+      <p className="demo-banner">
+        <strong>Live AWS demo.</strong> Data is synthetic and isolated per session. Every event below comes back from the deployed demo API.
+      </p>
+      <div className="app-grid" style={{ marginTop: "2.5rem" }}>
+        <section className="app-pane">
+          <p className="eyebrow">Mona’s evening check-in</p>
+          <h2>Review before anything runs</h2>
+          {stage === "idle" && (
+            <button className="cta app-button" disabled={busy} onClick={() => void start()}>
+              Compile the plan
+            </button>
+          )}
+          {preview && (
+            <div className="app-preview">
+              <p className="eyebrow">AgentCore preview · not active</p>
+              <h3>{preview.plan.label}</h3>
+              <p>{preview.plan.type} · {preview.plan.timezone}</p>
+              <ol className="app-steps">
+                {preview.plan.steps.map((step) => (
+                  <li key={step.sequence}>
+                    <span className="mono">+{Math.round(step.offsetSeconds / 60)}m</span>{" "}
+                    {step.action.replaceAll("_", " ")}{step.targetRole ? ` — ${step.targetRole}` : ""}
+                  </li>
+                ))}
+              </ol>
+              {stage === "preview" && <button className="cta app-button" disabled={busy} onClick={() => void saveDraft()}>Save this draft</button>}
+              {stage === "draft" && <button className="cta app-button" disabled={busy} onClick={() => void startDrill()}>Test this plan</button>}
+            </div>
+          )}
+          {(stage === "running" || stage === "alert") && moment && (
+            <div className="app-moment" aria-live="polite">
+              <p className="eyebrow">Real accelerated Moment</p>
+              <h3>{moment.planLabel}</h3>
+              <p>{moment.alertState ?? moment.status} · {new Date(moment.dueAt).toLocaleTimeString()}</p>
+              {responderUrl && <a className="cta app-button" href={responderUrl} target="_blank" rel="noreferrer">Open responder link</a>}
+            </div>
+          )}
+          {error && <p role="alert" className="app-error">{error}</p>}
+        </section>
 
-      <div
-        style={{
-          display: "grid",
-          gap: "clamp(1.5rem, 4vw, 3rem)",
-          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 20rem), 1fr))",
-          marginTop: "2.5rem",
-          alignItems: "start",
-        }}
-      >
-        <div>
-          <p className="eyebrow">Step 1 — the plan</p>
-          <p style={{ color: "var(--ico-graphite)" }}>
-            An evening check at 9:00 PM. If it goes unanswered: you, then you again, then a
-            message, then Maya, then Omar.
-          </p>
-
-          <div style={{ marginTop: "1.5rem", display: "grid", gap: "0.75rem" }}>
-            {phase === "idle" && (
-              <Action onClick={activate} kind="primary">
-                Activate the plan
-              </Action>
-            )}
-
-            {phase === "waiting" && (
-              <>
-                <p className="eyebrow" style={{ marginBottom: 0 }}>
-                  Step 2 — miss it
-                </p>
-                <Action onClick={advance} kind="attention">
-                  9:00 arrives, nobody answers
-                </Action>
-              </>
-            )}
-
-            {(phase === "self_contact" || phase === "circle") && (
-              <>
-                <Action onClick={advance} kind="attention">
-                  Let it continue
-                </Action>
-                {phase === "self_contact" && (
-                  <Action onClick={confirm} kind="primary">
-                    Tap “I’m okay”
-                  </Action>
-                )}
-                {phase === "circle" && (
-                  <Action onClick={claim} kind="primary">
-                    Maya taps “I’m checking”
-                  </Action>
-                )}
-              </>
-            )}
-
-            {phase === "checking" && (
-              <>
-                {/* The distinction the whole product turns on, made visible. */}
-                <p
-                  style={{
-                    padding: "0.85rem 1rem",
-                    border: "1px solid var(--ico-stone)",
-                    borderRadius: "12px",
-                    color: "var(--ico-graphite)",
-                    fontSize: "0.9375rem",
-                  }}
-                >
-                  Maya has acknowledged, not resolved. Omar is paused for ten minutes. If
-                  Maya goes quiet, contacting resumes where it left off.
-                </p>
-                <Action onClick={verify} kind="primary">
-                  Maya: “I reached Mona — all okay”
-                </Action>
-              </>
-            )}
-
-            {closed && (
-              <Action onClick={() => setPhase("idle")} kind="quiet">
-                Run it again
-              </Action>
-            )}
-          </div>
-        </div>
-
-        <div
-          style={{
-            border: "1px solid var(--ico-stone)",
-            borderRadius: "20px",
-            background: "var(--ico-surface)",
-            padding: "1.75rem",
-            minHeight: "18rem",
-          }}
-        >
-          <p className="eyebrow">What’s happened</p>
-
+        <aside className="app-pane">
+          <p className="eyebrow">Verified audit timeline</p>
           {events.length === 0 ? (
-            <p style={{ color: "var(--ico-graphite)" }}>
-              Nothing yet. Activate the plan to begin.
-            </p>
+            <p className="app-muted">{stage === "running" ? "Waiting for EventBridge Scheduler and Step Functions…" : "No workflow events yet."}</p>
           ) : (
-            <ol style={{ listStyle: "none", margin: 0, padding: 0 }} aria-live="polite">
+            <ol className="demo-timeline" aria-live="polite">
               {events.map((event, index) => (
-                <li
-                  key={`${event.time}-${index}`}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "5rem 1fr",
-                    gap: "0.85rem",
-                    padding: "0.45rem 0",
-                  }}
-                >
-                  <span className="mono" style={{ color: "var(--ico-graphite)" }}>
-                    {event.time}
-                  </span>
-                  <span
-                    style={{
-                      color:
-                        event.actor === "system" ? "var(--ico-ink)" : "var(--ico-resolved)",
-                    }}
-                  >
-                    {event.label}
-                  </span>
+                <li key={`${event.at}-${index}`}>
+                  <span className="mono">{new Date(event.at).toLocaleTimeString()}</span>
+                  <span>{event.event.replaceAll("_", " ")}</span>
                 </li>
               ))}
             </ol>
           )}
-
-          {phase === "exhausted" && (
-            <p style={{ marginTop: "1.5rem", color: "var(--ico-graphite)" }}>
-              Everyone on the plan was contacted and nobody confirmed. In Case of records
-              that plainly — it does not decide what it means.
-            </p>
-          )}
-        </div>
+          {preview && <TraceInspector trace={preview.trace} />}
+        </aside>
       </div>
     </div>
   );
 }
 
-function Banner() {
-  return (
-    <p
-      style={{
-        margin: 0,
-        padding: "0.75rem 1rem",
-        borderRadius: "12px",
-        background: "var(--ico-warning)",
-        color: "var(--ico-on-warning)",
-        fontSize: "0.9375rem",
-      }}
-    >
-      <strong>Walkthrough.</strong> This runs in your browser and contacts nobody. The real
-      Drill Mode runs the production workflow on a compressed clock.
-    </p>
-  );
-}
-
-function Action({
-  children,
-  onClick,
-  kind,
-}: {
-  children: React.ReactNode;
-  onClick: () => void;
-  kind: "primary" | "attention" | "quiet";
-}) {
-  const palette = {
-    primary: { background: "var(--ico-primary)", color: "var(--ico-on-primary)", border: "none" },
-    // Ink on Signal Orange. White measures 3.52:1 and fails AA.
-    attention: { background: "var(--ico-signal)", color: "var(--ico-on-signal)", border: "none" },
-    quiet: {
-      background: "transparent",
-      color: "var(--ico-ink)",
-      border: "1px solid var(--ico-stone)",
-    },
-  }[kind];
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        minHeight: "52px",
-        padding: "0.85rem 1.25rem",
-        borderRadius: "14px",
-        font: "inherit",
-        fontWeight: 500,
-        cursor: "pointer",
-        textAlign: "left",
-        ...palette,
-      }}
-    >
-      {children}
-    </button>
-  );
+function DemoState({ title, body }: { title: string; body?: string }) {
+  return <div className="app-state"><p className="eyebrow">Judge demo</p><h2>{title}</h2>{body && <p>{body}</p>}</div>;
 }

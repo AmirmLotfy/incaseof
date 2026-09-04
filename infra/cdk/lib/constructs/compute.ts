@@ -55,6 +55,7 @@ export class Compute extends Construct {
         ICO_TABLE_NAME: props.table.tableName,
         ICO_ENV: props.environment.name,
         ICO_TIME_SCALE: String(props.environment.demoTimeScale),
+        ...(props.environment.name === "demo" ? { ICO_DELIVERY_MODE: "SAFE_SINK" } : {}),
         ICO_ACTION_QUEUE_URL: props.actionQueue.queueUrl,
         // Endpoint encryption. Without it the worker records CHANNEL_UNAVAILABLE rather
         // than sending, which is the correct behaviour but not the intended one.

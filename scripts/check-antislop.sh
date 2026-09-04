@@ -14,7 +14,8 @@ FAIL=0
 srcfiles() {
   find "${SEARCH_PATHS[@]}" -type f \
     \( -name '*.tsx' -o -name '*.ts' -o -name '*.css' -o -name '*.kt' -o -name '*.xml' \) \
-    -not -path '*/node_modules/*' -not -path '*/.next/*' -not -path '*/build/*' \
+    -not -path '*/node_modules/*' -not -path '*/.next/*' -not -path '*/out/*' \
+    -not -path '*/build/*' \
     -not -name 'Tokens.kt' 2>/dev/null
 }
 

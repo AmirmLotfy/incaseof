@@ -1,5 +1,7 @@
 # Android demo release
 
+In Case Of closes uncertainty; it does not decide whether someone is in danger.
+
 The hackathon APK is a signed release of `com.incaof.app`. Release builds fail closed unless
 the API, Cognito, Firebase and signing inputs are present, and the release variant sets
 `ALLOW_LOCAL_DATA=false`.

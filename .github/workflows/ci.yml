@@ -86,7 +86,12 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
       - run: npm ci
+      - name: Build exact AgentCore deployment artifact
+        run: ./scripts/build-agentcore-runtime.sh
       - name: Typecheck
         run: npm run typecheck -w @incaseof/infra
       - name: Template assertions

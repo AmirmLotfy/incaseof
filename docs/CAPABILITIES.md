@@ -51,6 +51,8 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 - Push delivery: API 37 created enabled endpoint `a36c1e9a-6dc4-32ba-b174-cbb37b76b64a`; SNS accepted message `c10723f5-9d2b-578c-91d1-40e145dc9104`; Android posted notification `1001` on channel `moments` with the `I'M OKAY` action. Protected credentials and the FCM token remain outside Git and logs.
 - AWS core: `IcoStack-demo` is stable at `UPDATE_ROLLBACK_COMPLETE`; 157 resources were originally created. A rejected Nova update was safely rolled back because the account's applied `Versions per Agent` quota is zero.
 - AWS quota evidence: active AgentCore sessions were restored via approved request `451f1b8fde074b51bcb3aacaa2042ba8vNxnmcUj`; version request `b38dff125c3e4b1493e58c7fca4ed88bEgBdMI37` is `CASE_OPENED`.
+- AWS account-verification evidence: support case `178838741100092` remains `UNASSIGNED`; a factual update is prepared but has not been sent without action-time confirmation.
+- Public source evidence: commit `4850bd00b0b8776c848770db4df6859962c9bb82` is pushed to `codex/hackathon-final`; draft PR 15 has a fully green GitHub Actions run (`33886624526`) across Python, web, Android, guardrails and infrastructure.
 - Release negative test: `assembleRelease` refuses to run without explicit backend and signing inputs.
 
 ## Hard blockers before a ready claim
@@ -63,7 +65,7 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 6. Finish one physical-phone FCM/install pass and rebuild the signed release for the canonical API after edge hosting exists.
 7. Capture real deployed screenshots; only then generate the final 1800x1200 project image and demo video.
 8. Publish the sub-five-minute video and builder.aws posts. The user supplies the public video URL and AWS Builder ID.
-9. Review the dirty baseline, push a clean accepted commit, tag it, and finalize `submission/release-evidence.json`.
+9. Merge the green draft PR only after the live acceptance gate passes, then tag that exact accepted commit and finalize `submission/release-evidence.json`.
 
 ## Explicitly deferred
 

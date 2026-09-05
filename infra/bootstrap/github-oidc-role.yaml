@@ -5,9 +5,10 @@ Parameters:
   GitHubOidcProviderArn:
     Type: String
     Description: Existing token.actions.githubusercontent.com IAM OIDC provider ARN.
-  Repository:
+  RepositorySubject:
     Type: String
-    Default: AmirmLotfy/incaseof
+    Default: AmirmLotfy@178108135/incaseof@1342743239
+    Description: Immutable GitHub owner and repository subject from the Actions OIDC token.
   EnvironmentName:
     Type: String
     Default: demo
@@ -30,7 +31,7 @@ Resources:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
               StringLike:
-                token.actions.githubusercontent.com:sub: !Sub repo:${Repository}:environment:${EnvironmentName}
+                token.actions.githubusercontent.com:sub: !Sub repo:${RepositorySubject}:environment:${EnvironmentName}
       Policies:
         - PolicyName: AssumeCdkBootstrapRoles
           PolicyDocument:

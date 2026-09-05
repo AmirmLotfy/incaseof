@@ -52,7 +52,8 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 - AWS core: `IcoStack-demo` is stable at `UPDATE_COMPLETE`; the API exposes all 53 explicit routes and uses one source-scoped invocation permission. The existing AgentCore Runtime remains deliberately preserved because the account's applied `Versions per Agent` quota is zero.
 - AWS quota evidence: active AgentCore sessions were restored via approved request `451f1b8fde074b51bcb3aacaa2042ba8vNxnmcUj`; version request `b38dff125c3e4b1493e58c7fca4ed88bEgBdMI37` is `CASE_OPENED`.
 - AWS account-verification evidence: support case `178838741100092` remains `UNASSIGNED`; a factual update is prepared but has not been sent without action-time confirmation.
-- Public source evidence: commit `c9c9728ac3e03ad0bbea1e26e7e22b49ddabe099` is pushed to `codex/hackathon-final`; draft PR 15 has a fully green GitHub Actions run (`33960893369`) across Python, web, Android, guardrails and infrastructure, including exact Lambda and AgentCore artifact builds.
+- Public source evidence: commit `203f832259562a308be2df37fd5bf435025a5556` is pushed to `codex/hackathon-final`; draft PR 15 has a fully green GitHub Actions run (`33961468159`) across Python, web, Android, guardrails and infrastructure, including exact Lambda and AgentCore artifact builds.
+- Deployment identity: protected-environment run `33961468133` attempt 3 passed required review, exchanged GitHub OIDC for short-lived `ico-github-demo-deploy` credentials using the exact immutable repository subject, and verified the canonical API mapping. No long-lived AWS key was used. This proves the project-specific entry role; it does not retroactively accept the root-initiated recovery rollout or prove a full CDK deployment through OIDC.
 - Live deterministic Drill: the canonical `api.incaof.com` verifier created synthetic plan `ac091772-dddf-4de0-8129-d91912eeaee7`, accelerated Moment `c9d9cf91-6146-5883-a40a-20b076212251`, and resolved Alert `2fac022e-b742-41e4-9bf0-de39e22919c9`. Eleven deployed audit events ended `RESPONDER_VERIFIED`; worker references were restricted to `safe-sink:`. The AgentCore compile was not part of this proof and still returns the designed 503 fallback.
 - Release negative test: `assembleRelease` refuses to run without explicit backend and signing inputs.
 
@@ -60,7 +61,7 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 
 1. Complete AWS account verification. CloudFront and every tested Bedrock model currently return account-level blocks.
 2. Wait for AgentCore `Versions per Agent` case `178851871600399`, then deploy the corrected Nova runtime and 60-second idle lifecycle.
-3. Create an IAM Identity Center or durable least-privileged deployment path. Successful deployments used narrowly scoped, ephemeral IAM users that were deleted immediately afterward; the interactive session is still root.
+3. Complete a full demo-stack deployment through the now-verified protected GitHub OIDC entry role, and replace or scope the shared CDK bootstrap CloudFormation execution role that still carries `AdministratorAccess`. The latest stack recovery rollout was root-initiated and remains non-accepted evidence.
 4. Add the currently blocked Nova/AgentCore compile leg to the now-proven live workflow, queue, responder lease and resolution path; record runtime, trace and execution identifiers.
 5. Deploy edge hosting, publish both static clients, create apex/`www` records, and verify marketing, app, demo, consent and responder URLs globally. The canonical API descriptor is already live.
 6. Finish one physical-phone FCM/install pass and rebuild the signed release for the canonical API after edge hosting exists.

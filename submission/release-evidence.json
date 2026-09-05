@@ -4,13 +4,25 @@
   "sourceCommitAtStart": "6ef1e7119ffc34cd3f20fb4cd27db4a0e56aa13b",
   "acceptedCommit": null,
   "tag": null,
-  "verifiedAt": "2026-09-05T10:44:09Z",
+  "verifiedAt": "2026-09-05T10:49:55Z",
   "aws": {
     "accountIdRedacted": true,
-    "deploymentPrincipal": "interactive root session for non-accepted recovery rollout; protected GitHub OIDC path remains required before acceptance",
+    "deploymentPrincipal": "latest stack recovery rollout used an interactive root session and remains non-accepted; the protected GitHub OIDC entry role is now independently verified for future deployment operations",
     "stackName": "IcoStack-demo",
     "stackStatus": "UPDATE_COMPLETE",
     "region": "us-east-1",
+    "githubOidc": {
+      "roleName": "ico-github-demo-deploy",
+      "longLivedAwsKeysUsed": false,
+      "protectedEnvironment": "demo",
+      "requiredReviewPassed": true,
+      "immutableRepositorySubjectPinned": true,
+      "verificationRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/33961468133",
+      "verificationAttempt": 3,
+      "verifiedAt": "2026-09-05T10:49:55Z",
+      "canonicalApiVerified": true,
+      "fullCdkDeploymentVerified": false
+    },
     "apiId": "84t16g8eoe",
     "route53NameserversDelegated": true,
     "dnsDelegationVerifiedAt": "2026-09-05T01:24:02Z",
@@ -163,9 +175,9 @@
     },
     {
       "name": "github-oidc-deployment-identity",
-      "status": "PENDING_FRESH_PROTECTED_ENVIRONMENT_RUN",
-      "verifiedAt": "2026-09-05T10:44:09Z",
-      "details": "The demo environment now permits only main and codex/hackathon-final and still requires explicit review. Attempts 1 and 2 of run 33961294805 were rejected before runner admission using the earlier branch-policy snapshot; neither attempt reached AWS. A fresh commit-triggered verifier is required."
+      "status": "PASSED_IDENTITY_AND_CANONICAL_API_CHECK",
+      "verifiedAt": "2026-09-05T10:49:55Z",
+      "details": "Attempt 3 of run 33961468133 passed required demo-environment review, obtained short-lived credentials as ico-github-demo-deploy using the immutable repository OIDC subject, and verified the canonical API mapping. This proves the protected entry role, not a full CDK deployment."
     },
     {
       "name": "android-in-app-demo",

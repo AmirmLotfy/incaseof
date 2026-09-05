@@ -1,5 +1,8 @@
 # Deployment and recovery
 
+ICO does not decide whether someone is in danger. Deployment preserves the same product
+boundary: deterministic software authorizes actions, and people make safety judgments.
+
 The accepted path is GitHub Actions with OIDC and the protected `demo` environment. It builds
 the exact Lambda, AgentCore, Android and static-web artifacts before deployment; no long-lived
 AWS access key belongs in GitHub or this repository.

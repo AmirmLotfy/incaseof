@@ -1,12 +1,11 @@
 import { Duration, RemovalPolicy } from "aws-cdk-lib";
 import type * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import type * as kms from "aws-cdk-lib/aws-kms";
-import * as events from "aws-cdk-lib/aws-events";
-import * as targets from "aws-cdk-lib/aws-events-targets";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import * as logs from "aws-cdk-lib/aws-logs";
+import * as scheduler from "aws-cdk-lib/aws-scheduler";
 import type * as sqs from "aws-cdk-lib/aws-sqs";
 import { Construct } from "constructs";
 import * as path from "node:path";
@@ -124,9 +123,19 @@ export class Compute extends Construct {
       description: "Recovers pending durable action intents; never contacts a provider.",
       timeout: Duration.seconds(30),
     });
-    new events.Rule(this, "OutboxRecovery", {
-      schedule: events.Schedule.rate(Duration.minutes(1)),
-      targets: [new targets.LambdaFunction(this.outboxRelay)],
+    const outboxSchedulerRole = new iam.Role(this, "OutboxSchedulerRole", {
+      assumedBy: new iam.ServicePrincipal("scheduler.amazonaws.com"),
+      description: "Invokes only the ICO durable outbox recovery function",
+    });
+    this.outboxRelay.grantInvoke(outboxSchedulerRole);
+    new scheduler.CfnSchedule(this, "OutboxRecovery", {
+      scheduleExpression: "rate(1 minute)",
+      flexibleTimeWindow: { mode: "OFF" },
+      state: "ENABLED",
+      target: {
+        arn: this.outboxRelay.functionArn,
+        roleArn: outboxSchedulerRole.roleArn,
+      },
     });
     props.table.grantReadWriteData(this.outboxRelay);
     props.actionQueue.grantSendMessages(this.outboxRelay);

@@ -118,12 +118,12 @@ describe("workflow", () => {
     });
   });
 
-  it("creates a schedule group but declares no schedules", () => {
+  it("creates a schedule group and only the outbox recovery schedule", () => {
     const template = synth();
     template.resourceCountIs("AWS::Scheduler::ScheduleGroup", 1);
     // Pending Moments are application state. A schedule in the template would make every
-    // check-in a deployment.
-    template.resourceCountIs("AWS::Scheduler::Schedule", 0);
+    // check-in a deployment. The single static schedule only relays durable outbox work.
+    template.resourceCountIs("AWS::Scheduler::Schedule", 1);
   });
 
   it("lets only EventBridge Scheduler assume the scheduler role", () => {
@@ -144,9 +144,10 @@ describe("workflow", () => {
       Handler: "services.handlers.outbox_relay.handler",
       Timeout: 30,
     });
-    template.hasResourceProperties("AWS::Events::Rule", {
+    template.hasResourceProperties("AWS::Scheduler::Schedule", {
       ScheduleExpression: "rate(1 minute)",
       State: "ENABLED",
+      FlexibleTimeWindow: { Mode: "OFF" },
     });
   });
 });

@@ -4,10 +4,10 @@
   "sourceCommitAtStart": "6ef1e7119ffc34cd3f20fb4cd27db4a0e56aa13b",
   "acceptedCommit": null,
   "tag": null,
-  "verifiedAt": "2026-09-05T10:49:55Z",
+  "verifiedAt": "2026-09-05T11:17:39Z",
   "aws": {
     "accountIdRedacted": true,
-    "deploymentPrincipal": "latest stack recovery rollout used an interactive root session and remains non-accepted; the protected GitHub OIDC entry role is now independently verified for future deployment operations",
+    "deploymentPrincipal": "protected GitHub OIDC role ico-github-demo-deploy with project-specific CloudFormation executor ico-demo-cfn-exec; no long-lived AWS access key",
     "stackName": "IcoStack-demo",
     "stackStatus": "UPDATE_COMPLETE",
     "region": "us-east-1",
@@ -17,11 +17,13 @@
       "protectedEnvironment": "demo",
       "requiredReviewPassed": true,
       "immutableRepositorySubjectPinned": true,
-      "verificationRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/33961468133",
-      "verificationAttempt": 3,
-      "verifiedAt": "2026-09-05T10:49:55Z",
+      "verificationRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/33962736106",
+      "verificationAttempt": 1,
+      "verifiedAt": "2026-09-05T11:15:07Z",
       "canonicalApiVerified": true,
-      "fullCdkDeploymentVerified": false
+      "fullCdkDeploymentVerified": true,
+      "cloudFormationExecutionRole": "ico-demo-cfn-exec",
+      "sharedAdministratorExecutorUsed": false
     },
     "apiId": "84t16g8eoe",
     "route53NameserversDelegated": true,
@@ -80,15 +82,15 @@
       "correctiveAction": "Make Lambda staging an explicit CI/preflight and recovery step, rebuild the exact artifact, then redeploy and repeat live verification."
     },
     "lastDeploymentAttempt": {
-      "verifiedAt": "2026-09-05T08:51:06Z",
-      "sourceCommit": "da19bb6d0894523e50fc09fbec6aaf8357cb15fb",
-      "result": "PASSED_WITH_NON_ACCEPTED_ROOT_PRINCIPAL",
+      "verifiedAt": "2026-09-05T11:15:07Z",
+      "sourceCommit": "bc07ff49f19333ef185e1d04eaed88102e99ee85",
+      "result": "PASSED_QUOTA_SAFE_OIDC_SCOPED_ROLES",
       "stackStatus": "UPDATE_COMPLETE",
       "routeCount": 53,
       "canonicalApiDescriptor": true,
       "demoSessionIssued": true,
       "agentCoreRuntimePreserved": true,
-      "note": "Exact staged Lambda artifact, explicit routes and canonical API passed live verification; this recovery rollout is not acceptance evidence for least-privileged deployment."
+      "note": "Reviewer-gated GitHub Actions run 33962736106 built exact artifacts, deployed through short-lived OIDC credentials and ico-demo-cfn-exec, preserved the quota-blocked AgentCore Runtime exactly, and passed the canonical API check. This proves the deployment identity path but remains a recovery rollout until the corrected runtime can be deployed."
     }
   },
   "urls": {
@@ -130,17 +132,17 @@
     ]
   },
   "liveDeterministicDrill": {
-    "verifiedAt": "2026-09-05T08:51:06Z",
+    "verifiedAt": "2026-09-05T11:17:39Z",
     "directApi": true,
     "canonicalApi": true,
     "syntheticTenant": true,
     "timeScale": 0.02,
-    "planId": "ac091772-dddf-4de0-8129-d91912eeaee7",
-    "momentId": "c9d9cf91-6146-5883-a40a-20b076212251",
-    "alertId": "2fac022e-b742-41e4-9bf0-de39e22919c9",
+    "planId": "05b83895-b41d-4975-a06b-d7d762e2760c",
+    "momentId": "88071223-5461-58ec-a090-6d54cc9d0861",
+    "alertId": "b6c5c253-067b-41a6-8651-df67a4fe439e",
     "safeSinkReferences": [
-      "safe-sink:2fac022e-b742-41e4-9bf0-de39e22919c9:PUSH",
-      "safe-sink:2fac022e-b742-41e4-9bf0-de39e22919c9:SMS"
+      "safe-sink:b6c5c253-067b-41a6-8651-df67a4fe439e:PUSH",
+      "safe-sink:b6c5c253-067b-41a6-8651-df67a4fe439e:SMS"
     ],
     "terminalState": "RESOLVED",
     "auditEventCount": 11,
@@ -158,7 +160,7 @@
       "RESPONDER_VERIFIED"
     ],
     "modelCompileIncluded": false,
-    "note": "scripts/verify-live-demo-drill.sh passed against canonical api.incaof.com. The deployed Scheduler, Step Functions, SQS worker, signed responder authorization, checking lease and explicit-resolution path completed. Plan compilation remains on the separately recorded 503 fallback."
+    "note": "scripts/verify-live-demo-drill.sh passed against canonical api.incaof.com after the scoped-role OIDC deployment. The deployed Scheduler, Step Functions, SQS worker, signed responder authorization, checking lease and explicit-resolution path completed. Plan compilation remains on the separately recorded 503 fallback."
   },
   "gates": [
     {
@@ -175,9 +177,9 @@
     },
     {
       "name": "github-oidc-deployment-identity",
-      "status": "PASSED_IDENTITY_AND_CANONICAL_API_CHECK",
-      "verifiedAt": "2026-09-05T10:49:55Z",
-      "details": "Attempt 3 of run 33961468133 passed required demo-environment review, obtained short-lived credentials as ico-github-demo-deploy using the immutable repository OIDC subject, and verified the canonical API mapping. This proves the protected entry role, not a full CDK deployment."
+      "status": "PASSED_FULL_QUOTA_SAFE_DEPLOYMENT",
+      "verifiedAt": "2026-09-05T11:15:07Z",
+      "details": "Run 33962736106 passed required demo-environment review, obtained short-lived credentials as ico-github-demo-deploy using the immutable repository OIDC subject, published exact assets, updated IcoStack-demo through ico-demo-cfn-exec, proved the recorded stack RoleARN, and verified the canonical API mapping."
     },
     {
       "name": "android-in-app-demo",

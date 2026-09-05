@@ -4,7 +4,7 @@
   "sourceCommitAtStart": "6ef1e7119ffc34cd3f20fb4cd27db4a0e56aa13b",
   "acceptedCommit": null,
   "tag": null,
-  "verifiedAt": "2026-09-05T12:27:34Z",
+  "verifiedAt": "2026-09-05T12:37:01Z",
   "aws": {
     "accountIdRedacted": true,
     "deploymentPrincipal": "protected GitHub OIDC role ico-github-demo-deploy with project-specific CloudFormation executor ico-demo-cfn-exec; no long-lived AWS access key",
@@ -17,9 +17,9 @@
       "protectedEnvironment": "demo",
       "requiredReviewPassed": true,
       "immutableRepositorySubjectPinned": true,
-      "verificationRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/33964886109",
+      "verificationRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/33966283739",
       "verificationAttempt": 1,
-      "verifiedAt": "2026-09-05T12:04:35Z",
+      "verifiedAt": "2026-09-05T12:35:13Z",
       "canonicalApiVerified": true,
       "fullCdkDeploymentVerified": true,
       "cloudFormationExecutionRole": "ico-demo-cfn-exec",
@@ -82,15 +82,15 @@
       "correctiveAction": "Make Lambda staging an explicit CI/preflight and recovery step, rebuild the exact artifact, then redeploy and repeat live verification."
     },
     "lastDeploymentAttempt": {
-      "verifiedAt": "2026-09-05T12:04:35Z",
-      "sourceCommit": "9e7a72e9f7de3fa571747a2c6e1ffc72d1a39a1c",
+      "verifiedAt": "2026-09-05T12:35:13Z",
+      "sourceCommit": "a99fefda3254ac27bd83f6b4d776752f16bb0c5f",
       "result": "PASSED_QUOTA_SAFE_OIDC_SCOPED_ROLES",
       "stackStatus": "UPDATE_COMPLETE",
       "routeCount": 53,
       "canonicalApiDescriptor": true,
       "demoSessionIssued": true,
       "agentCoreRuntimePreserved": true,
-      "note": "Reviewer-gated GitHub Actions run 33964886109 built exact artifacts from commit 9e7a72e9f7de3fa571747a2c6e1ffc72d1a39a1c, deployed through short-lived OIDC credentials and ico-demo-cfn-exec, preserved the quota-blocked AgentCore Runtime exactly, and passed the canonical API check. The subsequent source correction selects AWS-native Nova after Claude returned an unsupported-country restriction; a normal runtime rollout remains blocked until the version quota is restored."
+      "note": "Reviewer-gated GitHub Actions run 33966283739 built exact artifacts from the Nova source commit, deployed through short-lived OIDC credentials and ico-demo-cfn-exec, preserved the quota-blocked AgentCore Runtime exactly, and passed the canonical API check. A normal runtime rollout remains blocked until the version quota is restored."
     }
   },
   "urls": {
@@ -135,17 +135,17 @@
     ]
   },
   "liveDeterministicDrill": {
-    "verifiedAt": "2026-09-05T12:06:27Z",
+    "verifiedAt": "2026-09-05T12:37:01Z",
     "directApi": true,
     "canonicalApi": true,
     "syntheticTenant": true,
     "timeScale": 0.02,
-    "planId": "14db4b20-544c-4774-b14a-63e36bc6be7c",
-    "momentId": "491775f0-32ad-5df8-886a-59e7f36e1296",
-    "alertId": "161c310f-f3f6-4c2f-b0df-787d505c530b",
+    "planId": "5ed67d2c-6c78-421c-a460-2b67aaa77a36",
+    "momentId": "87e1a9bf-a721-57c5-aa15-69ca5bbc1fc4",
+    "alertId": "1ebed127-aa00-498b-96d6-9cece5bfc9bd",
     "safeSinkReferences": [
-      "safe-sink:161c310f-f3f6-4c2f-b0df-787d505c530b:PUSH",
-      "safe-sink:161c310f-f3f6-4c2f-b0df-787d505c530b:SMS"
+      "safe-sink:1ebed127-aa00-498b-96d6-9cece5bfc9bd:PUSH",
+      "safe-sink:1ebed127-aa00-498b-96d6-9cece5bfc9bd:SMS"
     ],
     "terminalState": "RESOLVED",
     "auditEventCount": 11,
@@ -175,14 +175,14 @@
     {
       "name": "github-actions",
       "status": "PASSED",
-      "verifiedAt": "2026-09-05T12:01:07Z",
-      "details": "Run 33964725760; Python, Web, Android, Guardrails and Infrastructure all passed on commit 9e7a72e9f7de3fa571747a2c6e1ffc72d1a39a1c, including exact Lambda and AgentCore artifact builds"
+      "verifiedAt": "2026-09-05T12:30:49Z",
+      "details": "Run 33966117147; Python, Web, Android, Guardrails and Infrastructure all passed on commit a99fefda3254ac27bd83f6b4d776752f16bb0c5f, including exact Lambda and AgentCore artifact builds"
     },
     {
       "name": "github-oidc-deployment-identity",
       "status": "PASSED_FULL_QUOTA_SAFE_DEPLOYMENT",
-      "verifiedAt": "2026-09-05T12:04:35Z",
-      "details": "Run 33964886109 passed required demo-environment review on commit 9e7a72e9f7de3fa571747a2c6e1ffc72d1a39a1c, obtained short-lived credentials as ico-github-demo-deploy using the immutable repository OIDC subject, published exact assets, updated IcoStack-demo through ico-demo-cfn-exec while preserving the quota-blocked AgentCore version, proved the recorded stack RoleARN, and verified the canonical API mapping."
+      "verifiedAt": "2026-09-05T12:35:13Z",
+      "details": "Run 33966283739 passed required demo-environment review on commit a99fefda3254ac27bd83f6b4d776752f16bb0c5f, obtained short-lived credentials as ico-github-demo-deploy using the immutable repository OIDC subject, published exact assets, updated IcoStack-demo through ico-demo-cfn-exec while preserving the quota-blocked AgentCore version, proved the recorded stack RoleARN, and verified the canonical API mapping."
     },
     {
       "name": "android-in-app-demo",
@@ -193,11 +193,11 @@
   ],
   "sourceControl": {
     "branch": "codex/hackathon-final",
-    "headCommitAtLastGreenRun": "9e7a72e9f7de3fa571747a2c6e1ffc72d1a39a1c",
+    "headCommitAtLastGreenRun": "a99fefda3254ac27bd83f6b4d776752f16bb0c5f",
     "publicBranchPushed": true,
     "pullRequest": "https://github.com/AmirmLotfy/incaseof/pull/15",
     "pullRequestState": "DRAFT",
-    "githubActionsRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/33964725760"
+    "githubActionsRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/33966117147"
   },
   "artifacts": {
     "architecturePngSha256": "176687736f479c1efa93a24fa7d95c6761bb1a4c31e6497bf66e75cf6729d43d",

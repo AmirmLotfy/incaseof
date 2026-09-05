@@ -58,7 +58,7 @@ The Android client uses Kotlin and Jetpack Compose. The marketing site, authenti
 
 Amazon Cognito authenticates subjects. Amazon API Gateway exposes an explicit route list to Python 3.12 AWS Lambda handlers. Amazon DynamoDB stores versioned Plans, Moments, Alerts, consent and audit events. Amazon EventBridge Scheduler owns due times; AWS Step Functions Standard and Amazon SQS drive retried, idempotent escalation.
 
-Natural language is interpreted by a Strands agent running in Amazon Bedrock AgentCore Runtime with Claude Sonnet 4.6 through Amazon Bedrock. AWS execution-role credentials replace model API keys. The runtime has no DynamoDB, Scheduler, SQS, SNS or contact permission. AgentCore Gateway accepts only abstract roles, and an AgentCore Policy Engine evaluates Cedar policies in ENFORCE mode. Typed schema, time-zone, consent and safety validators re-check every draft before it can be saved.
+Natural language is interpreted by a Strands agent running in Amazon Bedrock AgentCore Runtime with AWS-native Amazon Nova 2 Lite through Amazon Bedrock. AWS execution-role credentials replace model API keys. The runtime has no DynamoDB, Scheduler, SQS, SNS or contact permission. AgentCore Gateway accepts only abstract roles, and an AgentCore Policy Engine evaluates Cedar policies in ENFORCE mode. Typed schema, time-zone, consent and safety validators re-check every draft before it can be saved.
 
 ### Challenges we ran into
 
@@ -78,7 +78,7 @@ After carefully reviewed pilots, we would add scoped context snapshots and addit
 
 ## Built with
 
-Python, TypeScript, Kotlin, Jetpack Compose, Next.js, Strands Agents SDK, Amazon Bedrock, Amazon Bedrock AgentCore, Claude Sonnet 4.6, AWS Lambda, AWS Step Functions, Amazon API Gateway, Amazon DynamoDB, Amazon Cognito, Amazon EventBridge Scheduler, Amazon SQS, Amazon SNS, Amazon CloudFront, Amazon S3, AWS KMS, AWS Secrets Manager, AWS CDK, Amazon CloudWatch, Playwright, Pytest
+Python, TypeScript, Kotlin, Jetpack Compose, Next.js, Strands Agents SDK, Amazon Bedrock, Amazon Bedrock AgentCore, Amazon Nova 2 Lite, AWS Lambda, AWS Step Functions, Amazon API Gateway, Amazon DynamoDB, Amazon Cognito, Amazon EventBridge Scheduler, Amazon SQS, Amazon SNS, Amazon CloudFront, Amazon S3, AWS KMS, AWS Secrets Manager, AWS CDK, Amazon CloudWatch, Playwright, Pytest
 
 ## Testing instructions
 

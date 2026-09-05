@@ -5,7 +5,7 @@ ways. It is also the wrong place to own safety state. Our design rule is simple:
 interprets humans; policy authorizes actions; deterministic software owns safety state.**
 
 The compiler is a Strands agent running in Amazon Bedrock AgentCore Runtime. It invokes
-Claude Sonnet 4.6 through Amazon Bedrock using temporary AWS execution-role credentials.
+AWS-native Amazon Nova 2 Lite through Amazon Bedrock using temporary AWS execution-role credentials.
 There is no model-provider API key in Lambda, the website or the Android package.
 
 The runtime receives an operation, an utterance, a time zone and abstract Circle roles. It

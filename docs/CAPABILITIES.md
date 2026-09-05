@@ -16,8 +16,8 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 
 | Capability | State | Current evidence | Release evidence still required |
 |---|---|---|---|
-| Natural-language plan preview | Locally verified; live blocked | Typed AgentCore adapter/runtime tests; deterministic revalidation; deployed v1 process exposed and fixed an artifact-only import defect | Deploy the corrected Claude artifact after the AgentCore version quota is restored, then record a bounded canary |
-| Model and credentials | Implemented; live blocked | Source is locked to `us.anthropic.claude-sonnet-4-6`; IAM/SigV4; no model API key in clients. Direct Bedrock calls currently return account-level `Operation not allowed` | AWS account verification, invocation ID, model ID, latency, token usage and redacted trace |
+| Natural-language plan preview | Locally verified; live blocked | Typed AgentCore adapter/runtime tests; deterministic revalidation; deployed v1 process exposed and fixed an artifact-only import defect | Deploy the corrected Nova artifact after the AgentCore version quota is restored, then record a bounded canary |
+| Model and credentials | Implemented; live blocked | Source is locked to AWS-native `us.amazon.nova-2-lite-v1:0`; IAM/SigV4; no model API key in clients. A direct Nova canary currently returns account-level `Operation not allowed`. Claude was rejected after Bedrock returned an unsupported-country restriction for this account | AWS account verification, invocation ID, model ID, latency, token usage and redacted trace |
 | Agent authorization | Provisioned; locally verified | Runtime, Gateway, role-only Lambda target and Cedar Policy Engine exist in `us-east-1`; Gateway is ENFORCE; CDK assertions pass | Permitted and denied live Gateway calls after account verification |
 | Plans | Partially live verified | Create/list/get/activate/pause/resume/test routes and Android/web clients; the Android judge entry now mints an isolated session and routes its existing repository through the demo API; direct demo API created a real draft and started an accelerated Drill | Deploy the expanded demo routes, then verify Agent-backed compile and Android drill in demo AWS |
 | Circle consent | Locally verified | Invite/resend/remove and signed accept/decline routes; Android invite UI; responder consent UI | Expiry, replay and cross-tenant tests on deployed URLs |
@@ -34,7 +34,7 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 | Marketing/web/responder | Locally verified | Next.js 16 static exports, typecheck, lint, build, 14 browser/accessibility cases including configured web-app mutations and explicit responder terminal state | CloudFront URLs, TLS/security headers and Lighthouse evidence |
 | Hosting | API live; edge blocked | Demo API, Cognito, DynamoDB, Scheduler, Step Functions, SQS, AgentCore and KMS are deployed. The registrar delegates `incaof.com` to the Route 53 zone; `api.incaof.com` has valid TLS, targets the demo API and returns the public product-boundary descriptor. CloudFront creation is blocked by AWS account verification | Deploy the edge resources; publish exports; verify apex/`www` DNS, TLS and headers globally |
 | Observability | Provisioned and locally verified | `ico-demo-health` dashboard and eight alarms exist; all eight alarms report OK as of 2026-09-04 | Dashboard screenshot plus evidence during a complete drill |
-| Architecture artifact | Locally verified | Claude-labelled 2400x1600 PNG, SVG source and visually checked one-page PDF | Upload preview on Devpost |
+| Architecture artifact | Locally verified | Nova-labelled 2400x1600 PNG, SVG source and visually checked one-page PDF | Upload preview on Devpost |
 | Project image and screenshots | Deferred until live demo | Final compositor must use real captures | Complete deployed capture set; no synthetic UI |
 | Demo video | Prepared, not produced | 4:30 script and shot plan | Approved Higgsfield budget, real captures, final master and public URL |
 | Bonus posts | Three complete drafts | Markdown drafts cover product principle, governed AgentCore and idempotent workflow | Publish on builder.aws and record URLs |
@@ -44,7 +44,7 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 - Unified preflight: all 19 gates pass on 2026-09-05.
 - Python: Ruff format/lint, mypy and the full test suite pass.
 - Contract parity: 53 method/path routes agree across OpenAPI, CDK and handler; authenticated and demo Android client routes are deployed in the correct environment templates.
-- Infrastructure: 45 CDK assertions and synthesis pass, including exact Claude resources, runtime session lifecycle, AgentCore user-context invocation permissions, the demo-only quota-recovery guard and the single API-scoped Lambda invocation permission.
+- Infrastructure: 45 CDK assertions and synthesis pass, including exact Nova resources, runtime session lifecycle, AgentCore user-context invocation permissions, the demo-only quota-recovery guard and the single API-scoped Lambda invocation permission.
 - Web: marketing and responder lint, typecheck and production static builds; 14 Playwright browser/accessibility cases.
 - Android: unit tests, release lint, ktlint, R8, package/signature inspection and fail-closed configuration checks pass. All 3 connected accessibility tests pass on both API 26 and API 37.
 - Android release identity: `com.incaof.app` v0.2.0 (`versionCode=2`), SHA-256 `db118074e6df54477212f2155674360a04a7b3eb69e2aacd168f6785d6cc60b3`, signing certificate SHA-256 `f12d1890545e420f5a2e10fa1475f21c2fa5463028f57fc3643daa1bc42bbd62`.
@@ -60,8 +60,8 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 ## Hard blockers before a ready claim
 
 1. Complete AWS account verification. CloudFront and every tested Bedrock model currently return account-level blocks.
-2. Wait for AgentCore `Versions per Agent` case `178851871600399`, then deploy the corrected Claude runtime and 60-second idle lifecycle.
-3. Add the currently blocked Claude/AgentCore compile leg to the now-proven live workflow, queue, responder lease and resolution path; record runtime, trace and execution identifiers.
+2. Wait for AgentCore `Versions per Agent` case `178851871600399`, then deploy the corrected Nova runtime and 60-second idle lifecycle.
+3. Add the currently blocked Nova/AgentCore compile leg to the now-proven live workflow, queue, responder lease and resolution path; record runtime, trace and execution identifiers.
 4. Deploy edge hosting, publish both static clients, create apex/`www` records, and verify marketing, app, demo, consent and responder URLs globally. The canonical API descriptor is already live.
 5. Finish one physical-phone FCM/install pass and rebuild the signed release for the canonical API after edge hosting exists.
 6. Capture real deployed screenshots; only then generate the final 1800x1200 project image and demo video.

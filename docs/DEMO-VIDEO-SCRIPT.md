@@ -24,7 +24,7 @@ doesn't respond after ten minutes, ask Maya, then Omar." Show the deployed Agent
 and the literal preview.
 
 **Narration:** "This is ICO: In Case Of. Mona describes an expected moment in ordinary
-language. A Strands agent on Amazon Bedrock AgentCore uses Claude Sonnet 4.6 to propose a
+language. A Strands agent on Amazon Bedrock AgentCore uses Amazon Nova 2 Lite to propose a
 typed draft. It has no permission to schedule, message, or read contact endpoints."
 
 ### 0:55-1:20 - Review and activate

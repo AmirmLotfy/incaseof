@@ -396,12 +396,12 @@ describe("agentcore", () => {
     template.hasOutput("AgentCoreRuntimeQualifier", { Value: "DEFAULT" });
   });
 
-  it("keeps the runtime side-effect free and scopes Bedrock to Claude Sonnet 4.6", () => {
+  it("keeps the runtime side-effect free and scopes Bedrock to Amazon Nova 2 Lite", () => {
     const template = synth();
     const serialized = JSON.stringify(template.findResources("AWS::IAM::Policy"));
-    assert.match(serialized, /us\.anthropic\.claude-sonnet-4-6/);
-    assert.match(serialized, /anthropic\.claude-sonnet-4-6/);
-    assert.doesNotMatch(serialized, /nova|gemini/i);
+    assert.match(serialized, /us\.amazon\.nova-2-lite-v1:0/);
+    assert.match(serialized, /amazon\.nova-2-lite-v1:0/);
+    assert.doesNotMatch(serialized, /anthropic|gemini/i);
 
     const runtimeRoles = template.findResources("AWS::IAM::Role", {
       Properties: {
@@ -419,7 +419,7 @@ describe("agentcore", () => {
     const runtimePolicy = Object.values(policies).find(
       (policy) =>
         runtimeRoleIds.some((id) => JSON.stringify(policy.Properties?.Roles ?? []).includes(id)) &&
-        JSON.stringify(policy).includes("us.anthropic.claude-sonnet-4-6"),
+        JSON.stringify(policy).includes("us.amazon.nova-2-lite-v1:0"),
     );
     const policyText = JSON.stringify(runtimePolicy);
     assert.doesNotMatch(policyText, /dynamodb:|scheduler:|sqs:|sns:/i);

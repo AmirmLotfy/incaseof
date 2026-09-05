@@ -16,7 +16,7 @@
                       ▼
                 Strands Agent
                       │
-          Claude Sonnet 4.6 via Bedrock
+          Amazon Nova 2 Lite via Bedrock
                       │
                    proposes
                       │
@@ -76,7 +76,7 @@ Those are application state.
        ▼                  ▼
   Strands Agent       Action Outbox
        │                  │
-Claude via Bedrock        ▼
+Nova via Bedrock          ▼
        │                 SQS
        ▼                  │
 AgentCore Gateway         ▼

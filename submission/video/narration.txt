@@ -1,6 +1,6 @@
 Independence should not require surveillance. She does not need a camera watching her, or a panic button she may not be able to press. She needs one quiet promise: if an expected moment passes, someone notices.
 
-This is ICO: In Case Of. Mona describes an expected moment in ordinary language. A Strands agent on Amazon Bedrock AgentCore uses Claude Sonnet 4.6 to propose a typed draft. It has no permission to schedule, message, or read contact endpoints.
+This is ICO: In Case Of. Mona describes an expected moment in ordinary language. A Strands agent on Amazon Bedrock AgentCore uses AWS-native Amazon Nova 2 Lite to propose a typed draft. It has no permission to schedule, message, or read contact endpoints.
 
 The model's answer is never an action. Deterministic schema, time-zone, consent and safety checks produce a preview. Mona reviews who may be contacted and when. Only then can software create the schedule.
 

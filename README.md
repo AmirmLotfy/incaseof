@@ -66,7 +66,7 @@ Concretely:
 ## Built with
 
 - **Strands Agents SDK** — the agent runtime
-- **Claude Sonnet 4.6 through Amazon Bedrock** — natural-language plan compilation without a model API key
+- **Amazon Nova 2 Lite through Amazon Bedrock** — AWS-native natural-language plan compilation without a model API key
 - **Amazon Bedrock AgentCore** — Strands runtime, role-only Gateway and Cedar policy enforcement
 - **AWS Step Functions** — durable escalation workflows
 - **EventBridge Scheduler** — safety timers that do not depend on a device
@@ -118,7 +118,7 @@ flowchart TD
     end
 
     subgraph Interpret["AI Interpretation Layer"]
-        AgentCore["Strands on AgentCore Runtime<br/>Claude Sonnet 4.6 via Bedrock"]
+        AgentCore["Strands on AgentCore Runtime<br/>Amazon Nova 2 Lite via Bedrock"]
     end
 
     subgraph Auth["Authorization Layer"]

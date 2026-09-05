@@ -7,6 +7,11 @@ The accepted path is GitHub Actions with OIDC and the protected `demo` environme
 the exact Lambda, AgentCore, Android and static-web artifacts before deployment; no long-lived
 AWS access key belongs in GitHub or this repository.
 
+The bootstrap stack `IcoGithubOidc` owns `ico-github-demo-deploy`. Its trust is limited to
+`repo:AmirmLotfy/incaseof:environment:demo`; its inline policies may assume only the four CDK
+bootstrap roles, publish only ICO demo static artifacts and read/update only the existing
+`api.incaof.com` API mapping. Run **Verify AWS deployment identity** after changing this role.
+
 ## Normal demo deployment
 
 Use the `Deploy demo` workflow. A normal deployment targets Amazon Nova 2 Lite and configures

@@ -73,6 +73,17 @@ Resources:
                 Condition:
                   StringEquals:
                     aws:ResourceTag/Project: in-case-of
+              - Sid: ReadCanonicalApiMapping
+                Effect: Allow
+                Action: apigateway:GET
+                Resource:
+                  - !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}::/domainnames/api.incaof.com
+                  - !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}::/domainnames/api.incaof.com/apimappings
+                  - !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}::/domainnames/api.incaof.com/apimappings/*
+              - Sid: UpdateCanonicalApiMapping
+                Effect: Allow
+                Action: apigateway:PATCH
+                Resource: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}::/domainnames/api.incaof.com/apimappings/*
 
 Outputs:
   RoleArn:

@@ -61,7 +61,9 @@ export class AgentCore extends Construct {
         "preserving the demo runtime requires its existing S3 bucket, key and model ID",
       );
     }
-    const runtimeModelId = preserveRuntime ? (preservedModelId as string) : "us.amazon.nova-2-lite-v1:0";
+    const runtimeModelId = preserveRuntime
+      ? (preservedModelId as string)
+      : "us.anthropic.claude-sonnet-4-6";
     const foundationModelId = runtimeModelId.replace(/^us\./, "");
     const modelResources = [
       Arn.format(
@@ -118,9 +120,7 @@ export class AgentCore extends Construct {
 
     this.runtime = new agentcore.CfnRuntime(this, "Runtime", {
       agentRuntimeName: `ico_${props.environment.name}_compiler`,
-      description: preserveRuntime
-        ? "ICO Strands compiler using Claude Sonnet 4.6 through Bedrock"
-        : "ICO Strands compiler using Amazon Nova 2 Lite through Bedrock",
+      description: "ICO Strands compiler using Claude Sonnet 4.6 through Bedrock",
       roleArn: this.runtimeRole.roleArn,
       protocolConfiguration: "HTTP",
       networkConfiguration: { networkMode: "PUBLIC" },

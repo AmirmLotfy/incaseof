@@ -48,20 +48,29 @@ async function reachable(url: string, attempts = 60): Promise<void> {
 function serve(app: string, port: number): ChildProcess {
   // Serve the exported output with the same clean-path and signed-token rewrites used by
   // CloudFront. This tests the artifact people actually receive, not a development server.
-  return spawn("node", [fileURLToPath(new URL("./static-server.mjs", import.meta.url)), "out", String(port)], {
-    // fileURLToPath, not .pathname: the repository path contains a space, which .pathname
-    // hands back percent-encoded and spawn then treats as a literal directory name.
-    cwd: fileURLToPath(new URL(`../apps/${app}`, import.meta.url)),
-    stdio: "ignore",
-    detached: false,
-  });
+  return spawn(
+    "node",
+    [
+      fileURLToPath(new URL("./static-server.mjs", import.meta.url)),
+      "out",
+      String(port),
+    ],
+    {
+      // fileURLToPath, not .pathname: the repository path contains a space, which .pathname
+      // hands back percent-encoded and spawn then treats as a literal directory name.
+      cwd: fileURLToPath(new URL(`../apps/${app}`, import.meta.url)),
+      stdio: "ignore",
+      detached: false,
+    },
+  );
 }
 
 before(async () => {
   server = serve("responder", PORT);
   marketing = serve("marketing", MARKETING_PORT);
   await Promise.all([reachable(BASE), reachable(MARKETING)]);
-  const macChrome = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+  const macChrome =
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
   browser = existsSync(macChrome)
     ? await chromium.launch({ executablePath: macChrome })
     : await chromium.launch();
@@ -81,14 +90,22 @@ async function newPage(): Promise<Page> {
 
 async function mockIncidentApi(page: Page, invalid = false): Promise<void> {
   const expected = new Date(Date.now() - 23 * 60_000);
-  const at = (minutes: number) => new Date(expected.getTime() + minutes * 60_000).toISOString();
-  await page.route("**/runtime-config.json", (route) => route.fulfill({
-    status: 200,
-    contentType: "application/json",
-    body: JSON.stringify({ apiUrl: "https://api.test.invalid" }),
-  }));
+  const at = (minutes: number) =>
+    new Date(expected.getTime() + minutes * 60_000).toISOString();
+  await page.route("**/runtime-config.json", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ apiUrl: "https://api.test.invalid" }),
+    }),
+  );
   await page.route("https://api.test.invalid/r/**", (route) => {
-    if (invalid) return route.fulfill({ status: 403, contentType: "application/json", body: "{}" });
+    if (invalid)
+      return route.fulfill({
+        status: 403,
+        contentType: "application/json",
+        body: "{}",
+      });
     return route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -111,26 +128,33 @@ async function mockIncidentApi(page: Page, invalid = false): Promise<void> {
       }),
     });
   });
-  await page.route("https://api.test.invalid/v1/r/**", (route) => route.fulfill({
-    status: 200,
-    contentType: "application/json",
-    body: JSON.stringify({ state: "CIRCLE_ESCALATION" }),
-  }));
+  await page.route("https://api.test.invalid/v1/r/**", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ state: "CIRCLE_ESCALATION" }),
+    }),
+  );
 }
 
 async function mockConfiguredApp(page: Page, calls: string[]): Promise<void> {
   await page.addInitScript(() => {
-    window.sessionStorage.setItem("ico.web.access-token", "synthetic-test-token");
+    window.sessionStorage.setItem(
+      "ico.web.access-token",
+      "synthetic-test-token",
+    );
   });
-  await page.route("**/runtime-config.json", (route) => route.fulfill({
-    status: 200,
-    contentType: "application/json",
-    body: JSON.stringify({
-      apiUrl: "https://api.test.invalid",
-      cognitoDomain: "auth.test.invalid",
-      webClientId: "web-test",
+  await page.route("**/runtime-config.json", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        apiUrl: "https://api.test.invalid",
+        cognitoDomain: "auth.test.invalid",
+        webClientId: "web-test",
+      }),
     }),
-  }));
+  );
   await page.route("https://api.test.invalid/**", async (route) => {
     const request = route.request();
     const url = new URL(request.url());
@@ -140,26 +164,44 @@ async function mockConfiguredApp(page: Page, calls: string[]): Promise<void> {
         headers: {
           "access-control-allow-origin": "*",
           "access-control-allow-methods": "GET,POST,DELETE,OPTIONS",
-          "access-control-allow-headers": "authorization,content-type,idempotency-key",
+          "access-control-allow-headers":
+            "authorization,content-type,idempotency-key",
         },
         body: "",
       });
     }
     calls.push(`${request.method()} ${url.pathname}`);
 
-    assert.equal(request.headers().authorization, "Bearer synthetic-test-token");
+    assert.equal(
+      request.headers().authorization,
+      "Bearer synthetic-test-token",
+    );
     if (request.method() !== "GET") {
-      assert.ok(request.headers()["idempotency-key"], `${url.pathname} omitted Idempotency-Key`);
+      assert.ok(
+        request.headers()["idempotency-key"],
+        `${url.pathname} omitted Idempotency-Key`,
+      );
     }
 
-    const json = (body: unknown, status = 200) => route.fulfill({
-      status,
-      contentType: "application/json",
-      headers: { "access-control-allow-origin": "*" },
-      body: JSON.stringify(body),
-    });
+    const json = (body: unknown, status = 200) =>
+      route.fulfill({
+        status,
+        contentType: "application/json",
+        headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify(body),
+      });
     if (request.method() === "GET" && url.pathname === "/v1/plans") {
-      return json({ plans: [{ planId: "plan-1", label: "Evening check", type: "ROUTINE", active: true, paused: false }] });
+      return json({
+        plans: [
+          {
+            planId: "plan-1",
+            label: "Evening check",
+            type: "ROUTINE",
+            active: true,
+            paused: false,
+          },
+        ],
+      });
     }
     if (request.method() === "GET" && url.pathname === "/v1/moments/next") {
       return json({
@@ -176,7 +218,17 @@ async function mockConfiguredApp(page: Page, calls: string[]): Promise<void> {
       });
     }
     if (request.method() === "GET" && url.pathname === "/v1/circle") {
-      return json({ members: [{ memberId: "member-1", displayName: "Maya", relationship: "Sister", role: "PRIMARY", status: "ACCEPTED" }] });
+      return json({
+        members: [
+          {
+            memberId: "member-1",
+            displayName: "Maya",
+            relationship: "Sister",
+            role: "PRIMARY",
+            status: "ACCEPTED",
+          },
+        ],
+      });
     }
     if (request.method() === "GET" && url.pathname === "/v1/history") {
       return json({ history: [] });
@@ -185,20 +237,51 @@ async function mockConfiguredApp(page: Page, calls: string[]): Promise<void> {
       return json({ alertId: "alert-1", state: "RESOLVED" });
     }
     if (request.method() === "POST" && url.pathname.endsWith("/extend")) {
-      assert.equal((request.postDataJSON() as { seconds: number }).seconds, 1800);
-      return json({ momentId: "moment-1", dueAt: new Date().toISOString(), graceUntil: new Date().toISOString() });
+      assert.equal(
+        (request.postDataJSON() as { seconds: number }).seconds,
+        1800,
+      );
+      return json({
+        momentId: "moment-1",
+        dueAt: new Date().toISOString(),
+        graceUntil: new Date().toISOString(),
+      });
     }
     if (request.method() === "POST" && url.pathname.endsWith("/cancel")) {
       return json({ momentId: "moment-1", status: "CANCELLED" });
     }
-    if (request.method() === "DELETE" && url.pathname === "/v1/circle/members/member-1") {
-      return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" }, body: "" });
+    if (
+      request.method() === "DELETE" &&
+      url.pathname === "/v1/circle/members/member-1"
+    ) {
+      return route.fulfill({
+        status: 204,
+        headers: { "access-control-allow-origin": "*" },
+        body: "",
+      });
     }
-    if (request.method() === "POST" && url.pathname === "/v1/circle/invitations") {
-      return json({ invitationId: "invite-1", status: "PENDING", inviteUrl: "https://incaof.com/i/synthetic" }, 201);
+    if (
+      request.method() === "POST" &&
+      url.pathname === "/v1/circle/invitations"
+    ) {
+      return json(
+        {
+          invitationId: "invite-1",
+          status: "PENDING",
+          inviteUrl: "https://incaof.com/i/synthetic",
+        },
+        201,
+      );
     }
-    if (request.method() === "POST" && url.pathname === "/v1/circle/invitations/invite-1/resend") {
-      return json({ invitationId: "invite-1", status: "PENDING", inviteUrl: "https://incaof.com/i/refreshed" });
+    if (
+      request.method() === "POST" &&
+      url.pathname === "/v1/circle/invitations/invite-1/resend"
+    ) {
+      return json({
+        invitationId: "invite-1",
+        status: "PENDING",
+        inviteUrl: "https://incaof.com/i/refreshed",
+      });
     }
     return json({ title: "Unexpected test route" }, 501);
   });
@@ -207,7 +290,8 @@ async function mockConfiguredApp(page: Page, calls: string[]): Promise<void> {
 async function violations(page: Page) {
   const result = await new AxeBuilder({ page }).withTags(STANDARD).analyze();
   return result.violations.map(
-    (v) => `${v.id} (${v.impact}) — ${v.help}\n      ${v.nodes[0]?.html?.slice(0, 120)}`,
+    (v) =>
+      `${v.id} (${v.impact}) — ${v.help}\n      ${v.nodes[0]?.html?.slice(0, 120)}`,
   );
 }
 
@@ -246,7 +330,10 @@ describe("responder web accessibility", () => {
     await page.getByRole("button", { name: /I reached Mona/i }).click();
     await page.getByRole("heading", { name: "This check is closed" }).waitFor();
 
-    assert.equal(await page.getByText(/contact ladder has stopped/i).count(), 1);
+    assert.equal(
+      await page.getByText(/contact ladder has stopped/i).count(),
+      1,
+    );
     assert.equal(await page.getByRole("button").count(), 0);
     const found = await violations(page);
     assert.deepEqual(found, [], `\n    ${found.join("\n    ")}\n`);
@@ -282,7 +369,9 @@ describe("responder web accessibility", () => {
         checked++;
         const label = (await control.textContent())?.trim() ?? "?";
         if (box.height < 44 || box.width < 44) {
-          small.push(`${label}: ${Math.round(box.width)}×${Math.round(box.height)}`);
+          small.push(
+            `${label}: ${Math.round(box.width)}×${Math.round(box.height)}`,
+          );
         }
       }
     };
@@ -296,7 +385,11 @@ describe("responder web accessibility", () => {
 
     // One control unclaimed, two claimed. Asserting the count catches the failure mode
     // where the state never advances and this quietly measures the same button twice.
-    assert.equal(checked, 3, `measured ${checked} controls, expected 3 across both states`);
+    assert.equal(
+      checked,
+      3,
+      `measured ${checked} controls, expected 3 across both states`,
+    );
     assert.deepEqual(small, [], `controls below 44px: ${small.join(", ")}`);
     await page.close();
   });
@@ -309,12 +402,18 @@ describe("responder web accessibility", () => {
     await page.goto(`${BASE}/r/sample`);
     await page.locator("[data-timeline-at]").first().waitFor();
 
-    const times = await page.locator("[data-timeline-at]").evaluateAll((nodes) =>
-      nodes.map((n) => n.getAttribute("data-timeline-at") ?? ""),
-    );
+    const times = await page
+      .locator("[data-timeline-at]")
+      .evaluateAll((nodes) =>
+        nodes.map((n) => n.getAttribute("data-timeline-at") ?? ""),
+      );
 
     assert.ok(times.length > 1, "the sample incident should have a timeline");
-    assert.deepEqual(times, [...times].sort(), "timeline is not in chronological DOM order");
+    assert.deepEqual(
+      times,
+      [...times].sort(),
+      "timeline is not in chronological DOM order",
+    );
     await page.close();
   });
 
@@ -330,7 +429,9 @@ describe("responder web accessibility", () => {
     const mute = await page.evaluate(() => {
       const state = ["--ico-signal", "--ico-critical", "--ico-resolved"]
         .map((token) =>
-          getComputedStyle(document.documentElement).getPropertyValue(token).trim(),
+          getComputedStyle(document.documentElement)
+            .getPropertyValue(token)
+            .trim(),
         )
         .filter(Boolean);
 
@@ -348,7 +449,11 @@ describe("responder web accessibility", () => {
         .map((node) => node.tagName.toLowerCase());
     });
 
-    assert.deepEqual(mute, [], `state shown only in colour: ${mute.join(", ")}`);
+    assert.deepEqual(
+      mute,
+      [],
+      `state shown only in colour: ${mute.join(", ")}`,
+    );
     await page.close();
   });
 });
@@ -388,7 +493,11 @@ describe("marketing site accessibility", () => {
     ] as const) {
       const expected = `${method} ${path}`;
       await Promise.all([
-        page.waitForRequest((request) => request.method() === method && new URL(request.url()).pathname === path),
+        page.waitForRequest(
+          (request) =>
+            request.method() === method &&
+            new URL(request.url()).pathname === path,
+        ),
         page.getByRole("button", { name: label }).click(),
       ]);
       assert.ok(calls.includes(expected), `${expected} was not called`);
@@ -397,7 +506,15 @@ describe("marketing site accessibility", () => {
     await page.getByLabel("Invite someone").fill("Omar");
     await page.getByRole("button", { name: "Create invitation" }).click();
     await page.getByRole("button", { name: "Refresh consent link" }).waitFor();
-    await page.getByRole("button", { name: "Refresh consent link" }).click();
+    await Promise.all([
+      page.waitForRequest(
+        (request) =>
+          request.method() === "POST" &&
+          new URL(request.url()).pathname ===
+            "/v1/circle/invitations/invite-1/resend",
+      ),
+      page.getByRole("button", { name: "Refresh consent link" }).click(),
+    ]);
     assert.ok(calls.includes("POST /v1/circle/invitations"));
     assert.ok(calls.includes("POST /v1/circle/invitations/invite-1/resend"));
     await page.close();
@@ -418,10 +535,15 @@ describe("marketing site accessibility", () => {
       await page.waitForSelector("main");
 
       const overflow = await page.evaluate(
-        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        () =>
+          document.documentElement.scrollWidth -
+          document.documentElement.clientWidth,
       );
 
-      assert.ok(overflow <= 0, `${overflow}px of horizontal overflow at ${width}px`);
+      assert.ok(
+        overflow <= 0,
+        `${overflow}px of horizontal overflow at ${width}px`,
+      );
       await page.close();
     });
   }

@@ -31,7 +31,7 @@
     "physicalDevice": "NOT_RUN"
   },
   "canary": {
-    "modelId": "us.amazon.nova-2-lite-v1:0",
+    "modelId": "us.anthropic.claude-sonnet-4-6",
     "runtimeInvocationId": null,
     "traceId": null,
     "workflowExecutionArn": null,

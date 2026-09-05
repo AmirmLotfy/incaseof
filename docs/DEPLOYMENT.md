@@ -18,7 +18,7 @@ can read only the exact CDK asset bucket, and can manage IAM roles only under
 
 ## Normal demo deployment
 
-Use the `Deploy demo` workflow. A normal deployment targets Amazon Nova 2 Lite and configures
+Use the `Deploy demo` workflow. A normal deployment targets Claude Sonnet 4.6 and configures
 the AgentCore Runtime with a 60-second idle session timeout. It must not be run while the
 account's applied `Versions per Agent` quota is zero because any Runtime property or artifact
 change creates a new AgentCore version.
@@ -45,7 +45,7 @@ Before using it:
 
 The context is rejected for `dev` and `prod`, and it fails closed unless all three deployed
 values are supplied. It is not part of the final accepted deployment. After AWS restores the
-quota, omit every preservation value, deploy the checked-in Nova artifact, run the bounded
+quota, omit every preservation value, deploy the checked-in Claude artifact, run the bounded
 AgentCore canary, and record its invocation and trace IDs.
 
 Never use `--hotswap` for acceptance. It bypasses CloudFormation and makes live state diverge

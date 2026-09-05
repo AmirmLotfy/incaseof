@@ -30,7 +30,7 @@
 
   <text x="90" y="785" class="lane">AI INTERPRETATION - SIDE EFFECT FREE</text>
   <rect class="box ai" x="90" y="820" width="425" height="180"/><text x="125" y="872" class="h">AgentCore Runtime</text><text x="125" y="906" class="b">Strands plan compiler</text><text x="125" y="938" class="small">IAM / SigV4, validated subject context</text><text x="125" y="965" class="small">No state, schedule, or contact grants</text>
-  <rect class="box ai" x="580" y="820" width="390" height="180"/><text x="615" y="872" class="h">Amazon Bedrock</text><text x="615" y="906" class="b">Amazon Nova 2 Lite</text><text x="615" y="938" class="small">AWS execution-role credentials</text><text x="615" y="965" class="small">No model API key in clients</text>
+  <rect class="box ai" x="580" y="820" width="390" height="180"/><text x="615" y="872" class="h">Amazon Bedrock</text><text x="615" y="906" class="b">Claude Sonnet 4.6</text><text x="615" y="938" class="small">AWS execution-role credentials</text><text x="615" y="965" class="small">No model API key in clients</text>
   <rect class="box ai" x="1035" y="820" width="420" height="180"/><text x="1070" y="872" class="h">Gateway + Policy</text><text x="1070" y="906" class="b">Role-only tool vocabulary</text><text x="1070" y="938" class="small">Cedar ENFORCE, default deny</text><text x="1070" y="965" class="small">Forbid-wins authorization</text>
   <rect class="box ai" x="1520" y="820" width="385" height="180"/><text x="1555" y="872" class="h">Deterministic guard</text><text x="1555" y="906" class="b">Schema, time, safety</text><text x="1555" y="938" class="small">Model proposes a typed draft</text><text x="1555" y="965" class="small">Software authorizes every action</text>
 
@@ -48,6 +48,6 @@
   <path class="flow" d="M1700 695 V760 H302 V805"/><path class="flow" d="M515 910 H565"/><path class="dash" d="M970 910 H1020"/><path class="dash" d="M1455 910 H1505"/>
   <path class="flow" d="M1700 695 V1060 H265 V1110"/><path class="flow" d="M440 1212 H480"/><path class="flow" d="M890 1212 H930"/><path class="flow" d="M1275 1212 H1315"/><path class="dash" d="M1680 1212 H1720"/>
   <path class="dash" d="M1095 1390 V1320"/>
-  <text x="2140" y="1444" class="small">implemented locally</text><rect x="2110" y="1428" width="18" height="18" rx="4" fill="#3A7665"/>
-  <text x="2140" y="1475" class="small">requires live verification</text><rect x="2110" y="1459" width="18" height="18" rx="4" fill="#E85B2A"/>
+  <text x="2140" y="1444" class="small">governed AI boundary</text><rect x="2110" y="1428" width="18" height="18" rx="4" fill="#3A7665"/>
+  <text x="2140" y="1475" class="small">deterministic AWS service</text><rect x="2110" y="1459" width="18" height="18" rx="4" fill="#E85B2A"/>
 </svg>

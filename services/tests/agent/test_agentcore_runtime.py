@@ -80,7 +80,7 @@ def test_runtime_compiles_without_exposing_the_utterance(monkeypatch: pytest.Mon
 
     assert result["compiledPlan"]["timezone"] == "Africa/Cairo"
     assert result["trace"]["runtime"] == "AMAZON_BEDROCK_AGENTCORE"
-    assert result["trace"]["modelId"] == "us.amazon.nova-2-lite-v1:0"
+    assert result["trace"]["modelId"] == "us.anthropic.claude-sonnet-4-6"
     assert len(result["trace"]["inputHash"]) == 64
     assert utterance not in str(result)
 

@@ -103,7 +103,7 @@ schema → semantic → contact authorization → safety → simulation → huma
 
 | Setting | Value |
 |---|---|
-| Primary model | `us.amazon.nova-2-lite-v1:0` through Amazon Bedrock |
+| Primary model | `us.anthropic.claude-sonnet-4-6` through Amazon Bedrock |
 | Runtime | Strands on Amazon Bedrock AgentCore Runtime |
 | Authentication | IAM / SigV4 with temporary execution-role credentials |
 | Output | Typed plan draft; deterministic validation is mandatory |

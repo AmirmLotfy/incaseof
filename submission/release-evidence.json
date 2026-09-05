@@ -4,7 +4,7 @@
   "sourceCommitAtStart": "6ef1e7119ffc34cd3f20fb4cd27db4a0e56aa13b",
   "acceptedCommit": null,
   "tag": null,
-  "verifiedAt": "2026-09-05T11:17:39Z",
+  "verifiedAt": "2026-09-05T11:57:29Z",
   "aws": {
     "accountIdRedacted": true,
     "deploymentPrincipal": "protected GitHub OIDC role ico-github-demo-deploy with project-specific CloudFormation executor ico-demo-cfn-exec; no long-lived AWS access key",
@@ -117,8 +117,9 @@
     "physicalDevice": "NOT_RUN"
   },
   "canary": {
-    "sourceModelId": "us.amazon.nova-2-lite-v1:0",
-    "deployedLegacyModelId": "us.anthropic.claude-sonnet-4-6",
+    "sourceModelId": "us.anthropic.claude-sonnet-4-6",
+    "deployedModelId": "us.anthropic.claude-sonnet-4-6",
+    "sourceMatchesDeployedModel": true,
     "runtimeInitializationReached": true,
     "runtimeReadyForRequest": false,
     "runtimeInvocationId": null,
@@ -166,7 +167,7 @@
     {
       "name": "unified-preflight",
       "status": "PASSED",
-      "verifiedAt": "2026-09-05T08:40:39Z",
+      "verifiedAt": "2026-09-05T11:57:29Z",
       "details": "19/19 gates; exact Lambda and AgentCore artifacts; 377 Python tests; 45 CDK assertions; 53 API routes in parity; 14 Playwright browser/accessibility cases"
     },
     {
@@ -197,8 +198,8 @@
     "githubActionsRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/33961294760"
   },
   "artifacts": {
-    "architecturePngSha256": "07261fbe70c5be2a02f9088d3ccf5dd0577aaa49cf1a2c5278c412e3d2ef0509",
-    "architecturePdfSha256": "9345cdc26146b61bd23fb5c8ecec2ef083d460cae37bf3b93f64df1f8c637331",
+    "architecturePngSha256": "c8a716ef7f283be48ef031b06620c5e3de6db69200a4ce50ba54d8722e604c30",
+    "architecturePdfSha256": "0fb032c320a655949fca360c3a8f4e441834d34866c81656fc23b29956dc243c",
     "projectImage": null,
     "screenshots": [
       "android/captures/api26-release-home.png",

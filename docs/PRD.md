@@ -242,7 +242,7 @@ Committed in full. See "Schedule risk" below.
 | One-time Plan | ✓ |
 | Recurring Plan | ✓ |
 | Natural language compilation | ✓ |
-| Strands on AgentCore with Amazon Nova 2 Lite through Bedrock | ✓ |
+| Strands on AgentCore with Claude Sonnet 4.6 through Bedrock | ✓ |
 | Strands Agent | ✓ |
 | AgentCore Runtime | ✓ |
 | AgentCore Gateway / Policy | ✓ |

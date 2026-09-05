@@ -10,7 +10,7 @@ license = { text = "Apache-2.0" }
 # tomorrow; a transitive minor bump is not an acceptable source of surprise.
 dependencies = [
     "strands-agents[gemini]==1.53.0",
-    "strands-agents-tools==0.8.6",
+    "strands-agents-tools==0.8.7",
     "google-genai==2.19.0",
     "pydantic==2.13.4",
     "boto3==1.43.78",

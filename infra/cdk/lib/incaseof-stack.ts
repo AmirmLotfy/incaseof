@@ -112,6 +112,7 @@ export class IcoStack extends Stack {
         compute.nextAction,
         compute.dispatch,
         compute.actionWorker,
+        compute.outboxRelay,
         agentCore.toolTarget,
       ],
       stateMachine: workflow.stateMachine,

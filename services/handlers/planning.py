@@ -29,7 +29,7 @@ from services.domain.ids import (
     uuid_factory,
 )
 from services.domain.moment import ExpectedMoment, moment_for, next_due_at
-from services.domain.plan import Plan, PlanVersion
+from services.domain.plan import Plan, PlanVersion, TriggerKind
 from services.handlers import bootstrap
 
 
@@ -101,7 +101,17 @@ def activate_plan(
     if version is None:
         raise ValueError(f"no such version {version_id}")
 
-    plan = ctx.plans.activate(plan_id, version_id, now)
+    owner_plan = ctx.plans.get_plan(plan_id)
+    if owner_plan is None or version.plan_id != plan_id:
+        raise ValueError("version does not belong to the requested plan")
+    circle = ctx.circles.get(owner_plan.circle_id)
+    bindings = {
+        role.value: str(member.person_id)
+        for role in version.responder_roles
+        if circle is not None and (member := circle.member_for_role(role)) is not None
+    }
+    plan = ctx.plans.activate(plan_id, version_id, now, bindings)
+    version = ctx.plans.get_version(version_id) or version
     moment = _next_moment(version, now=now, new_id=new_id, scale=ctx.scale)
     ctx.moments.save(moment, subject_person_id=plan.subject_person_id)
 
@@ -129,12 +139,14 @@ def schedule_following_moment(
     Called once a Moment resolves. A one-time Plan simply has no next Moment, which is not
     an error -- it is the plan finishing.
     """
-    moment = _next_moment(version, now=after, new_id=new_id, scale=ctx.scale)
-    if moment is None:
+    if version.trigger.kind is not TriggerKind.RECURRING:
         return None
     plan = ctx.plans.get_plan(version.plan_id)
-    if plan is None:
-        raise RuntimeError(f"version {version.version_id} points at missing plan {version.plan_id}")
+    if plan is None or not plan.is_active or plan.active_version_id != version.version_id:
+        return None
+    if next_due_at(version.trigger, version.timezone, after) is None:
+        return None
+    moment = _next_moment(version, now=after, new_id=new_id, scale=ctx.scale)
     ctx.moments.save(moment, subject_person_id=plan.subject_person_id)
     if ctx.scheduler is not None:
         ctx.scheduler.schedule(moment)

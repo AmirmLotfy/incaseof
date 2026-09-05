@@ -88,6 +88,11 @@
           "description": "RELATIVE only. Seconds from activation.",
           "minimum": 60,
           "maximum": 604800
+        },
+        "untilAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "RECURRING only. Inclusive final due instant, ISO-8601 with offset. No new Moment starts after this bound; existing Alerts finish normally."
         }
       },
       "allOf": [
@@ -102,7 +107,16 @@
           "then": {
             "required": [
               "dueAt"
-            ]
+            ],
+            "not": {
+              "anyOf": [
+                { "required": ["timeOfDay"] },
+                { "required": ["daysOfWeek"] },
+                { "required": ["intervalSeconds"] },
+                { "required": ["offsetSeconds"] },
+                { "required": ["untilAt"] }
+              ]
+            }
           }
         },
         {
@@ -116,7 +130,13 @@
           "then": {
             "required": [
               "timeOfDay"
-            ]
+            ],
+            "not": {
+              "anyOf": [
+                { "required": ["dueAt"] },
+                { "required": ["offsetSeconds"] }
+              ]
+            }
           }
         },
         {
@@ -130,7 +150,16 @@
           "then": {
             "required": [
               "offsetSeconds"
-            ]
+            ],
+            "not": {
+              "anyOf": [
+                { "required": ["dueAt"] },
+                { "required": ["timeOfDay"] },
+                { "required": ["daysOfWeek"] },
+                { "required": ["intervalSeconds"] },
+                { "required": ["untilAt"] }
+              ]
+            }
           }
         }
       ]

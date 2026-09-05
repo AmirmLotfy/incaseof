@@ -68,6 +68,8 @@ def document_from_version(version: PlanVersion) -> dict[str, Any]:
     immediately before a draft is created.
     """
     trigger: dict[str, Any] = {"kind": version.trigger.kind.value}
+    if version.trigger.until_at is not None:
+        trigger["untilAt"] = version.trigger.until_at.isoformat()
     if version.trigger.due_at is not None:
         trigger["dueAt"] = version.trigger.due_at.isoformat()
     if version.trigger.time_of_day is not None:
@@ -137,6 +139,7 @@ def _trigger_from(document: dict[str, Any]) -> Trigger:
         days_of_week=tuple(raw.get("daysOfWeek", ())),
         interval_seconds=raw.get("intervalSeconds"),
         offset_seconds=raw.get("offsetSeconds"),
+        until_at=datetime.fromisoformat(raw["untilAt"]) if raw.get("untilAt") else None,
     )
 
 

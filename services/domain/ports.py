@@ -8,7 +8,7 @@ Two operations are deliberately *conditional* rather than plain writes, because 
 the operations that enforce invariants under concurrency:
 
 * :meth:`AlertRepository.open_for_moment` -- one Moment produces at most one Alert.
-* :meth:`ActionLog.claim_key` -- an external action fires at most once per attempt.
+* :meth:`ActionLog.claim_key` -- compatibility detection for pre-outbox deployments.
 
 Expressing these as "check, then write" would be a race. Expressing them as conditional
 writes is what makes the invariant true when two schedulers deliver the same event.
@@ -46,7 +46,13 @@ class PlanRepository(Protocol):
         """Plans owned by a subject, ordered deterministically."""
         ...
 
-    def activate(self, plan_id: PlanId, version_id: PlanVersionId, at: datetime) -> Plan: ...
+    def activate(
+        self,
+        plan_id: PlanId,
+        version_id: PlanVersionId,
+        at: datetime,
+        bindings: dict[str, str] | None = None,
+    ) -> Plan: ...
 
 
 class MomentRepository(Protocol):
@@ -123,14 +129,10 @@ class InvitationRepository(Protocol):
 
 
 class ActionLog(Protocol):
-    def claim_key(self, key: IdempotencyKey) -> bool:
-        """Reserve an idempotency key.
+    """Legacy action locks retained only to reconcile pre-outbox attempts safely."""
 
-        Returns True if this caller won the race and should dispatch; False if the key was
-        already taken, in which case the caller reports success and sends nothing. The
-        person on the other end of a duplicate is being contacted twice about the same
-        alert -- suppressing that is the whole point.
-        """
+    def claim_key(self, key: IdempotencyKey) -> bool:
+        """Reserve a legacy key. New delivery uses the durable outbox instead."""
         ...
 
     def was_dispatched(self, key: IdempotencyKey) -> bool: ...

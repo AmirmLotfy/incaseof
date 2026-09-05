@@ -118,6 +118,7 @@ def trigger_to(trigger: Trigger) -> Item:
     return {
         "kind": trigger.kind.value,
         "dueAt": _iso(trigger.due_at),
+        "untilAt": _iso(trigger.until_at),
         "timeOfDay": trigger.time_of_day,
         "daysOfWeek": list(trigger.days_of_week),
         "intervalSeconds": _num(trigger.interval_seconds) if trigger.interval_seconds else None,
@@ -129,6 +130,7 @@ def trigger_from(item: Item) -> Trigger:
     return Trigger(
         kind=TriggerKind(item["kind"]),
         due_at=_dt(item.get("dueAt")),
+        until_at=_dt(item.get("untilAt")),
         time_of_day=item.get("timeOfDay"),
         days_of_week=tuple(item.get("daysOfWeek") or ()),
         interval_seconds=_int(item["intervalSeconds"]) if item.get("intervalSeconds") else None,
@@ -174,6 +176,7 @@ def version_to(version: PlanVersion) -> Item:
         "leaseSeconds": _num(version.lease_seconds),
         "label": version.label,
         "activatedAt": _iso(version.activated_at),
+        "responderBindings": dict(version.responder_bindings),
     }
 
 
@@ -197,6 +200,7 @@ def version_from(item: Item) -> PlanVersion:
         lease_seconds=_int(item["leaseSeconds"]),
         label=item.get("label"),
         activated_at=_dt(item.get("activatedAt")),
+        responder_bindings=dict(item.get("responderBindings") or {}),
     )
 
 

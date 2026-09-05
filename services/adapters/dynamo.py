@@ -6,7 +6,7 @@ than a read followed by a write -- because the read-then-write version is a race
 looks correct in every test that runs one thing at a time:
 
 * :meth:`DynamoAlertRepository.open_for_moment` -- invariant 1, one Moment at most one Alert.
-* :meth:`DynamoActionLog.claim_key` -- invariant 5, an action dispatches at most once.
+* :class:`DynamoOutbox` -- action ownership and outcomes are durable and conditional.
 * :meth:`DynamoAlertRepository.save` -- optimistic locking, so two responders claiming an
   Alert at the same instant cannot both succeed by overwriting each other.
 
@@ -103,12 +103,15 @@ class DynamoPlanRepository:
     table: Table
 
     def get_plan(self, plan_id: PlanId) -> Plan | None:
-        item = self.table.get_item(Key={"pk": keys.plan(plan_id), "sk": keys.META}).get("Item")
+        item = self.table.get_item(
+            ConsistentRead=True, Key={"pk": keys.plan(plan_id), "sk": keys.META}
+        ).get("Item")
         return codec.plan_from(_doc(item)) if item else None
 
     def get_version(self, version_id: PlanVersionId) -> PlanVersion | None:
         item = self.table.get_item(
-            Key={"pk": keys.version_pointer(version_id), "sk": keys.META}
+            ConsistentRead=True,
+            Key={"pk": keys.version_pointer(version_id), "sk": keys.META},
         ).get("Item")
         return codec.version_from(_doc(item)) if item else None
 
@@ -177,23 +180,84 @@ class DynamoPlanRepository:
             }
         )
 
-    def activate(self, plan_id: PlanId, version_id: PlanVersionId, at: datetime) -> Plan:
+    def activate(
+        self,
+        plan_id: PlanId,
+        version_id: PlanVersionId,
+        at: datetime,
+        bindings: dict[str, str] | None = None,
+    ) -> Plan:
         from dataclasses import replace
 
         version = self.get_version(version_id)
         if version is None:
             raise ValueError(f"no such version {version_id}")
-        self.table.update_item(
-            Key={"pk": keys.version_pointer(version_id), "sk": keys.META},
-            UpdateExpression="SET #d.activatedAt = :at",
-            ExpressionAttributeNames={"#d": "data"},
-            ExpressionAttributeValues={":at": at.isoformat()},
-        )
         plan = self.get_plan(plan_id)
         if plan is None:
             raise ValueError(f"no such plan {plan_id}")
+        if version.plan_id != plan_id:
+            raise ValueError("version does not belong to the requested plan")
+        activated_version = replace(
+            version,
+            activated_at=version.activated_at or at,
+            responder_bindings=version.responder_bindings
+            if version.activated_at
+            else (bindings or {}),
+        )
         activated = replace(plan, active_version_id=version_id, paused=False)
-        self.save_plan(activated)
+        try:
+            self.table.meta.client.transact_write_items(
+                TransactItems=[
+                    {
+                        "Update": {
+                            "TableName": self.table.name,
+                            "Key": {"pk": keys.version_pointer(version_id), "sk": keys.META},
+                            "UpdateExpression": "SET #data = :after",
+                            "ConditionExpression": "#data = :before",
+                            "ExpressionAttributeNames": {"#data": "data"},
+                            "ExpressionAttributeValues": {
+                                ":before": codec.version_to(version),
+                                ":after": codec.version_to(activated_version),
+                            },
+                        }
+                    },
+                    {
+                        "Update": {
+                            "TableName": self.table.name,
+                            "Key": {
+                                "pk": keys.plan(plan_id),
+                                "sk": keys.version_sk(version.version_number),
+                            },
+                            "UpdateExpression": "SET #data = :after",
+                            "ConditionExpression": "#data = :before",
+                            "ExpressionAttributeNames": {"#data": "data"},
+                            "ExpressionAttributeValues": {
+                                ":before": codec.version_to(version),
+                                ":after": codec.version_to(activated_version),
+                            },
+                        }
+                    },
+                    {
+                        "Update": {
+                            "TableName": self.table.name,
+                            "Key": {"pk": keys.plan(plan_id), "sk": keys.META},
+                            "UpdateExpression": "SET #data = :after",
+                            "ConditionExpression": "#data = :before",
+                            "ExpressionAttributeNames": {"#data": "data"},
+                            "ExpressionAttributeValues": {
+                                ":before": codec.plan_to(plan),
+                                ":after": codec.plan_to(activated),
+                            },
+                        }
+                    },
+                ]
+            )
+        except ClientError as error:
+            if _is(error, TRANSACTION_CANCELLED):
+                raise ConcurrentModification(
+                    "plan or version changed during activation; re-read before retrying"
+                ) from error
+            raise
         return activated
 
 
@@ -202,7 +266,9 @@ class DynamoMomentRepository:
     table: Table
 
     def get(self, moment_id: MomentId) -> ExpectedMoment | None:
-        item = self.table.get_item(Key={"pk": keys.moment(moment_id), "sk": keys.META}).get("Item")
+        item = self.table.get_item(
+            ConsistentRead=True, Key={"pk": keys.moment(moment_id), "sk": keys.META}
+        ).get("Item")
         return codec.moment_from(_doc(item)) if item else None
 
     def save(
@@ -286,7 +352,9 @@ class DynamoAlertRepository:
     _owners: dict[AlertId, PersonId] = field(default_factory=dict)
 
     def get(self, alert_id: AlertId) -> Alert | None:
-        item = self.table.get_item(Key={"pk": keys.alert(alert_id), "sk": keys.META}).get("Item")
+        item = self.table.get_item(
+            ConsistentRead=True, Key={"pk": keys.alert(alert_id), "sk": keys.META}
+        ).get("Item")
         if not item:
             return None
         alert = codec.alert_from(_doc(item))
@@ -413,9 +481,9 @@ class DynamoAlertRepository:
 
         A real access pattern, not an internal detail: the API resolves a Moment the
         subject is confirming into the Alert that is escalating about them."""
-        lock = self.table.get_item(Key={"pk": keys.moment(moment_id), "sk": keys.ALERT_LOCK}).get(
-            "Item"
-        )
+        lock = self.table.get_item(
+            ConsistentRead=True, Key={"pk": keys.moment(moment_id), "sk": keys.ALERT_LOCK}
+        ).get("Item")
         if not lock:
             return None
         return self.get(AlertId(_text(lock, "alertId")))
@@ -428,7 +496,9 @@ class DynamoCircleRepository:
     def get(self, circle_id: CircleId) -> Circle | None:
         from boto3.dynamodb.conditions import Key
 
-        response = self.table.query(KeyConditionExpression=Key("pk").eq(keys.circle(circle_id)))
+        response = self.table.query(
+            ConsistentRead=True, KeyConditionExpression=Key("pk").eq(keys.circle(circle_id))
+        )
         items = response.get("Items", [])
         meta = next((i for i in items if _text(i, "sk") == keys.META), None)
         if meta is None:
@@ -476,8 +546,9 @@ class DynamoCircleRepository:
         from boto3.dynamodb.conditions import Key
 
         response = self.table.query(
+            ConsistentRead=True,
             KeyConditionExpression=Key("pk").eq(keys.plan(plan_id))
-            & Key("sk").begins_with("CONSENT#")
+            & Key("sk").begins_with("CONSENT#"),
         )
         grants = [codec.consent_from(_doc(i)) for i in response.get("Items", [])]
         return {g.responder_person_id: g for g in grants}
@@ -497,9 +568,9 @@ class DynamoInvitationRepository:
     table: Table
 
     def get(self, invitation_id: InvitationId) -> CircleInvitation | None:
-        item = self.table.get_item(Key={"pk": keys.invitation(invitation_id), "sk": keys.META}).get(
-            "Item"
-        )
+        item = self.table.get_item(
+            ConsistentRead=True, Key={"pk": keys.invitation(invitation_id), "sk": keys.META}
+        ).get("Item")
         return codec.invitation_from(_doc(item)) if item else None
 
     def save(self, invitation: CircleInvitation) -> None:
@@ -536,9 +607,9 @@ class DynamoActionLog:
         return True
 
     def was_dispatched(self, key: IdempotencyKey) -> bool:
-        item = self.table.get_item(Key={"pk": keys.idempotency(key.value), "sk": keys.LOCK}).get(
-            "Item"
-        )
+        item = self.table.get_item(
+            ConsistentRead=True, Key={"pk": keys.idempotency(key.value), "sk": keys.LOCK}
+        ).get("Item")
         return item is not None
 
 

@@ -17,6 +17,7 @@ from functools import lru_cache
 from typing import Any
 
 import boto3
+from botocore.config import Config
 
 from services.adapters.contact import (
     ChannelRouter,
@@ -37,6 +38,7 @@ from services.adapters.dynamo import (
     DynamoPlanRepository,
 )
 from services.adapters.endpoints import DynamoEndpointRepository
+from services.adapters.outbox import DynamoOutbox
 from services.adapters.queue import ActionQueue, SqsActionQueue
 from services.adapters.scheduling import EventBridgeMomentScheduler, MomentScheduler
 from services.domain.clock import REAL_TIME, Clock, SystemClock, TimeScale
@@ -95,6 +97,7 @@ class Context:
     signing_key: bytes = b""
     invitations: InvitationRepository | None = None
     devices: DeviceRegistry | None = None
+    outbox: DynamoOutbox | None = None
 
     def now(self) -> datetime:
         return self.clock.now()
@@ -134,6 +137,7 @@ def build(*, schedule_target_arn: str | None = None) -> Context:
         decisions=DynamoDecisionLog(table),
         invitations=DynamoInvitationRepository(table),
         devices=_devices(endpoints),
+        outbox=DynamoOutbox(table),
     )
 
 
@@ -173,7 +177,14 @@ def _sender(table: Any) -> ContactSender | None:
     if endpoints is None:
         return None
 
-    sns = boto3.client("sns")
+    sns = boto3.client(
+        "sns",
+        config=Config(
+            retries={"total_max_attempts": 1, "mode": "standard"},
+            connect_timeout=5,
+            read_timeout=15,
+        ),
+    )
 
     senders: dict[Channel, Any] = {
         Channel.SMS: SmsSender(

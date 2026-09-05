@@ -1,6 +1,8 @@
 import { Duration, RemovalPolicy } from "aws-cdk-lib";
 import type * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import type * as kms from "aws-cdk-lib/aws-kms";
+import * as events from "aws-cdk-lib/aws-events";
+import * as targets from "aws-cdk-lib/aws-events-targets";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
@@ -43,6 +45,7 @@ export class Compute extends Construct {
   readonly nextAction: lambda.Function;
   readonly dispatch: lambda.Function;
   readonly actionWorker: lambda.Function;
+  readonly outboxRelay: lambda.Function;
 
   constructor(scope: Construct, id: string, props: ComputeProps) {
     super(scope, id);
@@ -113,6 +116,21 @@ export class Compute extends Construct {
       // quota allows it, this caps how many can go out at once; see IcoEnvironment.
       reservedConcurrentExecutions: props.environment.reservedWorkerConcurrency,
     });
+
+    this.outboxRelay = new lambda.Function(this, "OutboxRelay", {
+      ...shared,
+      logGroup: logGroup("OutboxRelay"),
+      handler: "services.handlers.outbox_relay.handler",
+      description: "Recovers pending durable action intents; never contacts a provider.",
+      timeout: Duration.seconds(30),
+    });
+    new events.Rule(this, "OutboxRecovery", {
+      schedule: events.Schedule.rate(Duration.minutes(1)),
+      targets: [new targets.LambdaFunction(this.outboxRelay)],
+    });
+    props.table.grantReadWriteData(this.outboxRelay);
+    props.actionQueue.grantSendMessages(this.outboxRelay);
+    props.key.grantEncryptDecrypt(this.outboxRelay);
 
     this.actionWorker.addEventSource(
       new SqsEventSource(props.actionQueue, {

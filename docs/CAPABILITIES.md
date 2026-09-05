@@ -4,6 +4,40 @@ Updated: 2026-09-05. Branch: `codex/hackathon-final`.
 
 In Case Of closes uncertainty; it does not decide whether someone is in danger.
 
+## Active implementation checkpoint — 2026-09-05
+
+The Egypt/US production plan is authorized: public Google Play, Arabic/English,
+push/SMS, a $100 monthly operating target, and funded admission limits. Hackathon
+and production acceptance remain separate. Neither release is accepted.
+
+**Safety repair locally verified.** The recovery review reproduced two provider calls for
+one replayed SQS body, contact after consent withdrawal, a lost-action window before SQS
+enqueue, and missing real subject recipients. The repair adds transactional outbox records,
+a one-minute recovery relay, conditional worker ownership, explicit subject recipients,
+pinned responder identities, strong authorization reads, atomic outcomes/audit events and
+UNKNOWN provider outcomes. Worker sends with unknown outcomes are never blindly retried.
+Existing legacy action locks require reconciliation, not replay.
+
+The complete preflight now passes with 397 Python tests and 47 CDK assertions. Focused
+regressions cover sequential and concurrent replay, enqueue failure, pre-provider failure,
+ambiguous provider acceptance, worker death, consent withdrawal, recipient reassignment,
+checking and resolution races, terminal-alert reconciliation, pagination, subject adapters,
+and outcome/audit atomicity. The quota-preserving CDK diff adds the relay and updates
+the application functions without replacing or modifying the deployed AgentCore Runtime.
+These remain local/PR facts until the scoped OIDC deployment and live drill complete.
+
+AWS login was restored on September 5. The configured session is root: provider
+inspection only; deployments continue through protected scoped GitHub OIDC. Fresh
+inspection confirms `IcoStack-demo=UPDATE_COMPLETE` and `Versions per Agent=0`.
+AWS Support API inspection is unavailable under the current support subscription.
+
+Next resumable actions: push the verified repair, pass CI, deploy it through scoped OIDC,
+and run a new deterministic drill; implement production interfaces and country readiness;
+refresh support cases through the console; deploy the corrected AI runtime only after the
+version quota and artifact gates pass.
+Production account lifecycle, Arabic coverage, phone verification, carrier receipts,
+capacity admission, Play delivery and physical-country evidence remain outstanding.
+
 Evidence states have precise meanings:
 
 - **Implemented**: source exists and is internally consistent.
@@ -41,10 +75,10 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 
 ## Current automated evidence
 
-- Unified preflight: all 19 gates pass on 2026-09-05.
-- Python: Ruff format/lint, mypy and the full test suite pass.
+- Unified preflight: all 19 gates pass on 2026-09-05 after the delivery repair.
+- Python: Ruff format/lint, mypy and all 397 tests pass.
 - Contract parity: 53 method/path routes agree across OpenAPI, CDK and handler; authenticated and demo Android client routes are deployed in the correct environment templates.
-- Infrastructure: 45 CDK assertions and synthesis pass, including exact Nova resources, runtime session lifecycle, AgentCore user-context invocation permissions, the demo-only quota-recovery guard and the single API-scoped Lambda invocation permission.
+- Infrastructure: 47 CDK assertions and synthesis pass, including exact Nova resources, runtime session lifecycle, AgentCore user-context invocation permissions, the one-minute outbox recovery rule, the six-timeout SQS visibility window, the demo-only quota-recovery guard and the single API-scoped Lambda invocation permission.
 - Web: marketing and responder lint, typecheck and production static builds; 14 Playwright browser/accessibility cases.
 - Android: unit tests, release lint, ktlint, R8, package/signature inspection and fail-closed configuration checks pass. All 3 connected accessibility tests pass on both API 26 and API 37.
 - Android release identity: `com.incaof.app` v0.2.0 (`versionCode=2`), SHA-256 `db118074e6df54477212f2155674360a04a7b3eb69e2aacd168f6785d6cc60b3`, signing certificate SHA-256 `f12d1890545e420f5a2e10fa1475f21c2fa5463028f57fc3643daa1bc42bbd62`.

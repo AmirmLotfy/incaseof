@@ -102,6 +102,13 @@ def _localise(day: datetime, at: time, zone: ZoneInfo) -> datetime:
 
 
 def next_due_at(trigger: Trigger, timezone: str, after: datetime) -> datetime | None:
+    candidate = _next_unbounded(trigger, timezone, after)
+    if candidate is not None and trigger.until_at is not None and candidate > trigger.until_at:
+        return None
+    return candidate
+
+
+def _next_unbounded(trigger: Trigger, timezone: str, after: datetime) -> datetime | None:
     """The next instant this trigger expects something to happen, strictly after ``after``.
 
     Always returned in **UTC**, even though the arithmetic happens in the plan's zone.
@@ -146,10 +153,7 @@ def next_due_at(trigger: Trigger, timezone: str, after: datetime) -> datetime | 
     # each day's anchor re-syncs it. So "22:00 every three hours" yields 22:00, 01:00,
     # 04:00 ... and lands back exactly on 22:00 the next day rather than drifting.
     #
-    # The chain therefore runs continuously rather than stopping at dawn. A plan that
-    # should only cover one night needs an explicit end bound, which the schema does not
-    # yet have -- see the Phase 5 note in docs/PRD.md. Until then, a bounded night is
-    # expressed as a RELATIVE or ONE_TIME plan, and pausing stops a running chain.
+    # The caller applies the explicit until_at bound to this candidate.
     previous = _previous_anchor(local_after, at, zone, allowed)
     if previous is None:
         return forward.astimezone(UTC)

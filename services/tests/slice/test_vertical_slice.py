@@ -110,7 +110,7 @@ def test_a_duplicate_scheduler_delivery_opens_one_alert(a_slice: Slice) -> None:
     assert first == second
 
 
-def test_a_replayed_queue_message_does_not_contact_anyone_twice(a_slice: Slice) -> None:
+def test_replaying_workflow_does_not_enqueue_the_same_action_twice(a_slice: Slice) -> None:
     """Invariant 5, end to end.
 
     The person on the other end of a duplicate is being told twice, at night, that someone
@@ -276,13 +276,39 @@ def test_a_one_time_plan_has_no_next_occurrence(a_slice: Slice) -> None:
     }
     activation = a_slice.create_plan(one_time)
 
-    with pytest.raises(ValueError, match="expects nothing after"):
+    following = planning.schedule_following_moment(
+        a_slice.ctx,
+        activation.version,
+        after=activation.moment.due_at,
+        new_id=a_slice.ids,
+    )
+    assert following is None
+
+
+def test_a_bounded_recurring_plan_stops_at_its_end(a_slice: Slice) -> None:
+    from services.handlers import planning
+
+    from .conftest import EVENING_PLAN
+
+    bounded = {
+        **EVENING_PLAN,
+        "trigger": {
+            "kind": "RECURRING",
+            "timeOfDay": "21:00",
+            "untilAt": "2026-08-26T21:00:00+02:00",
+        },
+    }
+    activation = a_slice.create_plan(bounded)
+
+    assert (
         planning.schedule_following_moment(
             a_slice.ctx,
             activation.version,
             after=activation.moment.due_at,
             new_id=a_slice.ids,
         )
+        is None
+    )
 
 
 # -- the responder surface ----------------------------------------------------

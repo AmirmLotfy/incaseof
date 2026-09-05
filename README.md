@@ -58,8 +58,9 @@ Concretely:
   what that Alert is doing.
 - **Acknowledged is not resolved.** A responder tapping *I'm checking* pauses backup escalation for
   a 10-minute lease. If they vanish, the lease expires and escalation resumes.
-- **Duplicate external actions are structurally impossible** — every action carries
-  `alert_id + step_id + attempt_number` and dispatch is a conditional write.
+- **Delivery attempts have durable identities** — every action carries
+  `alert_id + step_id + attempt_number`. Confirmed attempts are deduplicated at the worker;
+  uncertain provider outcomes require reconciliation and are never blindly resent.
 
 ---
 

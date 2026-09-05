@@ -279,15 +279,12 @@ conversational voice · Amazon Connect + IVR · WhatsApp · progressive device c
 AppFunctions · richer exceptions · plan recommendations · dark mode refinement · advanced
 multi-Circle permissions.
 
-### Known gaps, deliberately deferred
+### Recurring-plan boundary
 
-Recorded when found rather than left implicit:
-
-- **Interval plans have no end bound.** `intervalSeconds` anchors a chain to `timeOfDay` and
-  repeats indefinitely, so "check every three hours tonight" keeps checking tomorrow. A bounded
-  night is currently expressed as a `RELATIVE` or `ONE_TIME` plan, or by pausing. Adding an
-  explicit `until` to the schema is a Phase 5 change, once natural-language compilation shows
-  how people actually phrase the bound.
+`intervalSeconds` anchors a chain to `timeOfDay`. Time-limited requests also carry
+`untilAt`, the inclusive final occurrence, so "check every three hours tonight" cannot
+silently keep checking tomorrow. An omitted bound means the person reviewed and activated
+an ongoing recurrence.
 
 ### Do not build before submission
 Wear OS · iOS · browser extension · smartwatch detection · fall detection · calendar integration ·

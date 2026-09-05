@@ -42,6 +42,14 @@ def decide(ctx: bootstrap.Context, alert_id: AlertId) -> dict[str, Any]:
         return {"decision": TERMINAL, "reason": "NO_SUCH_ALERT"}
 
     now = ctx.now()
+    if ctx.outbox is not None and not alert.is_terminal and not alert.is_paused:
+        for step in alert.version.steps:
+            key = key_for(alert_id, step.step_id).value
+            row = ctx.outbox.get(key)
+            if row is None:
+                continue
+            if row["status"] in {"PENDING", "SENDING"}:
+                return {"decision": WAIT, "seconds": 2, "reason": "DELIVERY_PENDING"}
     alert = advance(ctx, alert, now)
 
     if alert.is_terminal:
@@ -129,36 +137,45 @@ def dispatch(ctx: bootstrap.Context, alert_id: AlertId, sequences: list[int]) ->
         # Invariant 4: a terminal Alert cancels everything still pending.
         return {"dispatched": [], "denied": [], "suppressed": "ALERT_CLOSED"}
 
+    if ctx.outbox is None or ctx.queue is None:
+        raise RuntimeError("a durable outbox and action queue are required")
     now = ctx.now()
+    before = alert
     dispatched: list[int] = []
     denied: list[dict[str, str]] = []
-
+    intents: list[ActionIntent] = []
+    plan = ctx.plans.get_plan(PlanId(alert.version.plan_id))
+    if plan is None:
+        raise RuntimeError("Alert plan is missing")
+    if alert.is_paused:
+        return {"dispatched": [], "denied": [], "suppressed": "CHECKING"}
     for sequence in sequences:
         step = alert.version.step(int(sequence))
-
+        key = key_for(alert_id, step.step_id, attempt_number=1)
+        if ctx.outbox.get(key.value):
+            continue
+        if ctx.actions.was_dispatched(key):
+            alert = alert.record_attempt(step)
+            ctx.audit.append(
+                alert_id=alert_id,
+                actor_type="SYSTEM",
+                actor_id="migration",
+                event_type="ACTION_OUTCOME_UNKNOWN",
+                at=now,
+                metadata={
+                    "sequence": str(sequence),
+                    "reason": "LEGACY_ATTEMPT_REQUIRES_RECONCILIATION",
+                },
+            )
+            continue
+        member = None
         if step.action.is_responder_directed:
-            decision = _authorise(ctx, alert, step, now)
-            if decision is None:
+            member = _authorise(ctx, alert, step, now)
+            if member is None:
                 denied.append({"sequence": str(sequence), "reason": "NOT_AUTHORIZED"})
                 alert = alert.record_attempt(step)
                 continue
-
-        key = key_for(alert_id, step.step_id, attempt_number=1)
-        if not ctx.actions.claim_key(key):
-            # Somebody already queued this exact attempt. Report success, send nothing.
-            alert = alert.record_attempt(step)
-            continue
-
-        if ctx.queue is None:
-            # Never silently. Skipping the enqueue here would mark the rung attempted and
-            # contact nobody — the ladder would advance past a person who was never reached,
-            # and nothing would look wrong.
-            raise RuntimeError(
-                "no action queue is configured; refusing to mark rungs attempted without "
-                "dispatching them"
-            )
-
-        ctx.queue.enqueue(
+        intents.append(
             ActionIntent(
                 alert_id=alert_id,
                 step_id=step.step_id,
@@ -167,21 +184,18 @@ def dispatch(ctx: bootstrap.Context, alert_id: AlertId, sequences: list[int]) ->
                 channel=step.action.channel,
                 target_role=step.target_role,
                 idempotency_key=key.value,
+                recipient_id=member.person_id if member else plan.subject_person_id,
+                membership_id=str(member.membership_id) if member else None,
             )
         )
-
         alert = alert.record_attempt(step)
         dispatched.append(step.sequence)
-        ctx.audit.append(
-            alert_id=alert_id,
-            actor_type="SYSTEM",
-            actor_id="workflow",
-            event_type="ACTION_QUEUED",
-            at=now,
-            metadata={"sequence": str(step.sequence), "action": step.action.value},
-        )
-
-    ctx.alerts.save(alert)
+    if alert != before:
+        ctx.outbox.stage(before, alert, intents, now)
+        ctx.alerts.get(alert_id)  # refresh optimistic revision after the transaction
+    for intent in intents:
+        # Failure here leaves a durable PENDING row for the relay; never loses a rung.
+        ctx.queue.enqueue(intent)
     return {"dispatched": dispatched, "denied": denied, "alertId": alert_id}
 
 

@@ -105,7 +105,8 @@ class DynamoEndpointRepository:
         self, person_id: PersonId, endpoint_type: EndpointType
     ) -> ContactEndpoint | None:
         item = self.table.get_item(
-            Key={"pk": keys.person(person_id), "sk": f"ENDPOINT#{endpoint_type.value}"}
+            ConsistentRead=True,
+            Key={"pk": keys.person(person_id), "sk": f"ENDPOINT#{endpoint_type.value}"},
         ).get("Item")
         if not item:
             return None

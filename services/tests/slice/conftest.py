@@ -37,6 +37,7 @@ from services.adapters.dynamo import (
     DynamoMomentRepository,
     DynamoPlanRepository,
 )
+from services.adapters.outbox import DynamoOutbox
 from services.adapters.queue import InMemoryActionQueue
 from services.domain.circle import (
     Circle,
@@ -323,6 +324,7 @@ def a_slice() -> Iterator[Slice]:
                 alerts=DynamoAlertRepository(table),
                 circles=DynamoCircleRepository(table),
                 actions=DynamoActionLog(table),
+                outbox=DynamoOutbox(table),
                 audit=DynamoAuditLog(table),
                 clock=clock,
                 scale=REAL_TIME,

@@ -96,6 +96,13 @@ describe("messaging", () => {
     const denies = JSON.stringify(policies);
     assert.match(denies, /aws:SecureTransport/, "queues must refuse plaintext transport");
   });
+
+  it("keeps a message invisible for six worker timeouts", () => {
+    synth().hasResourceProperties("AWS::SQS::Queue", {
+      VisibilityTimeout: 360,
+      RedrivePolicy: Match.anyValue(),
+    });
+  });
 });
 
 describe("workflow", () => {
@@ -128,6 +135,18 @@ describe("workflow", () => {
           }),
         ]),
       }),
+    });
+  });
+
+  it("runs the durable outbox recovery every minute", () => {
+    const template = synth();
+    template.hasResourceProperties("AWS::Lambda::Function", {
+      Handler: "services.handlers.outbox_relay.handler",
+      Timeout: 30,
+    });
+    template.hasResourceProperties("AWS::Events::Rule", {
+      ScheduleExpression: "rate(1 minute)",
+      State: "ENABLED",
     });
   });
 });

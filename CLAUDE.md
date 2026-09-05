@@ -123,6 +123,7 @@ evidence levels.
 
 The locked model path is Strands on Amazon Bedrock AgentCore Runtime using
 `us.amazon.nova-2-lite-v1:0` through IAM. Compilation is side-effect free and every returned
-draft is revalidated by deterministic code. The live `IcoStack-dev` is a legacy partial stack;
-the current demo/hosting/AgentCore source has not been deployed. The active CLI principal is
-root, so deployment is prohibited until a least-privileged administrator/deployment path exists.
+draft is revalidated by deterministic code. The current demo stack and scoped GitHub OIDC deployment have live evidence in
+`docs/CAPABILITIES.md`; the legacy dev stack is not the release environment.
+A restored local root session is for inspection only. Deploy through the protected,
+scoped GitHub OIDC path after exact-artifact validation and a reviewed CDK diff.

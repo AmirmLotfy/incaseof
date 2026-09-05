@@ -62,10 +62,22 @@ class InMemoryPlanRepository:
             )
         )
 
-    def activate(self, plan_id: PlanId, version_id: PlanVersionId, at: datetime) -> Plan:
+    def activate(
+        self,
+        plan_id: PlanId,
+        version_id: PlanVersionId,
+        at: datetime,
+        bindings: dict[str, str] | None = None,
+    ) -> Plan:
         plan = self.plans[plan_id]
         version = self.versions[version_id]
-        self.versions[version_id] = replace(version, activated_at=at)
+        self.versions[version_id] = replace(
+            version,
+            activated_at=version.activated_at or at,
+            responder_bindings=version.responder_bindings
+            if version.activated_at
+            else (bindings or {}),
+        )
         activated = replace(plan, active_version_id=version_id, paused=False)
         self.plans[plan_id] = activated
         return activated

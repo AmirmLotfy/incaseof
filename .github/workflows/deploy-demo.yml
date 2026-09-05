@@ -18,15 +18,15 @@ jobs:
     environment: demo
     steps:
       - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v7
-      - uses: actions/setup-node@v5
+      - uses: astral-sh/setup-uv@v10
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
       - run: npm ci
       - run: uv sync --frozen
       - name: Configure short-lived AWS credentials
-        uses: aws-actions/configure-aws-credentials@v5
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ vars.AWS_DEMO_DEPLOY_ROLE_ARN }}
           aws-region: us-east-1
@@ -91,7 +91,7 @@ jobs:
           ICO_PUBLIC_API_URL: https://api.incaof.com
         run: ./scripts/deploy-web.sh
       - name: Retain signed APK for release evidence
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: in-case-of-android-demo
           path: |

@@ -14,6 +14,80 @@ Parameters:
     Default: demo
 
 Resources:
+  DemoCloudFormationExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ico-demo-cfn-exec
+      Description: Service-family-scoped CloudFormation executor for the ICO demo stack.
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudformation.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ManageIcoDemoRegionalServices
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: ManageOnlyRequiredRegionalServiceFamilies
+                Effect: Allow
+                Action:
+                  - apigateway:*
+                  - bedrock-agentcore:*
+                  - cloudwatch:DeleteAlarms
+                  - cloudwatch:DeleteDashboards
+                  - cloudwatch:DescribeAlarms
+                  - cloudwatch:GetDashboard
+                  - cloudwatch:PutDashboard
+                  - cloudwatch:PutMetricAlarm
+                  - cognito-idp:*
+                  - dynamodb:*
+                  - kms:*
+                  - lambda:*
+                  - logs:*
+                  - scheduler:*
+                  - secretsmanager:*
+                  - sqs:*
+                  - states:*
+                  - tagging:GetResources
+                  - xray:GetSamplingRules
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    aws:RequestedRegion: !Ref AWS::Region
+              - Sid: ReadOnlyExactCdkAssetBucket
+                Effect: Allow
+                Action:
+                  - s3:GetBucketLocation
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:ListBucket
+                Resource:
+                  - !Sub arn:${AWS::Partition}:s3:::cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}
+                  - !Sub arn:${AWS::Partition}:s3:::cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/*
+              - Sid: ManageOnlyIcoDemoRoles
+                Effect: Allow
+                Action:
+                  - iam:AttachRolePolicy
+                  - iam:CreateRole
+                  - iam:DeleteRole
+                  - iam:DeleteRolePolicy
+                  - iam:DetachRolePolicy
+                  - iam:GetRole
+                  - iam:GetRolePolicy
+                  - iam:ListAttachedRolePolicies
+                  - iam:ListRolePolicies
+                  - iam:PassRole
+                  - iam:PutRolePolicy
+                  - iam:TagRole
+                  - iam:UntagRole
+                  - iam:UpdateAssumeRolePolicy
+                  - iam:UpdateRoleDescription
+                Resource: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/IcoStack-demo-*
+
   GitHubDemoDeployRole:
     Type: AWS::IAM::Role
     Properties:
@@ -86,7 +160,26 @@ Resources:
                 Action: apigateway:PATCH
                 Resource: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}::/domainnames/api.incaof.com/apimappings/*
 
+  AllowCdkDeployRoleToPassDemoExecutor:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: PassIcoDemoCloudFormationExecutor
+      Roles:
+        - !Sub cdk-hnb659fds-deploy-role-${AWS::AccountId}-${AWS::Region}
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: iam:PassRole
+            Resource: !GetAtt DemoCloudFormationExecutionRole.Arn
+            Condition:
+              StringEquals:
+                iam:PassedToService: cloudformation.amazonaws.com
+
 Outputs:
   RoleArn:
     Value: !GetAtt GitHubDemoDeployRole.Arn
     Description: Set as the protected demo environment variable AWS_DEMO_DEPLOY_ROLE_ARN.
+  CloudFormationExecutionRoleArn:
+    Value: !GetAtt DemoCloudFormationExecutionRole.Arn
+    Description: Project-specific executor selected by the demo CDK synthesizer.

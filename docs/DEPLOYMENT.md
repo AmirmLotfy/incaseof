@@ -8,9 +8,13 @@ the exact Lambda, AgentCore, Android and static-web artifacts before deployment;
 AWS access key belongs in GitHub or this repository.
 
 The bootstrap stack `IcoGithubOidc` owns `ico-github-demo-deploy`. Its trust is limited to
-`repo:AmirmLotfy/incaseof:environment:demo`; its inline policies may assume only the four CDK
-bootstrap roles, publish only ICO demo static artifacts and read/update only the existing
-`api.incaof.com` API mapping. Run **Verify AWS deployment identity** after changing this role.
+the immutable `repo:AmirmLotfy@178108135/incaseof@1342743239:environment:demo` subject; its
+inline policies may assume only the four CDK bootstrap roles, publish only ICO demo static
+artifacts and read/update only the existing `api.incaof.com` API mapping. The demo synthesizer
+selects `ico-demo-cfn-exec` instead of the shared bootstrap executor with AdministratorAccess.
+That project-specific role is default-deny outside ICO's required regional service families,
+can read only the exact CDK asset bucket, and can manage IAM roles only under
+`IcoStack-demo-*`. Run **Verify AWS deployment identity** after changing either role.
 
 ## Normal demo deployment
 

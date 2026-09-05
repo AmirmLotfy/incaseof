@@ -19,6 +19,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Protocol
 
+from .account import Profile
 from .agent_decision import AgentDecision
 from .alert import Alert
 from .circle import Circle, ConsentGrant
@@ -27,6 +28,12 @@ from .ids import AlertId, CircleId, InvitationId, MomentId, PersonId, PlanId, Pl
 from .invitation import CircleInvitation
 from .moment import ExpectedMoment
 from .plan import Plan, PlanVersion
+
+
+class ProfileRepository(Protocol):
+    def get(self, person_id: PersonId) -> Profile | None: ...
+
+    def save(self, profile: Profile) -> None: ...
 
 
 class PlanRepository(Protocol):

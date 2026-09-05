@@ -153,6 +153,8 @@
     "momentId": "36c1810a-380f-5d27-8273-8a62c64f367e",
     "alertId": "84d3d2cd-1c6a-4abc-ac7e-a517f6f6cc37",
     "workflowExecutionArnRedacted": "arn:aws:states:us-east-1:<account-id-redacted>:execution:WorkflowEscalation797C0498-vkUJVS19c0Dm:alert-84d3d2cd-1c6a-4abc-ac7e-a517f6f6cc37",
+    "workflowExecutionStatus": "SUCCEEDED",
+    "workflowStoppedAt": "2026-09-05T21:13:54.357Z",
     "safeSinkReferences": [
       "safe-sink:84d3d2cd-1c6a-4abc-ac7e-a517f6f6cc37:PUSH",
       "safe-sink:84d3d2cd-1c6a-4abc-ac7e-a517f6f6cc37:SMS"
@@ -178,14 +180,14 @@
     "durableOutboxUniqueKeys": 4,
     "durableOutboxTerminalStatuses": ["ACCEPTED", "ACCEPTED", "ACCEPTED", "ACCEPTED"],
     "modelCompileIncluded": false,
-    "note": "scripts/verify-live-demo-drill.sh passed against the deployed direct API after scoped-role OIDC run 33991694814. The deployed Scheduler, Step Functions, SQS worker, durable outbox, signed responder authorization, checking lease and explicit-resolution path completed at the Alert boundary. Plan compilation remains on the separately recorded 503 fallback."
+    "note": "scripts/verify-live-demo-drill.sh passed against the deployed direct API after scoped-role OIDC run 33991694814. The deployed Scheduler, Step Functions, SQS worker, durable outbox, signed responder authorization, checking lease and explicit-resolution path completed, and the Standard workflow later observed the terminal Alert and finished SUCCEEDED. Plan compilation remains on the separately recorded 503 fallback."
   },
   "gates": [
     {
       "name": "unified-preflight",
       "status": "PASSED",
-      "verifiedAt": "2026-09-05T20:58:41Z",
-      "details": "19/19 local gates on the delivery repair plus green CI on the final workflow fix; exact Lambda and AgentCore artifacts; 398 Python tests; 47 CDK assertions; 53 API routes in parity; 14 Playwright browser/accessibility cases"
+      "verifiedAt": "2026-09-05T21:30:05Z",
+      "details": "All local gates on the delivery repair and production account foundation; exact Lambda and AgentCore artifacts; 410 Python tests; 48 CDK assertions; 56 API routes in parity; 14 Playwright browser/accessibility cases"
     },
     {
       "name": "github-actions",

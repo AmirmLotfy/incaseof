@@ -14,16 +14,24 @@ import json
 import os
 from dataclasses import replace
 from datetime import timedelta
-from typing import Any
+from typing import Any, cast
 from uuid import NAMESPACE_URL, uuid5
 
+from services.domain.account import (
+    AccountStatus,
+    Profile,
+    SupportedCountry,
+    SupportedLocale,
+)
 from services.domain.circle import (
     Circle,
     CircleMember,
     ConsentGrant,
     ConsentStatus,
+    ContactChannelPermission,
     MemberStatus,
 )
+from services.domain.contact_endpoint import EndpointType
 from services.domain.demo_token import issue as issue_demo_token
 from services.domain.demo_token import verify as verify_demo_token
 from services.domain.errors import (
@@ -48,7 +56,7 @@ from services.domain.invitation import CircleInvitation, InvitationStatus
 from services.domain.invitation_token import issue as issue_invitation_token
 from services.domain.invitation_token import verify as verify_invitation_token
 from services.domain.moment import ExpectedMoment, MomentStatus
-from services.domain.plan import Plan, PlanVersion, ResponderRole
+from services.domain.plan import Channel, Plan, PlanVersion, ResponderRole
 from services.domain.resolution import ResolutionSource
 from services.domain.responder_token import TokenError
 from services.handlers import bootstrap, planning, responding
@@ -154,6 +162,12 @@ def _dispatch(event: dict[str, Any]) -> dict[str, Any]:
         return _responder_route(ctx, route, token)
 
     # -- subject, by Cognito principal ------------------------------------
+    if route == "GET /v1/profile":
+        return _profile(ctx, _caller(event))
+    if route == "PATCH /v1/profile":
+        return _update_profile(ctx, event, _caller(event))
+    if route == "GET /v1/readiness":
+        return _readiness_response(ctx, _caller(event))
     if route == "POST /v1/plans/compile":
         return _compile(ctx, event)
     if route == "POST /v1/plans":
@@ -675,6 +689,209 @@ def _responder_route(ctx: bootstrap.Context, route: str, token: str) -> dict[str
 # -- subject ------------------------------------------------------------------
 
 
+def _profile_repository(ctx: bootstrap.Context) -> Any:
+    if ctx.profiles is None:
+        raise RuntimeError("profile repository is not configured")
+    return ctx.profiles
+
+
+def _profile_view(profile: Profile) -> dict[str, Any]:
+    return {
+        "displayName": profile.display_name,
+        "locale": profile.locale.value,
+        "timezone": profile.timezone,
+        "country": profile.country.value,
+        "status": profile.status.value,
+        "createdAt": profile.created_at.isoformat(),
+        "updatedAt": profile.updated_at.isoformat(),
+    }
+
+
+def _profile(ctx: bootstrap.Context, person: PersonId) -> dict[str, Any]:
+    profile = _profile_repository(ctx).get(person)
+    if profile is None:
+        return _problem(404, "Complete your account profile", "PROFILE_NOT_FOUND")
+    return _response(200, _profile_view(profile))
+
+
+def _update_profile(
+    ctx: bootstrap.Context, event: dict[str, Any], person: PersonId
+) -> dict[str, Any]:
+    payload = _body(event)
+    allowed = {"displayName", "locale", "timezone", "country"}
+    if not payload or set(payload) - allowed:
+        raise ValueError("profile contains unsupported or no fields")
+
+    repository = _profile_repository(ctx)
+    current = repository.get(person)
+    now = ctx.now()
+    for field in payload:
+        if not isinstance(payload[field], str):
+            raise ValueError(f"{field} must be a string")
+    display_name = payload["displayName"].strip() if "displayName" in payload else None
+    locale = SupportedLocale(payload["locale"]) if "locale" in payload else None
+    timezone = payload["timezone"] if "timezone" in payload else None
+    country = SupportedCountry(payload["country"]) if "country" in payload else None
+    if current is None:
+        if None in {display_name, locale, timezone, country}:
+            return _problem(
+                422,
+                "A new profile requires displayName, locale, timezone, and country",
+                "PROFILE_INCOMPLETE",
+            )
+        profile = Profile(
+            person_id=person,
+            display_name=cast(str, display_name),
+            locale=cast(SupportedLocale, locale),
+            timezone=cast(str, timezone),
+            country=cast(SupportedCountry, country),
+            status=AccountStatus.ACTIVE,
+            created_at=now,
+            updated_at=now,
+        )
+    else:
+        profile = current.update(
+            at=now,
+            display_name=display_name,
+            locale=locale,
+            timezone=timezone,
+            country=country,
+        )
+    repository.save(profile)
+    return _response(200, _profile_view(profile))
+
+
+def _allowed_countries() -> frozenset[SupportedCountry]:
+    configured = os.environ.get("ICO_ALLOWED_COUNTRIES", "EG,US")
+    return frozenset(
+        SupportedCountry(value.strip()) for value in configured.split(",") if value.strip()
+    )
+
+
+def _admissions_open() -> bool:
+    default = "false" if os.environ.get("ICO_ENV") == "prod" else "true"
+    value = os.environ.get("ICO_ADMISSIONS_OPEN", default).lower()
+    if value not in {"true", "false"}:
+        raise RuntimeError("ICO_ADMISSIONS_OPEN must be true or false")
+    return value == "true"
+
+
+def _max_active_plans() -> int:
+    value = int(os.environ.get("ICO_MAX_ACTIVE_PLANS_PER_ACCOUNT", "3"))
+    if value < 1 or value > 20:
+        raise RuntimeError("ICO_MAX_ACTIVE_PLANS_PER_ACCOUNT must be between 1 and 20")
+    return value
+
+
+def _has_verified_endpoint(ctx: bootstrap.Context, person: PersonId, kind: EndpointType) -> bool:
+    if ctx.endpoints is None:
+        return False
+    endpoint = ctx.endpoints.for_person(person, kind)
+    return endpoint is not None and endpoint.is_usable
+
+
+def _account_readiness(ctx: bootstrap.Context, person: PersonId) -> dict[str, Any]:
+    profile = ctx.profiles.get(person) if ctx.profiles is not None else None
+    plans = ctx.plans.list_for_subject(person)
+    active_count = sum(plan.is_active for plan in plans)
+    maximum = _max_active_plans()
+    country_supported = profile is not None and profile.country in _allowed_countries()
+    profile_ready = profile is not None and profile.status is AccountStatus.ACTIVE
+    admissions_open = _admissions_open()
+    reasons: list[str] = []
+    if not profile_ready:
+        reasons.append("PROFILE_REQUIRED")
+    if profile is not None and not country_supported:
+        reasons.append("COUNTRY_UNSUPPORTED")
+    if not admissions_open:
+        reasons.append("ADMISSIONS_PAUSED")
+    if active_count >= maximum:
+        reasons.append("CAPACITY_EXHAUSTED")
+    circle = ctx.circles.for_owner(person)
+    accepted_members = len(circle.accepted_members) if circle else 0
+    return {
+        "profileReady": profile_ready,
+        "countrySupported": country_supported,
+        "admissionsOpen": admissions_open,
+        "activePlanCount": active_count,
+        "maxActivePlans": maximum,
+        "remainingPlanCapacity": max(0, maximum - active_count),
+        "subjectChannels": {
+            "push": _has_verified_endpoint(ctx, person, EndpointType.PUSH_TOKEN),
+            "sms": _has_verified_endpoint(ctx, person, EndpointType.PHONE),
+            "call": False,
+        },
+        "acceptedResponderCount": accepted_members,
+        "accountReady": not reasons,
+        "reasons": reasons,
+    }
+
+
+def _readiness_response(ctx: bootstrap.Context, person: PersonId) -> dict[str, Any]:
+    return _response(200, _account_readiness(ctx, person))
+
+
+def _activation_readiness_problem(
+    ctx: bootstrap.Context,
+    person: PersonId,
+    plan: Plan,
+    version: PlanVersion,
+) -> dict[str, Any] | None:
+    if os.environ.get("ICO_ENV") != "prod":
+        return None
+    readiness = _account_readiness(ctx, person)
+    for reason in readiness["reasons"]:
+        title = {
+            "PROFILE_REQUIRED": "Complete your account profile",
+            "COUNTRY_UNSUPPORTED": "This country is not available",
+            "ADMISSIONS_PAUSED": "New plan activation is temporarily paused",
+            "CAPACITY_EXHAUSTED": "Your active plan limit has been reached",
+        }[reason]
+        return _problem(409, title, reason)
+
+    circle = ctx.circles.get(CircleId(plan.circle_id))
+    channel_missing = False
+    for step in version.steps:
+        channel = step.action.channel
+        if step.action.is_subject_directed:
+            endpoint_type = {
+                Channel.PUSH: EndpointType.PUSH_TOKEN,
+                Channel.SMS: EndpointType.PHONE,
+            }.get(channel)
+            if endpoint_type is None or not _has_verified_endpoint(ctx, person, endpoint_type):
+                channel_missing = True
+        elif step.target_role is not None:
+            member = circle.member_for_role(step.target_role) if circle else None
+            permission = {
+                Channel.PUSH: ContactChannelPermission.PUSH,
+                Channel.SMS: ContactChannelPermission.SMS,
+                Channel.CALL: ContactChannelPermission.CALL,
+            }[channel]
+            consent = (
+                ctx.circles.consents_for(plan.plan_id).get(member.person_id) if member else None
+            )
+            endpoint_type = {
+                Channel.PUSH: EndpointType.PUSH_TOKEN,
+                Channel.SMS: EndpointType.PHONE,
+            }.get(channel)
+            if (
+                member is None
+                or consent is None
+                or not consent.is_active(ctx.now())
+                or not consent.permits_channel(permission)
+                or endpoint_type is None
+                or not _has_verified_endpoint(ctx, member.person_id, endpoint_type)
+            ):
+                channel_missing = True
+    if channel_missing:
+        return _problem(
+            409,
+            "Verify every channel and responder required by this plan",
+            "CHANNEL_NOT_READY",
+        )
+    return None
+
+
 def _create_plan(ctx: bootstrap.Context, event: dict[str, Any], person: PersonId) -> dict[str, Any]:
     payload = _body(event)
     document = payload.get("compiledPlan", payload)
@@ -755,6 +972,10 @@ def _activate_plan(
             "Required Circle consent is still pending",
             "CONSENT_REQUIRED",
         )
+
+    readiness_problem = _activation_readiness_problem(ctx, person, plan, version)
+    if readiness_problem is not None:
+        return readiness_problem
 
     activation = planning.activate_plan(
         ctx,

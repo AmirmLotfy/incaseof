@@ -118,9 +118,20 @@ for (const ref of refs) {
 // Mirrors the Python contract test. The rule is the same on both sides of the wire:
 // the API must not hand a client a way to contact someone directly.
 const FORBIDDEN = new Set(["phone", "phonenumber", "msisdn", "email", "endpoint", "callbackurl"]);
-const scanProps = (node, path) => {
-  if (Array.isArray(node)) return node.forEach((n, i) => scanProps(n, `${path}[${i}]`));
+const localRef = (ref) =>
+  ref
+    .slice(2)
+    .split("/")
+    .map((part) => part.replace(/~1/g, "/").replace(/~0/g, "~"))
+    .reduce((node, part) => node?.[part], spec);
+const scanProps = (node, path, seenRefs = new Set()) => {
+  if (Array.isArray(node)) {
+    return node.forEach((n, i) => scanProps(n, `${path}[${i}]`, seenRefs));
+  }
   if (node && typeof node === "object") {
+    if (typeof node.$ref === "string" && node.$ref.startsWith("#/") && !seenRefs.has(node.$ref)) {
+      scanProps(localRef(node.$ref), node.$ref, new Set([...seenRefs, node.$ref]));
+    }
     for (const [k, v] of Object.entries(node)) {
       if (k === "properties" && v && typeof v === "object") {
         for (const prop of Object.keys(v)) {
@@ -129,11 +140,17 @@ const scanProps = (node, path) => {
           }
         }
       }
-      scanProps(v, `${path}.${k}`);
+      scanProps(v, `${path}.${k}`, seenRefs);
     }
   }
 };
-scanProps(spec.paths ?? {}, "paths");
+for (const [path, operations] of Object.entries(spec.paths ?? {})) {
+  for (const [method, operation] of Object.entries(operations ?? {})) {
+    if (HTTP_METHODS.has(method)) {
+      scanProps(operation.responses ?? {}, `paths.${path}.${method}.responses`);
+    }
+  }
+}
 
 // --- report ---------------------------------------------------------------
 if (failures.length) {

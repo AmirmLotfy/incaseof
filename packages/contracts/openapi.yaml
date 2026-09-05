@@ -20,6 +20,7 @@ servers:
 
 tags:
   - name: service
+  - name: account
   - name: plans
   - name: moments
   - name: circle
@@ -46,6 +47,55 @@ paths:
                   service: { const: "In Case Of API" }
                   status: { const: "ok" }
                   productBoundary: { type: string }
+
+  /v1/profile:
+    get:
+      tags: [account]
+      summary: Read the authenticated account profile
+      security: [{ cognito: [] }]
+      responses:
+        "200":
+          description: Profile
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Profile" }
+        "404": { $ref: "#/components/responses/Problem" }
+    patch:
+      tags: [account]
+      summary: Create or update locale, country, timezone, and display name
+      security: [{ cognito: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                displayName: { type: string, minLength: 1, maxLength: 60 }
+                locale: { type: string, enum: [en, ar] }
+                timezone: { type: string, minLength: 1, maxLength: 64 }
+                country: { type: string, enum: [EG, US] }
+      responses:
+        "200":
+          description: Saved profile
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Profile" }
+        "422": { $ref: "#/components/responses/Problem" }
+
+  /v1/readiness:
+    get:
+      tags: [account]
+      summary: Read launch-market, channel, and plan-capacity readiness
+      description: Returns status booleans and reason codes; never returns endpoint values.
+      security: [{ cognito: [] }]
+      responses:
+        "200":
+          description: Account readiness
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Readiness" }
 
   /v1/plans/compile:
     post:
@@ -563,3 +613,48 @@ components:
               reason_code:
                 type: string
                 description: Stable machine code. Never leaks another user's data.
+  schemas:
+    Profile:
+      type: object
+      additionalProperties: false
+      required: [displayName, locale, timezone, country, status, createdAt, updatedAt]
+      properties:
+        displayName: { type: string, minLength: 1, maxLength: 60 }
+        locale: { type: string, enum: [en, ar] }
+        timezone: { type: string }
+        country: { type: string, enum: [EG, US] }
+        status: { type: string, enum: [ACTIVE, DELETION_PENDING, DELETED] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    Readiness:
+      type: object
+      additionalProperties: false
+      required:
+        - profileReady
+        - countrySupported
+        - admissionsOpen
+        - activePlanCount
+        - maxActivePlans
+        - remainingPlanCapacity
+        - subjectChannels
+        - acceptedResponderCount
+        - accountReady
+        - reasons
+      properties:
+        profileReady: { type: boolean }
+        countrySupported: { type: boolean }
+        admissionsOpen: { type: boolean }
+        activePlanCount: { type: integer, minimum: 0 }
+        maxActivePlans: { type: integer, minimum: 1 }
+        remainingPlanCapacity: { type: integer, minimum: 0 }
+        subjectChannels:
+          type: object
+          additionalProperties: false
+          required: [push, sms, call]
+          properties:
+            push: { type: boolean }
+            sms: { type: boolean }
+            call: { const: false }
+        acceptedResponderCount: { type: integer, minimum: 0 }
+        accountReady: { type: boolean }
+        reasons: { type: array, items: { type: string } }

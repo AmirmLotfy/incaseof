@@ -37,8 +37,9 @@ from services.adapters.dynamo import (
     DynamoMomentRepository,
     DynamoPlanRepository,
 )
-from services.adapters.endpoints import DynamoEndpointRepository
+from services.adapters.endpoints import DynamoEndpointRepository, EndpointRepository
 from services.adapters.outbox import DynamoOutbox
+from services.adapters.profile import DynamoProfileRepository
 from services.adapters.queue import ActionQueue, SqsActionQueue
 from services.adapters.scheduling import EventBridgeMomentScheduler, MomentScheduler
 from services.domain.clock import REAL_TIME, Clock, SystemClock, TimeScale
@@ -52,6 +53,7 @@ from services.domain.ports import (
     InvitationRepository,
     MomentRepository,
     PlanRepository,
+    ProfileRepository,
 )
 
 
@@ -98,6 +100,8 @@ class Context:
     invitations: InvitationRepository | None = None
     devices: DeviceRegistry | None = None
     outbox: DynamoOutbox | None = None
+    profiles: ProfileRepository | None = None
+    endpoints: EndpointRepository | None = None
 
     def now(self) -> datetime:
         return self.clock.now()
@@ -132,12 +136,14 @@ def build(*, schedule_target_arn: str | None = None) -> Context:
         scale=TimeScale(scale_factor) if scale_factor != 1.0 else REAL_TIME,
         scheduler=_scheduler(schedule_target_arn),
         queue=_queue(),
-        sender=_sender(table),
+        sender=_sender(endpoints),
         signing_key=_signing_key(),
         decisions=DynamoDecisionLog(table),
         invitations=DynamoInvitationRepository(table),
         devices=_devices(endpoints),
         outbox=DynamoOutbox(table),
+        profiles=DynamoProfileRepository(table),
+        endpoints=endpoints,
     )
 
 
@@ -159,7 +165,7 @@ def _devices(endpoints: DynamoEndpointRepository | None) -> DeviceRegistry | Non
     )
 
 
-def _sender(table: Any) -> ContactSender | None:
+def _sender(endpoints: DynamoEndpointRepository | None) -> ContactSender | None:
     """Delivery, on whichever channels are actually configured.
 
     Absent altogether means the worker records CHANNEL_UNAVAILABLE rather than pretending
@@ -173,7 +179,6 @@ def _sender(table: Any) -> ContactSender | None:
             raise RuntimeError("ICO_DELIVERY_MODE is permitted only as SAFE_SINK in demo")
         return SafeDemoSender()
 
-    endpoints = _endpoints(table)
     if endpoints is None:
         return None
 

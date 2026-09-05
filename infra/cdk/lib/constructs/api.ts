@@ -62,6 +62,9 @@ export class Api extends Construct {
         ICO_KMS_KEY_ID: props.key.keyId,
         ICO_AGENTCORE_RUNTIME_ARN: props.agentCoreRuntimeArn,
         ICO_AGENTCORE_QUALIFIER: "live",
+        ICO_ALLOWED_COUNTRIES: "EG,US",
+        ICO_ADMISSIONS_OPEN: String(props.environment.admissionsOpen),
+        ICO_MAX_ACTIVE_PLANS_PER_ACCOUNT: String(props.environment.maxActivePlansPerAccount),
         ...(props.pushPlatformArn ? { ICO_PUSH_PLATFORM_ARN: props.pushPlatformArn } : {}),
         PYTHONUNBUFFERED: "1",
       },
@@ -118,7 +121,8 @@ export class Api extends Construct {
         // The responder web app is the only browser origin that calls this.
         allowMethods: [
           apigw.CorsHttpMethod.GET,
-          apigw.CorsHttpMethod.POST,
+        apigw.CorsHttpMethod.POST,
+          apigw.CorsHttpMethod.PATCH,
           apigw.CorsHttpMethod.DELETE,
         ],
         allowHeaders: [
@@ -162,6 +166,9 @@ export class Api extends Construct {
     // that was never deployed fails at the worst possible moment — when somebody is trying
     // to say they are okay — so test/stack.test.ts asserts this list covers IcoApi.kt.
     const authenticated: Array<[string, apigw.HttpMethod]> = [
+      ["/v1/profile", apigw.HttpMethod.GET],
+      ["/v1/profile", apigw.HttpMethod.PATCH],
+      ["/v1/readiness", apigw.HttpMethod.GET],
       ["/v1/plans/compile", apigw.HttpMethod.POST],
       ["/v1/plans", apigw.HttpMethod.POST],
       ["/v1/moments/next", apigw.HttpMethod.GET],

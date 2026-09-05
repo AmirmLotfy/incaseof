@@ -614,6 +614,17 @@ describe("environments", () => {
     }
   });
 
+  it("starts production admissions closed with bounded account capacity", () => {
+    const functions = synth("prod").findResources("AWS::Lambda::Function");
+    const api = Object.values(functions).find((fn) =>
+      fn.Properties?.Handler?.includes?.("handlers.api"),
+    );
+    assert.ok(api, "expected the API handler");
+    assert.equal(api.Properties?.Environment?.Variables?.ICO_ADMISSIONS_OPEN, "false");
+    assert.equal(api.Properties?.Environment?.Variables?.ICO_MAX_ACTIVE_PLANS_PER_ACCOUNT, "3");
+    assert.equal(api.Properties?.Environment?.Variables?.ICO_ALLOWED_COUNTRIES, "EG,US");
+  });
+
   it("redirects external delivery only in the public demo environment", () => {
     for (const [env, expected] of [["dev", undefined], ["demo", "SAFE_SINK"], ["prod", undefined]] as const) {
       const functions = synth(env).findResources("AWS::Lambda::Function");

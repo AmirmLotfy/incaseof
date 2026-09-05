@@ -16,6 +16,19 @@ token audiences. The machine-readable definition lives in `packages/contracts/op
 GET    /      service descriptor; no tenant data
 ```
 
+## Account and readiness
+
+```text
+GET    /v1/profile       profile and locale settings; never contact endpoints
+PATCH  /v1/profile       create or update display name, locale, timezone, and country
+GET    /v1/readiness     account, channel, responder, and plan-capacity status
+```
+
+The first launch markets are Egypt and the United States, with Arabic and English locales.
+Production activation fails closed while admissions are paused, while the profile is incomplete,
+or when a plan requires an unverified subject or responder channel. Readiness exposes stable reason
+codes and booleans without returning phone numbers, push tokens, or provider endpoint identifiers.
+
 ## Plans
 
 ```

@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 from datetime import datetime
 
+from services.domain.account import Profile
 from services.domain.agent_decision import AgentDecision
 from services.domain.alert import Alert
 from services.domain.circle import Circle, ConsentGrant
@@ -26,6 +27,17 @@ from services.domain.ids import (
 from services.domain.invitation import CircleInvitation
 from services.domain.moment import ExpectedMoment, MomentStatus
 from services.domain.plan import Plan, PlanVersion
+
+
+@dataclass
+class InMemoryProfileRepository:
+    profiles: dict[PersonId, Profile] = field(default_factory=dict)
+
+    def get(self, person_id: PersonId) -> Profile | None:
+        return self.profiles.get(person_id)
+
+    def save(self, profile: Profile) -> None:
+        self.profiles[profile.person_id] = profile
 
 
 @dataclass

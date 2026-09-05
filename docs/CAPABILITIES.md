@@ -41,7 +41,7 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 
 ## Current automated evidence
 
-- Unified preflight: all 18 gates pass on 2026-09-05.
+- Unified preflight: all 19 gates pass on 2026-09-05.
 - Python: Ruff format/lint, mypy and the full test suite pass.
 - Contract parity: 53 method/path routes agree across OpenAPI, CDK and handler; authenticated and demo Android client routes are deployed in the correct environment templates.
 - Infrastructure: 45 CDK assertions and synthesis pass, including exact Nova resources, runtime session lifecycle, AgentCore user-context invocation permissions, the demo-only quota-recovery guard and the single API-scoped Lambda invocation permission.

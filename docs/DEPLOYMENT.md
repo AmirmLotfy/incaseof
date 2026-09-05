@@ -25,9 +25,11 @@ Before using it:
 1. Read the deployed CloudFormation template.
 2. Copy the Runtime's current S3 artifact bucket template/key and model ID exactly. Preserve
    CloudFormation substitutions such as `${AWS::AccountId}` instead of resolving them locally.
-3. Synthesize and run `cdk diff --no-change-set` with the preservation context.
-4. Refuse the rollout if the diff changes `AWS::BedrockAgentCore::Runtime`.
-5. Deploy only the `demo` environment and record the change-set ID and stack events.
+3. Run `./scripts/build-lambda.sh`; the ignored staging directory is the deployable Lambda
+   artifact, so synthesizing before this step can publish stale handler code.
+4. Synthesize and run `cdk diff --no-change-set` with the preservation context.
+5. Refuse the rollout if the diff changes `AWS::BedrockAgentCore::Runtime`.
+6. Deploy only the `demo` environment and record the change-set ID and stack events.
 
 The context is rejected for `dev` and `prod`, and it fails closed unless all three deployed
 values are supplied. It is not part of the final accepted deployment. After AWS restores the

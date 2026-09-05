@@ -4,12 +4,12 @@
   "sourceCommitAtStart": "6ef1e7119ffc34cd3f20fb4cd27db4a0e56aa13b",
   "acceptedCommit": null,
   "tag": null,
-  "verifiedAt": "2026-09-05T02:14:05Z",
+  "verifiedAt": "2026-09-05T08:40:39Z",
   "aws": {
     "accountIdRedacted": true,
     "deploymentPrincipal": "ephemeral least-privileged IAM user; deleted after deployment",
     "stackName": "IcoStack-demo",
-    "stackStatus": "UPDATE_ROLLBACK_COMPLETE",
+    "stackStatus": "UPDATE_COMPLETE",
     "region": "us-east-1",
     "apiId": "84t16g8eoe",
     "route53NameserversDelegated": true,
@@ -51,13 +51,21 @@
         "status": "CASE_OPENED"
       }
     },
-    "lastDeploymentAttempt": {
+    "previousDeploymentFailure": {
       "verifiedAt": "2026-09-05T03:27:30Z",
       "sourceCommit": "3624de83036c4b70ffc7302c3f093f9db46433f0",
       "result": "ROLLED_BACK",
       "stackStatus": "UPDATE_ROLLBACK_COMPLETE",
       "reason": "Per-route API Gateway invoke permissions exceeded Lambda's 20480-byte resource-policy limit; no failed route changes remained live.",
       "correctiveAction": "Use one source-scoped API-wide invoke permission and retain explicit route declarations; regression assertion added locally and rollout not retried until CI passes."
+    },
+    "lastDeploymentAttempt": {
+      "verifiedAt": "2026-09-05T03:35:00Z",
+      "sourceCommit": "f7c73bf3b1462541eb75c2560a2fbbdc72a09795",
+      "result": "STACK_UPDATE_COMPLETE_POSTDEPLOY_VERIFICATION_FAILED",
+      "stackStatus": "UPDATE_COMPLETE",
+      "reason": "API routes and the consolidated invoke permission deployed, but the manual recovery command had not restaged the ignored Lambda artifact; GET / reached an older handler and returned 404.",
+      "correctiveAction": "Make Lambda staging an explicit CI/preflight and recovery step, rebuild the exact artifact, then redeploy and repeat live verification."
     }
   },
   "urls": {
@@ -132,14 +140,14 @@
     {
       "name": "unified-preflight",
       "status": "PASSED",
-      "verifiedAt": "2026-09-05T03:18:29Z",
-      "details": "18/18 gates; 377 Python tests; 45 CDK assertions; 53 API routes in parity; 14 Playwright browser/accessibility cases"
+      "verifiedAt": "2026-09-05T08:40:39Z",
+      "details": "19/19 gates; exact Lambda and AgentCore artifacts; 377 Python tests; 45 CDK assertions; 53 API routes in parity; 14 Playwright browser/accessibility cases"
     },
     {
       "name": "github-actions",
       "status": "PASSED",
-      "verifiedAt": "2026-09-05T02:55:00Z",
-      "details": "Run 33939503535; Python, Web, Android, Guardrails and Infrastructure all passed on commit 9ff23284851f1251760e0fe1231398dc215b730d"
+      "verifiedAt": "2026-09-05T03:31:00Z",
+      "details": "Run 33941953557; Python, Web, Android, Guardrails and Infrastructure all passed on commit f7c73bf3b1462541eb75c2560a2fbbdc72a09795"
     },
     {
       "name": "android-in-app-demo",
@@ -150,11 +158,11 @@
   ],
   "sourceControl": {
     "branch": "codex/hackathon-final",
-    "headCommitAtLastGreenRun": "9ff23284851f1251760e0fe1231398dc215b730d",
+    "headCommitAtLastGreenRun": "f7c73bf3b1462541eb75c2560a2fbbdc72a09795",
     "publicBranchPushed": true,
     "pullRequest": "https://github.com/AmirmLotfy/incaseof/pull/15",
     "pullRequestState": "DRAFT",
-    "githubActionsRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/33939503535"
+    "githubActionsRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/33941953557"
   },
   "artifacts": {
     "architecturePngSha256": "07261fbe70c5be2a02f9088d3ccf5dd0577aaa49cf1a2c5278c412e3d2ef0509",

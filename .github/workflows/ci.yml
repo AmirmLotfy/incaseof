@@ -90,6 +90,8 @@ jobs:
         with:
           enable-cache: true
       - run: npm ci
+      - name: Build exact Lambda deployment artifact
+        run: ./scripts/build-lambda.sh
       - name: Build exact AgentCore deployment artifact
         run: ./scripts/build-agentcore-runtime.sh
       - name: Typecheck

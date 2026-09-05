@@ -29,7 +29,7 @@ dev = [
     # Required by botocore to read `aws login` credentials locally. The AWS CLI bundles
     # its own copy; Lambda uses IAM roles and needs neither.
     "awscrt==0.36.2",
-    "boto3-stubs[dynamodb,kms,scheduler,secretsmanager,sns,sqs,stepfunctions]==1.43.78",
+    "boto3-stubs[dynamodb,kms,scheduler,secretsmanager,sns,sqs,stepfunctions]==1.43.86",
 ]
 
 [build-system]

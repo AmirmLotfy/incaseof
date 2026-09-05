@@ -32,7 +32,7 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 | Android debug | Locally verified | `assembleDebug`, unit tests, Android lint and ktlint pass; all 3 connected accessibility tests pass on API 26 and API 37 against the latest source | Physical-phone checks |
 | Android release | Built and emulator verified | Signed `com.incaof.app` v0.2.0 APK; API 26-37; v2/v3 verification; no local repository/localhost marker; clean install and launch on API 26/API 37; Android 13+ permission request verified | One physical-phone install and notification pass; rebuild for the canonical API after edge hosting exists |
 | Marketing/web/responder | Locally verified | Next.js 16 static exports, typecheck, lint, build, 13 browser/accessibility cases including configured web-app mutations | CloudFront URLs, TLS/security headers and Lighthouse evidence |
-| Hosting | Core provisioned; edge blocked | Demo API, Cognito, DynamoDB, Scheduler, Step Functions, SQS, AgentCore and KMS are deployed. Private S3/CloudFront/WAF/certificate/DNS source passes synth, but CloudFront creation is blocked by AWS account verification | Deploy edge resources; publish exports; verify apex/`www`/API DNS, TLS and headers globally |
+| Hosting | Core provisioned; edge blocked | Demo API, Cognito, DynamoDB, Scheduler, Step Functions, SQS, AgentCore and KMS are deployed. The registrar delegates `incaof.com` to the Route 53 zone and `api.incaof.com` resolves with valid TLS; its root remains 404 until the new public descriptor is deployed. CloudFront creation is blocked by AWS account verification | Deploy the API descriptor and edge resources; publish exports; verify apex/`www`/API DNS, TLS and headers globally |
 | Observability | Provisioned and locally verified | `ico-demo-health` dashboard and eight alarms exist; all eight alarms report OK as of 2026-09-04 | Dashboard screenshot plus evidence during a complete drill |
 | Architecture artifact | Locally verified | Nova-labelled 2400x1600 PNG, SVG source and visually checked one-page PDF | Upload preview on Devpost |
 | Project image and screenshots | Deferred until live demo | Final compositor must use real captures | Complete deployed capture set; no synthetic UI |
@@ -62,7 +62,7 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 2. Wait for AgentCore `Versions per Agent` case `178851871600399`, then deploy the corrected Nova runtime and 60-second idle lifecycle.
 3. Create an IAM Identity Center or durable least-privileged deployment path. Successful deployments used narrowly scoped, ephemeral IAM users that were deleted immediately afterward; the interactive session is still root.
 4. Add the currently blocked Nova/AgentCore compile leg to the now-proven live workflow, queue, responder lease and resolution path; record runtime, trace and execution identifiers.
-5. Deploy and publish both static clients, create apex/`www` records, and verify marketing, app, demo, consent, responder and API URLs globally.
+5. Deploy the public API descriptor and edge hosting, publish both static clients, create apex/`www` records, and verify marketing, app, demo, consent, responder and API URLs globally.
 6. Finish one physical-phone FCM/install pass and rebuild the signed release for the canonical API after edge hosting exists.
 7. Capture real deployed screenshots; only then generate the final 1800x1200 project image and demo video.
 8. Publish the sub-five-minute video and builder.aws posts. The user supplies the public video URL and AWS Builder ID.

@@ -12,6 +12,8 @@
     "stackStatus": "UPDATE_ROLLBACK_COMPLETE",
     "region": "us-east-1",
     "apiId": "84t16g8eoe",
+    "route53NameserversDelegated": true,
+    "dnsDelegationVerifiedAt": "2026-09-05T01:24:02Z",
     "agentCoreRuntimeId": "ico_demo_compiler-6NwvbhBK5L",
     "agentCoreRuntimeVersion": "1",
     "agentCoreRuntimeStatus": "READY",
@@ -55,7 +57,7 @@
     "webApp": null,
     "demo": null,
     "directApi": "https://84t16g8eoe.execute-api.us-east-1.amazonaws.com",
-    "canonicalApi": null,
+    "canonicalApi": "https://api.incaof.com",
     "apk": null
   },
   "android": {

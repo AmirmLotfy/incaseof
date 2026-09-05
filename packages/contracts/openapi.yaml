@@ -358,6 +358,44 @@ paths:
       security: []
       responses: { "201": { description: Created } }
 
+  /v1/demo/plans/{planId}:
+    get:
+      tags: [demo]
+      summary: Get a plan inside the synthetic judge tenant
+      security: []
+      parameters: [{ $ref: "#/components/parameters/PlanId" }]
+      responses: { "200": { description: OK } }
+
+  /v1/demo/plans/{planId}/activate:
+    post:
+      tags: [demo]
+      summary: Activate a consented synthetic judge plan
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/PlanId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses: { "200": { description: Activated } }
+
+  /v1/demo/plans/{planId}/pause:
+    post:
+      tags: [demo]
+      summary: Pause a synthetic judge plan
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/PlanId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses: { "200": { description: Paused } }
+
+  /v1/demo/plans/{planId}/resume:
+    post:
+      tags: [demo]
+      summary: Resume a synthetic judge plan
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/PlanId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses: { "200": { description: Resumed } }
+
   /v1/demo/plans/{planId}/test:
     post:
       tags: [demo]
@@ -375,6 +413,48 @@ paths:
       security: []
       responses: { "200": { description: OK } }
 
+  /v1/demo/moments/{momentId}/confirm:
+    post:
+      tags: [demo]
+      summary: Confirm the synthetic judge Moment
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/MomentId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses: { "200": { description: Confirmed } }
+
+  /v1/demo/moments/{momentId}/extend:
+    post:
+      tags: [demo]
+      summary: Extend the synthetic judge Moment
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/MomentId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses: { "200": { description: Extended } }
+
+  /v1/demo/circle:
+    get:
+      tags: [demo]
+      summary: List accepted synthetic Circle roles
+      security: []
+      responses: { "200": { description: OK } }
+
+  /v1/demo/circle/invitations:
+    post:
+      tags: [demo]
+      summary: Create a synthetic Circle invitation
+      security: []
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      responses: { "201": { description: Invitation created } }
+
+  /v1/demo/history:
+    get:
+      tags: [demo]
+      summary: List the synthetic judge tenant's resolved Moments
+      security: []
+      responses: { "200": { description: OK } }
+
   /v1/demo/alerts/{alertId}:
     get:
       tags: [demo]
@@ -382,6 +462,16 @@ paths:
       security: []
       parameters: [{ $ref: "#/components/parameters/AlertId" }]
       responses: { "200": { description: OK } }
+
+  /v1/demo/alerts/{alertId}/claim:
+    post:
+      tags: [demo]
+      summary: Claim a synthetic judge Alert
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/AlertId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses: { "200": { description: Claimed } }
 
   /v1/demo/alerts/{alertId}/timeline:
     get:

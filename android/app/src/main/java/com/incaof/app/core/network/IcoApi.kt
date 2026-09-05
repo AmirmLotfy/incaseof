@@ -15,6 +15,9 @@ import retrofit2.http.Path
  * client calling a route that was never deployed fails at the worst possible moment.
  */
 interface IcoApi {
+    @POST("v1/demo/session")
+    suspend fun startDemoSession(): Response<DemoSessionDto>
+
     @POST("v1/plans/compile")
     suspend fun compilePlan(
         @Body request: CompilePlanRequest,

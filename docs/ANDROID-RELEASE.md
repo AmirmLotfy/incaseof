@@ -63,5 +63,9 @@ Record the APK SHA-256, package metadata, device/API level, test exit status and
 3. Allow installation from the browser or file manager when Android prompts.
 4. Install the APK, open **In Case Of**, and choose **Try judge demo**.
 
+The button stays inside the app. It requests a short-lived synthetic session, labels the
+entire experience **JUDGE DEMO**, routes product calls only through `/v1/demo/*`, and exposes
+an **Exit demo** action. It cannot register the phone for delivery or reach local fixture data.
+
 This is a hackathon demo distributed directly by the project, not a Google Play release and
 not an emergency service.

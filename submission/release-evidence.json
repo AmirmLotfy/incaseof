@@ -124,23 +124,29 @@
     {
       "name": "unified-preflight",
       "status": "PASSED",
-      "verifiedAt": "2026-09-05T02:14:05Z",
-      "details": "18/18 gates; 376 Python tests; 43 CDK assertions; 43 API routes in parity; 14 Playwright browser/accessibility cases"
+      "verifiedAt": "2026-09-05T02:34:42Z",
+      "details": "18/18 gates; 377 Python tests; 43 CDK assertions; 53 API routes in parity; 14 Playwright browser/accessibility cases"
     },
     {
       "name": "github-actions",
       "status": "PASSED",
-      "verifiedAt": "2026-09-05T01:19:12Z",
-      "details": "Run 33935674895; Python, Web, Android, Guardrails and Infrastructure all passed on commit d1d613a1e64ea31bb4e33c5997408f2504a5df56"
+      "verifiedAt": "2026-09-05T02:22:00Z",
+      "details": "Run 33938504566; Python, Web, Android, Guardrails and Infrastructure all passed on commit c173ee99c0b084f32ba2d0d5d1ec3dc9f39e23a2"
+    },
+    {
+      "name": "android-in-app-demo",
+      "status": "LOCALLY_VERIFIED",
+      "verifiedAt": "2026-09-05T02:34:42Z",
+      "details": "Short-lived synthetic token, demo-only route rewriting, separate ViewModel identities and device-registration refusal pass local tests; deployment and device exercise remain pending"
     }
   ],
   "sourceControl": {
     "branch": "codex/hackathon-final",
-    "headCommitAtLastGreenRun": "d1d613a1e64ea31bb4e33c5997408f2504a5df56",
+    "headCommitAtLastGreenRun": "c173ee99c0b084f32ba2d0d5d1ec3dc9f39e23a2",
     "publicBranchPushed": true,
     "pullRequest": "https://github.com/AmirmLotfy/incaseof/pull/15",
     "pullRequestState": "DRAFT",
-    "githubActionsRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/33935674895"
+    "githubActionsRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/33938504566"
   },
   "artifacts": {
     "architecturePngSha256": "07261fbe70c5be2a02f9088d3ccf5dd0577aaa49cf1a2c5278c412e3d2ef0509",

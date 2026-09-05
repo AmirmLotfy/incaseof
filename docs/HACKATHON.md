@@ -91,6 +91,9 @@ Python, TypeScript, Kotlin, Jetpack Compose, Next.js, Strands Agents SDK, Amazon
 7. Open Developer Trace to inspect the redacted AgentCore, model, tool, policy and deterministic decisions.
 8. Optionally install the signed APK and choose **Try judge demo**.
 
+The Android demo runs in-app against the same isolated AWS demo tenant and safe delivery
+sink; a persistent banner distinguishes it from an authenticated personal account.
+
 No payment or personal phone number is required. Demo identities are synthetic, delivery is redirected to a safe sink, and tokens shown in Developer Trace are redacted.
 
 ## Screenshot uploads

@@ -217,11 +217,11 @@ fun SignInScreen(
             TextButton(onClick = { mode = AuthMode.RESET_REQUEST }) { Text("Forgot password?") }
         }
         Spacer(Modifier.height(12.dp))
-        TextButton(onClick = onTryJudgeDemo, modifier = Modifier.fillMaxWidth()) {
-            Text("Try judge demo")
+        TextButton(onClick = onTryJudgeDemo, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
+            Text(if (busy) "Opening safe demo…" else "Try judge demo")
         }
         Text(
-            "Opens the synthetic public demo. It never contacts real people.",
+            "Runs an isolated synthetic demo in this app. It never contacts real people.",
             style = MaterialTheme.typography.bodySmall,
             color = ico.graphite,
         )

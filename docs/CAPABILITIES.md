@@ -1,6 +1,6 @@
 # In Case Of - capability and release evidence matrix
 
-Updated: 2026-09-04. Branch: `codex/hackathon-final`.
+Updated: 2026-09-05. Branch: `codex/hackathon-final`.
 
 In Case Of closes uncertainty; it does not decide whether someone is in danger.
 
@@ -19,17 +19,17 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 | Natural-language plan preview | Locally verified; live blocked | Typed AgentCore adapter/runtime tests; deterministic revalidation; deployed v1 process exposed and fixed an artifact-only import defect | Deploy the corrected Nova artifact after the AgentCore version quota is restored, then record a bounded canary |
 | Model and credentials | Implemented; live blocked | Source is locked to `us.amazon.nova-2-lite-v1:0`; IAM/SigV4; no model API key in clients. Direct Bedrock calls currently return account-level `Operation not allowed` | AWS account verification, invocation ID, model ID, latency, token usage and redacted trace |
 | Agent authorization | Provisioned; locally verified | Runtime, Gateway, role-only Lambda target and Cedar Policy Engine exist in `us-east-1`; Gateway is ENFORCE; CDK assertions pass | Permitted and denied live Gateway calls after account verification |
-| Plans | Partially live verified | Create/list/get/activate/pause/resume/test routes and Android/web clients; direct demo API created a real draft and started an accelerated Drill | Agent-backed compile plus authenticated web and Android drill in demo AWS |
+| Plans | Partially live verified | Create/list/get/activate/pause/resume/test routes and Android/web clients; the Android judge entry now mints an isolated session and routes its existing repository through the demo API; direct demo API created a real draft and started an accelerated Drill | Deploy the expanded demo routes, then verify Agent-backed compile and Android drill in demo AWS |
 | Circle consent | Locally verified | Invite/resend/remove and signed accept/decline routes; Android invite UI; responder consent UI | Expiry, replay and cross-tenant tests on deployed URLs |
 | Moment lifecycle | Partially live verified | The deployed Scheduler materialized a due Alert in the synthetic judge tenant; get/next/confirm/extend/cancel and recurring creation remain covered locally | Live confirm, extend, cancel and recurring-next-Moment evidence |
 | Alert lifecycle | Partially live verified | A signed synthetic responder link was policy-gated until Circle escalation, then claim created `CHECKING` and explicit resolve produced `RESOLVED` | Private-window UI capture plus live release, extend, conflict and lease-expiry evidence |
 | History | Locally verified | Owner-indexed terminal Alert query; API/Android mapping | Resolved deployed drill visible on clients |
 | Workflow | Live verified without the model leg | A deployed accelerated Drill produced 11 audit events through Scheduler, Standard Step Functions, SQS, worker, responder lease and explicit resolution | Deployed execution ARN plus a complete AgentCore-to-workflow trace after model access is restored |
-| Public judge demo | Demo-only; partially live verified | Fresh isolated sessions, draft creation and a complete deterministic Drill succeed on the direct API; real handlers, no browser fixtures | Agent compile and public `/demo` edge hosting |
+| Public judge demo | Demo-only; partially live verified | Fresh isolated sessions, draft creation and a complete deterministic Drill succeed on the direct API; web and Android use the same real handlers with no browser fixtures or local-data fallback; demo device registration is impossible | Deploy the expanded Android demo surface, Agent compile and public `/demo` edge hosting |
 | Demo delivery | Demo-only; live verified | The deployed worker accepted real queued PUSH/SMS attempts and recorded redacted `safe-sink:` provider references in the audit timeline | Judge-facing UI capture after edge hosting |
 | SMS | Implemented, not live verified | Worker is sole `sns:Publish` principal; endpoints resolved at dispatch | One permitted project-owned verified test number |
 | FCM | Live verified on emulator | Isolated Firebase project/app, least-privilege service account in Secrets Manager, enabled SNS platform app, API registration, one enabled endpoint and one delivered API 37 notification with the real `I'M OKAY` action | One physical-device receipt |
-| Android debug | Locally verified | `assembleDebug`, unit tests, Android lint and ktlint pass; all 3 connected accessibility tests pass on API 26 and API 37 against the latest source | Physical-phone checks |
+| Android debug | Locally verified | `assembleDebug`, unit tests, Android lint and ktlint pass; all 3 connected accessibility tests pass on API 26 and API 37; the in-app judge session is route-isolated and token-tested | Deploy and exercise the in-app judge flow; physical-phone checks |
 | Android release | Built and emulator verified | Signed `com.incaof.app` v0.2.0 APK; API 26-37; v2/v3 verification; no local repository/localhost marker; clean install and launch on API 26/API 37; Android 13+ permission request verified | One physical-phone install and notification pass; rebuild for the canonical API after edge hosting exists |
 | Marketing/web/responder | Locally verified | Next.js 16 static exports, typecheck, lint, build, 14 browser/accessibility cases including configured web-app mutations and explicit responder terminal state | CloudFront URLs, TLS/security headers and Lighthouse evidence |
 | Hosting | Core provisioned; edge blocked | Demo API, Cognito, DynamoDB, Scheduler, Step Functions, SQS, AgentCore and KMS are deployed. The registrar delegates `incaof.com` to the Route 53 zone and `api.incaof.com` resolves with valid TLS; its root remains 404 until the new public descriptor is deployed. CloudFront creation is blocked by AWS account verification | Deploy the API descriptor and edge resources; publish exports; verify apex/`www`/API DNS, TLS and headers globally |
@@ -42,8 +42,8 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 ## Current automated evidence
 
 - Unified preflight: all 18 gates pass on 2026-09-05.
-- Python: Ruff format/lint, mypy, 376 passing tests.
-- Contract parity: 43 method/path routes agree across OpenAPI, CDK and handler; Android client routes are deployed in the template.
+- Python: Ruff format/lint, mypy and the full test suite pass.
+- Contract parity: 53 method/path routes agree across OpenAPI, CDK and handler; authenticated and demo Android client routes are deployed in the correct environment templates.
 - Infrastructure: 43 CDK assertions and synthesis pass, including exact Nova resources, runtime session lifecycle and AgentCore user-context invocation permissions.
 - Web: marketing and responder lint, typecheck and production static builds; 14 Playwright browser/accessibility cases.
 - Android: unit tests, release lint, ktlint, R8, package/signature inspection and fail-closed configuration checks pass. All 3 connected accessibility tests pass on both API 26 and API 37.

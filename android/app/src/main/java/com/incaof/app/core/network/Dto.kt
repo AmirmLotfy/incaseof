@@ -17,6 +17,14 @@ import kotlinx.serialization.json.JsonObject
  */
 
 @Serializable
+data class DemoSessionDto(
+    val sessionToken: String,
+    val expiresInSeconds: Int,
+    val subjectDisplayName: String,
+    val synthetic: Boolean,
+)
+
+@Serializable
 data class MomentDto(
     val momentId: String,
     val planLabel: String,
@@ -189,9 +197,10 @@ data class ClaimResponseDto(
 @Serializable
 data class DrillResponseDto(
     val status: String,
-    val planId: String,
-    val timeScale: Double,
-    val message: String,
+    val planId: String? = null,
+    val timeScale: Double? = null,
+    val message: String = "",
+    val moment: MomentDto? = null,
 )
 
 /** RFC 9457 problem detail. `reason_code` is stable; `title` is not for parsing. */

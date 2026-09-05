@@ -90,9 +90,19 @@ POST   /v1/demo/session
 POST   /v1/demo/plans/compile
 POST   /v1/demo/plans
 GET    /v1/demo/plans
+GET    /v1/demo/plans/{planId}
+POST   /v1/demo/plans/{planId}/activate
+POST   /v1/demo/plans/{planId}/pause
+POST   /v1/demo/plans/{planId}/resume
 POST   /v1/demo/plans/{planId}/test
 GET    /v1/demo/moments/next
+POST   /v1/demo/moments/{momentId}/confirm
+POST   /v1/demo/moments/{momentId}/extend
+GET    /v1/demo/circle
+POST   /v1/demo/circle/invitations
+GET    /v1/demo/history
 GET    /v1/demo/alerts/{alertId}
+POST   /v1/demo/alerts/{alertId}/claim
 GET    /v1/demo/alerts/{alertId}/timeline
 GET    /v1/demo/alerts/{alertId}/responder-link
 ```
@@ -100,6 +110,8 @@ GET    /v1/demo/alerts/{alertId}/responder-link
 Each session is isolated under a random synthetic subject, expires after 30 minutes and has
 accepted fixture roles but no real contact endpoints. These routes return `404` outside the
 demo environment. They still run the same compiler, repositories, Scheduler and workflow.
+There is deliberately no demo device-registration route: judge sessions can only use the
+safe delivery sink and can never attach a phone or other contact endpoint.
 
 Voice is deferred and intentionally absent from the P0 public API. There is no placeholder
 route implying that an unsupported channel exists.

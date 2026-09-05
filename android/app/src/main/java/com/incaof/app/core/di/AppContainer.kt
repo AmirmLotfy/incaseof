@@ -4,6 +4,7 @@ import android.content.Context
 import com.incaof.app.BuildConfig
 import com.incaof.app.core.auth.AuthRepository
 import com.incaof.app.core.auth.CognitoAuthRepository
+import com.incaof.app.core.auth.DemoAuthRepository
 import com.incaof.app.core.auth.LocalAuthRepository
 import com.incaof.app.core.network.NetworkModule
 import com.incaof.app.data.ApiIcoRepository
@@ -40,4 +41,16 @@ class AppContainer(
         if (hasBackend) ApiIcoRepository(NetworkModule.api(auth)) else LocalIcoRepository()
 
     val appContext: Context = context.applicationContext
+
+    /** Starts an isolated in-app judge walkthrough without creating a Cognito account. */
+    suspend fun startJudgeDemo(): Result<ViewModelFactory> =
+        runCatching {
+            val response = NetworkModule.api(auth).startDemoSession()
+            check(response.isSuccessful) { "Demo session unavailable (${response.code()})" }
+            val session = requireNotNull(response.body()) { "Demo session response was empty" }
+            check(session.synthetic && session.sessionToken.isNotBlank()) { "Invalid demo session response" }
+            val demoAuth = DemoAuthRepository(session.sessionToken, session.subjectDisplayName)
+            val demoRepository = ApiIcoRepository(NetworkModule.demoApi(demoAuth), allowDeviceRegistration = false)
+            ViewModelFactory(demoAuth, demoRepository)
+        }
 }

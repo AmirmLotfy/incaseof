@@ -30,6 +30,7 @@ import java.time.Instant
 /** Talks to the deployed API. */
 class ApiIcoRepository(
     private val api: IcoApi,
+    private val allowDeviceRegistration: Boolean = true,
 ) : IcoRepository {
     override suspend fun compilePlan(description: String, timezone: String): Result<CompiledPlanDraft> =
         runCatching {
@@ -188,11 +189,15 @@ class ApiIcoRepository(
         }
 
     override suspend fun registerDevice(deviceId: String, registrationToken: String): Result<Unit> =
-        runCatching {
-            val registered =
-                api.registerDevice(RegisterDeviceRequest(deviceId, registrationToken)).requireBody()
-            require(registered.deviceId == deviceId) { "device registration response mismatch" }
-            return@runCatching
+        if (!allowDeviceRegistration) {
+            Result.failure(IllegalStateException("Demo sessions cannot register delivery devices"))
+        } else {
+            runCatching {
+                val registered =
+                    api.registerDevice(RegisterDeviceRequest(deviceId, registrationToken)).requireBody()
+                require(registered.deviceId == deviceId) { "device registration response mismatch" }
+                return@runCatching
+            }
         }
 
     private suspend fun planMutation(

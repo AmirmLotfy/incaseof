@@ -282,7 +282,7 @@ describe("api", () => {
       .filter((route) => route.Properties?.AuthorizationType !== "JWT")
       .map((route) => String(route.Properties?.RouteKey));
     assert.ok(demoRoutes.includes("POST /v1/demo/session"));
-    assert.equal(demoRoutes.filter((route) => route.includes("/v1/demo/")).length, 9);
+    assert.equal(demoRoutes.filter((route) => route.includes("/v1/demo/")).length, 19);
   });
 
   it("scopes every unauthenticated route to a single token", () => {
@@ -330,9 +330,15 @@ describe("api", () => {
         String(route.Properties?.RouteKey).replace(/\{(\w+)\}/g, "{}"),
       ),
     );
+    const deployedDemo = new Set(
+      Object.values(synth("demo").findResources("AWS::ApiGatewayV2::Route")).map((route) =>
+        String(route.Properties?.RouteKey).replace(/\{(\w+)\}/g, "{}"),
+      ),
+    );
 
     for (const call of called) {
-      assert.ok(deployed.has(call), `client calls ${call}, which is not deployed`);
+      const routes = call.includes("/v1/demo/") ? deployedDemo : deployed;
+      assert.ok(routes.has(call), `client calls ${call}, which is not deployed in its environment`);
     }
   });
 

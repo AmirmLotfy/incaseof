@@ -34,14 +34,21 @@ check_jq '.android.physicalDevice == "PASSED"' "physical Android device verifica
 check_jq '.artifacts.projectImage | type == "string" and length > 0' "Devpost project image is not recorded"
 
 accepted_commit=$(jq -r '.acceptedCommit // empty' "$manifest")
-if [[ -n "$accepted_commit" ]] && [[ "$(git rev-parse HEAD 2>/dev/null)" != "$accepted_commit" ]]; then
-  fail "working HEAD is not the accepted commit"
+if [[ -n "$accepted_commit" ]] && ! git merge-base --is-ancestor "$accepted_commit" HEAD 2>/dev/null; then
+  fail "accepted product commit is not an ancestor of working HEAD"
 fi
 if [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
   fail "Git worktree is not clean"
 fi
 if [[ -n "$accepted_commit" ]] && ! git merge-base --is-ancestor "$accepted_commit" origin/main 2>/dev/null; then
   fail "accepted commit is not on public origin/main"
+fi
+tag=$(jq -r '.tag // empty' "$manifest")
+if [[ -n "$accepted_commit" && -n "$tag" ]] && [[ "$(git rev-parse "$tag^{commit}" 2>/dev/null)" != "$accepted_commit" ]]; then
+  fail "accepted tag does not resolve to the accepted product commit"
+fi
+if ! git merge-base --is-ancestor HEAD origin/main 2>/dev/null; then
+  fail "release-evidence HEAD is not pushed to public origin/main"
 fi
 
 for key in marketing webApp demo canonicalApi apk; do

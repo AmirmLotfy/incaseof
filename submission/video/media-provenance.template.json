@@ -1,0 +1,42 @@
+{
+  "status": "NOT_FINAL",
+  "project": "In Case Of — ICO",
+  "producedAt": null,
+  "acceptedCommit": null,
+  "master": {
+    "path": "submission/video/final/ico-demo-master-1080p.mp4",
+    "sha256": null,
+    "durationSeconds": null,
+    "width": 1920,
+    "height": 1080
+  },
+  "narration": {
+    "path": "submission/video/final/ico-narration.wav",
+    "sha256": null,
+    "provider": null,
+    "providerResultId": null,
+    "rightsNotes": null
+  },
+  "captions": {
+    "srt": "submission/video/final/ico-demo.en.srt",
+    "vtt": "submission/video/final/ico-demo.en.vtt"
+  },
+  "thumbnail": {
+    "path": "submission/video/final/ico-youtube-thumbnail.png",
+    "sha256": null,
+    "width": 1280,
+    "height": 720
+  },
+  "timeline": {
+    "path": null,
+    "sha256": null,
+    "editor": null
+  },
+  "generatedAssets": [],
+  "productCaptures": [],
+  "music": null,
+  "notes": [
+    "Copy to submission/video/final/media-provenance.json and fill only from visible provider, file, and live-capture evidence.",
+    "Do not record account IDs, contact endpoints, tokens, private utterances, or notification payloads."
+  ]
+}

@@ -68,3 +68,8 @@ SHA-256, review decision, repair relationship and rights/license notes.
 - `media-provenance.json`
 
 Real deployed capture must be used for every claimed feature and AWS trace.
+
+Checked-in preparation now includes `narration.txt`, `EDITING-HANDOFF.md` and
+`media-provenance.template.json`. Final binaries and live-capture provenance belong in the
+Git-ignored `submission/video/final/` directory and must pass
+`scripts/verify-video-package.sh` before upload.

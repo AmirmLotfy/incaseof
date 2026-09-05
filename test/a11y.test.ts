@@ -238,6 +238,21 @@ describe("responder web accessibility", () => {
     await page.close();
   });
 
+  it("shows an explicit accessible terminal state after resolution", async () => {
+    const page = await newPage();
+    await mockIncidentApi(page);
+    await page.goto(`${BASE}/r/sample`);
+    await page.getByRole("button", { name: /checking/i }).click();
+    await page.getByRole("button", { name: /I reached Mona/i }).click();
+    await page.getByRole("heading", { name: "This check is closed" }).waitFor();
+
+    assert.equal(await page.getByText(/contact ladder has stopped/i).count(), 1);
+    assert.equal(await page.getByRole("button").count(), 0);
+    const found = await violations(page);
+    assert.deepEqual(found, [], `\n    ${found.join("\n    ")}\n`);
+    await page.close();
+  });
+
   it("the invalid-link page has none", async () => {
     const page = await newPage();
     await mockIncidentApi(page, true);

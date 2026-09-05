@@ -20,3 +20,42 @@ Required files:
 
 `scripts/build-devpost-image.sh` refuses to write the final project image until its four
 required source captures are present.
+
+## Live browser capture
+
+After the canonical deployment and AgentCore canary pass, run:
+
+```bash
+npm run capture:submission
+```
+
+The capture runner reads the canonical marketing URL from `submission/release-evidence.json`,
+requires HTTPS on `incaof.com`, refuses to run in final mode before the AgentCore canary passes,
+uses no network interception or fixtures, and records SHA-256 provenance. It captures the two
+marketing views, web preview, redacted Developer Trace, audit timeline, and all three responder
+states. Android captures remain a physical/emulator-device procedure.
+
+`ICO_CAPTURE_MODE=rehearsal ICO_CAPTURE_BASE_URL=http://127.0.0.1:3000` may be used only to
+debug selectors. Rehearsal files are not submission evidence and must never be recorded in the
+accepted manifest.
+
+The project-image compositor intentionally does not require `status: ACCEPTED`; that would create
+a circular gate because the final image itself is required before acceptance. Instead it requires
+the live AgentCore canary, resolved deployed Drill, reachable canonical URLs, and real source
+captures before writing anything.
+
+## Android capture
+
+For each Android state, navigate the signed `com.incaof.app` release to the intended screen,
+then require a unique visible phrase while capturing it:
+
+```bash
+ICO_EXPECT_TEXT='Someone notices' ./scripts/capture-android-screen.sh android-home
+ICO_EXPECT_TEXT='Review before activating' ./scripts/capture-android-screen.sh android-create
+ICO_EXPECT_TEXT='Circle' ./scripts/capture-android-screen.sh android-circle
+ICO_EXPECT_TEXT='Drill' ./scripts/capture-android-screen.sh android-drill
+```
+
+The script refuses a debug package, a background app, ambiguous device selection, missing
+expected text, and visible local/sample markers. It hashes the device serial before recording
+provenance and never writes the raw serial.

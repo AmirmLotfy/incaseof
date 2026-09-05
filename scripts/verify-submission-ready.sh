@@ -84,12 +84,13 @@ if [[ -f submission/devpost/in-case-of-project-1800x1200.png ]] && command -v ma
   [[ "$dimensions" == "1800x1200" ]] || fail "Devpost project image is not 1800x1200"
 fi
 
-for screenshot in \
-  marketing-desktop.png marketing-mobile.png web-plan-preview.png android-home.png \
-  android-create.png android-circle.png android-drill.png responder-claim.png \
-  responder-lease.png responder-resolved.png audit-timeline.png developer-trace-redacted.png; do
-  check_file "submission/screenshots/$screenshot"
-done
+if ! ./scripts/verify-screenshot-evidence.sh; then
+  fail "real screenshot evidence did not pass"
+fi
+
+if ! ./scripts/verify-video-package.sh; then
+  fail "final video production package did not pass"
+fi
 
 if [[ ${#failures[@]} -gt 0 ]]; then
   echo "SUBMISSION NOT READY (${#failures[@]} blockers)"

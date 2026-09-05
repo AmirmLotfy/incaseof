@@ -4,7 +4,7 @@
   "sourceCommitAtStart": "6ef1e7119ffc34cd3f20fb4cd27db4a0e56aa13b",
   "acceptedCommit": null,
   "tag": null,
-  "verifiedAt": "2026-09-05T01:19:12Z",
+  "verifiedAt": "2026-09-05T02:14:05Z",
   "aws": {
     "accountIdRedacted": true,
     "deploymentPrincipal": "ephemeral least-privileged IAM user; deleted after deployment",
@@ -124,8 +124,8 @@
     {
       "name": "unified-preflight",
       "status": "PASSED",
-      "verifiedAt": "2026-09-05T01:16:03Z",
-      "details": "18/18 gates; 376 Python tests; 43 CDK assertions; 43 API routes in parity; 13 Playwright browser/accessibility cases"
+      "verifiedAt": "2026-09-05T02:14:05Z",
+      "details": "18/18 gates; 376 Python tests; 43 CDK assertions; 43 API routes in parity; 14 Playwright browser/accessibility cases"
     },
     {
       "name": "github-actions",

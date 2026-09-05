@@ -64,6 +64,11 @@ Thumbs.db
 coverage/
 *.log
 
+# Final video media can contain large binaries and redacted-but-sensitive live captures.
+# Keep the checked-in production controls/templates; validate the local delivery package
+# with scripts/verify-video-package.sh before uploading it manually.
+submission/video/final/
+
 # ---- Vendored agent skills ----
 # Installed with `npx skills add referodesign/refero_skill --skill refero-design`.
 # Documentation only — 11 markdown files, no executable code — but it is a tool install

@@ -19,6 +19,7 @@
     "tokens": "npm run tokens -w @incaseof/design-tokens",
     "tokens:check": "npm run check -w @incaseof/design-tokens",
     "contracts:check": "npm run check -w @incaseof/contracts",
+    "capture:submission": "node scripts/capture-live-web.mjs",
     "test:a11y": "npm run build --workspace apps/responder --workspace apps/marketing && node --import tsx --test test/a11y.test.ts"
   },
   "engines": {

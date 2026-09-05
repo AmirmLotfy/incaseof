@@ -30,6 +30,9 @@ Before using it:
 4. Synthesize and run `cdk diff --no-change-set` with the preservation context.
 5. Refuse the rollout if the diff changes `AWS::BedrockAgentCore::Runtime`.
 6. Deploy only the `demo` environment and record the change-set ID and stack events.
+7. Run `./scripts/configure-api-domain.sh`. The script updates the single existing
+   empty-path mapping in place, fails if the mapping is ambiguous and verifies the public
+   descriptor through `https://api.incaof.com/`.
 
 The context is rejected for `dev` and `prod`, and it fails closed unless all three deployed
 values are supplied. It is not part of the final accepted deployment. After AWS restores the

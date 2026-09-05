@@ -4,10 +4,10 @@
   "sourceCommitAtStart": "6ef1e7119ffc34cd3f20fb4cd27db4a0e56aa13b",
   "acceptedCommit": null,
   "tag": null,
-  "verifiedAt": "2026-09-05T08:40:39Z",
+  "verifiedAt": "2026-09-05T08:51:06Z",
   "aws": {
     "accountIdRedacted": true,
-    "deploymentPrincipal": "ephemeral least-privileged IAM user; deleted after deployment",
+    "deploymentPrincipal": "interactive root session for non-accepted recovery rollout; protected GitHub OIDC path remains required before acceptance",
     "stackName": "IcoStack-demo",
     "stackStatus": "UPDATE_COMPLETE",
     "region": "us-east-1",
@@ -59,13 +59,24 @@
       "reason": "Per-route API Gateway invoke permissions exceeded Lambda's 20480-byte resource-policy limit; no failed route changes remained live.",
       "correctiveAction": "Use one source-scoped API-wide invoke permission and retain explicit route declarations; regression assertion added locally and rollout not retried until CI passes."
     },
-    "lastDeploymentAttempt": {
+    "previousDeploymentVerificationFailure": {
       "verifiedAt": "2026-09-05T03:35:00Z",
       "sourceCommit": "f7c73bf3b1462541eb75c2560a2fbbdc72a09795",
       "result": "STACK_UPDATE_COMPLETE_POSTDEPLOY_VERIFICATION_FAILED",
       "stackStatus": "UPDATE_COMPLETE",
       "reason": "API routes and the consolidated invoke permission deployed, but the manual recovery command had not restaged the ignored Lambda artifact; GET / reached an older handler and returned 404.",
       "correctiveAction": "Make Lambda staging an explicit CI/preflight and recovery step, rebuild the exact artifact, then redeploy and repeat live verification."
+    },
+    "lastDeploymentAttempt": {
+      "verifiedAt": "2026-09-05T08:51:06Z",
+      "sourceCommit": "da19bb6d0894523e50fc09fbec6aaf8357cb15fb",
+      "result": "PASSED_WITH_NON_ACCEPTED_ROOT_PRINCIPAL",
+      "stackStatus": "UPDATE_COMPLETE",
+      "routeCount": 53,
+      "canonicalApiDescriptor": true,
+      "demoSessionIssued": true,
+      "agentCoreRuntimePreserved": true,
+      "note": "Exact staged Lambda artifact, explicit routes and canonical API passed live verification; this recovery rollout is not acceptance evidence for least-privileged deployment."
     }
   },
   "urls": {
@@ -107,16 +118,17 @@
     ]
   },
   "liveDeterministicDrill": {
-    "verifiedAt": "2026-09-05T00:47:05Z",
+    "verifiedAt": "2026-09-05T08:51:06Z",
     "directApi": true,
+    "canonicalApi": true,
     "syntheticTenant": true,
     "timeScale": 0.02,
-    "planId": "296d2f6c-665a-4b1f-b758-1e2e1c4abf75",
-    "momentId": "4aadb215-3f52-5fd2-a707-5e0f62bdb8ed",
-    "alertId": "39d0714b-23d3-4f30-9623-1929d7dc627a",
+    "planId": "ac091772-dddf-4de0-8129-d91912eeaee7",
+    "momentId": "c9d9cf91-6146-5883-a40a-20b076212251",
+    "alertId": "2fac022e-b742-41e4-9bf0-de39e22919c9",
     "safeSinkReferences": [
-      "safe-sink:39d0714b-23d3-4f30-9623-1929d7dc627a:PUSH",
-      "safe-sink:39d0714b-23d3-4f30-9623-1929d7dc627a:SMS"
+      "safe-sink:2fac022e-b742-41e4-9bf0-de39e22919c9:PUSH",
+      "safe-sink:2fac022e-b742-41e4-9bf0-de39e22919c9:SMS"
     ],
     "terminalState": "RESOLVED",
     "auditEventCount": 11,
@@ -134,7 +146,7 @@
       "RESPONDER_VERIFIED"
     ],
     "modelCompileIncluded": false,
-    "note": "scripts/verify-live-demo-drill.sh passed against the direct demo API. The same deployed Scheduler, Step Functions, SQS worker, signed responder authorization, checking lease and explicit-resolution path completed. Plan compilation remained on the separately recorded 503 fallback."
+    "note": "scripts/verify-live-demo-drill.sh passed against canonical api.incaof.com. The deployed Scheduler, Step Functions, SQS worker, signed responder authorization, checking lease and explicit-resolution path completed. Plan compilation remains on the separately recorded 503 fallback."
   },
   "gates": [
     {
@@ -151,9 +163,9 @@
     },
     {
       "name": "android-in-app-demo",
-      "status": "LOCALLY_VERIFIED",
-      "verifiedAt": "2026-09-05T02:34:42Z",
-      "details": "Short-lived synthetic token, demo-only route rewriting, separate ViewModel identities and device-registration refusal pass local tests; deployment and device exercise remain pending"
+      "status": "BACKEND_LIVE_DEVICE_PENDING",
+      "verifiedAt": "2026-09-05T08:51:06Z",
+      "details": "Short-lived synthetic sessions and all 19 demo backend routes are live on the canonical API; separate Android demo identities and device-registration refusal pass tests, while a new installed-device exercise remains pending"
     }
   ],
   "sourceControl": {

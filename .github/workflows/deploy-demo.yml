@@ -49,6 +49,11 @@ jobs:
           -c hostedZoneId=${{ vars.ICO_HOSTED_ZONE_ID }}
           -c hostedZoneName=incaof.com
           -c pushPlatformArn=${{ vars.ICO_FCM_PLATFORM_ARN }}
+      - name: Point the canonical API mapping at this demo stack
+        env:
+          ICO_STACK_NAME: IcoStack-demo
+          ICO_API_DOMAIN: api.incaof.com
+        run: ./scripts/configure-api-domain.sh
       - name: Build and verify signed Android demo
         env:
           ICO_ANDROID_KEYSTORE_B64: ${{ secrets.ICO_ANDROID_KEYSTORE_B64 }}

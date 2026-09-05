@@ -68,6 +68,12 @@ Resources:
                 Resource:
                   - !Sub arn:${AWS::Partition}:s3:::cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}
                   - !Sub arn:${AWS::Partition}:s3:::cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/*
+              - Sid: ReadExactCdkBootstrapVersion
+                Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+                Resource: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/cdk-bootstrap/hnb659fds/version
               - Sid: ManageOnlyIcoDemoRoles
                 Effect: Allow
                 Action:

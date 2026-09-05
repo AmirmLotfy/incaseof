@@ -49,7 +49,12 @@ def decide(ctx: bootstrap.Context, alert_id: AlertId) -> dict[str, Any]:
             if row is None:
                 continue
             if row["status"] in {"PENDING", "SENDING"}:
-                return {"decision": WAIT, "seconds": 2, "reason": "DELIVERY_PENDING"}
+                return {
+                    "decision": WAIT,
+                    "seconds": 2,
+                    "reason": "DELIVERY_PENDING",
+                    "alertId": alert_id,
+                }
     alert = advance(ctx, alert, now)
 
     if alert.is_terminal:

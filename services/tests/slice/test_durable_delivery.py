@@ -89,6 +89,19 @@ def test_failed_queue_write_leaves_recoverable_intent(a_slice: Slice) -> None:
     assert len(a_slice.sender.sent) == 1
 
 
+def test_pending_delivery_wait_preserves_workflow_identity(a_slice: Slice) -> None:
+    intent = pending(a_slice, sequence=1)
+
+    decision = escalation.decide(a_slice.ctx, intent.alert_id)
+
+    assert decision == {
+        "decision": escalation.WAIT,
+        "seconds": 2,
+        "reason": "DELIVERY_PENDING",
+        "alertId": intent.alert_id,
+    }
+
+
 def test_unknown_outcome_is_not_automatically_retried(a_slice: Slice) -> None:
     intent = pending(a_slice)
 

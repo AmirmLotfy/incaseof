@@ -52,7 +52,7 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 - AWS core: `IcoStack-demo` is stable at `UPDATE_ROLLBACK_COMPLETE`; 157 resources were originally created. A rejected Nova update was safely rolled back because the account's applied `Versions per Agent` quota is zero.
 - AWS quota evidence: active AgentCore sessions were restored via approved request `451f1b8fde074b51bcb3aacaa2042ba8vNxnmcUj`; version request `b38dff125c3e4b1493e58c7fca4ed88bEgBdMI37` is `CASE_OPENED`.
 - AWS account-verification evidence: support case `178838741100092` remains `UNASSIGNED`; a factual update is prepared but has not been sent without action-time confirmation.
-- Public source evidence: commit `39327e80a1fdfbe52b393eb188a175c2ed137524` is pushed to `codex/hackathon-final`; draft PR 15 has a fully green GitHub Actions run (`33887114294`) across Python, web, Android, guardrails and infrastructure.
+- Public source evidence: commit `d1d613a1e64ea31bb4e33c5997408f2504a5df56` is pushed to `codex/hackathon-final`; draft PR 15 has a fully green GitHub Actions run (`33935674895`) across Python, web, Android, guardrails and infrastructure.
 - Live deterministic Drill: the guarded verifier created synthetic plan `296d2f6c-665a-4b1f-b758-1e2e1c4abf75`, accelerated Moment `4aadb215-3f52-5fd2-a707-5e0f62bdb8ed`, and resolved Alert `39d0714b-23d3-4f30-9623-1929d7dc627a`. Eleven deployed audit events ended `RESPONDER_VERIFIED`; worker references were restricted to `safe-sink:`. The AgentCore compile was not part of this proof and still returned the designed 503 fallback.
 - Release negative test: `assembleRelease` refuses to run without explicit backend and signing inputs.
 

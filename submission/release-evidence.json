@@ -50,6 +50,14 @@
         "caseId": "178851871600399",
         "status": "CASE_OPENED"
       }
+    },
+    "lastDeploymentAttempt": {
+      "verifiedAt": "2026-09-05T03:27:30Z",
+      "sourceCommit": "3624de83036c4b70ffc7302c3f093f9db46433f0",
+      "result": "ROLLED_BACK",
+      "stackStatus": "UPDATE_ROLLBACK_COMPLETE",
+      "reason": "Per-route API Gateway invoke permissions exceeded Lambda's 20480-byte resource-policy limit; no failed route changes remained live.",
+      "correctiveAction": "Use one source-scoped API-wide invoke permission and retain explicit route declarations; regression assertion added locally and rollout not retried until CI passes."
     }
   },
   "urls": {
@@ -125,7 +133,7 @@
       "name": "unified-preflight",
       "status": "PASSED",
       "verifiedAt": "2026-09-05T03:18:29Z",
-      "details": "18/18 gates; 377 Python tests; 44 CDK assertions; 53 API routes in parity; 14 Playwright browser/accessibility cases"
+      "details": "18/18 gates; 377 Python tests; 45 CDK assertions; 53 API routes in parity; 14 Playwright browser/accessibility cases"
     },
     {
       "name": "github-actions",

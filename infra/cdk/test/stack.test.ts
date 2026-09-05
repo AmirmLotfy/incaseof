@@ -353,6 +353,19 @@ describe("api", () => {
       );
     }
   });
+
+  it("uses one API-scoped Lambda permission instead of a statement per route", () => {
+    // Lambda resource policies are capped at 20 KiB. Route-scoped permissions crossed
+    // that hard service limit when the public judge-demo slice reached full parity.
+    const permissions = synth("demo").findResources("AWS::Lambda::Permission");
+    const apiPermissions = Object.entries(permissions).filter(
+      ([name, permission]) =>
+        name.includes("ApiHandler") &&
+        permission.Properties?.Principal === "apigateway.amazonaws.com",
+    );
+    assert.equal(apiPermissions.length, 1, "expected one invoke permission for the shared API Lambda");
+    assert.match(JSON.stringify(apiPermissions[0]?.[1].Properties?.SourceArn), /\*\/\*\/\*/);
+  });
 });
 
 describe("agentcore", () => {

@@ -44,7 +44,7 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 - Unified preflight: all 18 gates pass on 2026-09-05.
 - Python: Ruff format/lint, mypy and the full test suite pass.
 - Contract parity: 53 method/path routes agree across OpenAPI, CDK and handler; authenticated and demo Android client routes are deployed in the correct environment templates.
-- Infrastructure: 44 CDK assertions and synthesis pass, including exact Nova resources, runtime session lifecycle, AgentCore user-context invocation permissions and the demo-only quota-recovery guard.
+- Infrastructure: 45 CDK assertions and synthesis pass, including exact Nova resources, runtime session lifecycle, AgentCore user-context invocation permissions, the demo-only quota-recovery guard and the single API-scoped Lambda invocation permission.
 - Web: marketing and responder lint, typecheck and production static builds; 14 Playwright browser/accessibility cases.
 - Android: unit tests, release lint, ktlint, R8, package/signature inspection and fail-closed configuration checks pass. All 3 connected accessibility tests pass on both API 26 and API 37.
 - Android release identity: `com.incaof.app` v0.2.0 (`versionCode=2`), SHA-256 `db118074e6df54477212f2155674360a04a7b3eb69e2aacd168f6785d6cc60b3`, signing certificate SHA-256 `f12d1890545e420f5a2e10fa1475f21c2fa5463028f57fc3643daa1bc42bbd62`.

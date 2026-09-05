@@ -135,7 +135,13 @@ export class Api extends Construct {
       },
     });
 
-    const integration = new HttpLambdaIntegration("ApiIntegration", this.handler);
+    // All explicit routes share one API-scoped invoke permission. CDK's route-scoped
+    // default emits one Lambda policy statement per route; the demo surface is large
+    // enough to exceed Lambda's 20 KiB resource-policy limit. The API ID remains the
+    // trust boundary, while the route list below remains explicit and test-enforced.
+    const integration = new HttpLambdaIntegration("ApiIntegration", this.handler, {
+      scopePermissionToRoute: false,
+    });
 
     // A stable public descriptor lets hosting and judges verify that the canonical API
     // is reachable without creating an account or touching tenant state.

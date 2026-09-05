@@ -13,7 +13,7 @@ dependencies = [
     "strands-agents-tools==0.8.6",
     "google-genai==2.19.0",
     "pydantic==2.13.4",
-    "boto3==1.43.78",
+    "boto3==1.43.86",
     "aws-lambda-powertools==3.34.0",
     "jsonschema==4.26.0",
 ]

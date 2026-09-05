@@ -5,6 +5,13 @@
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 1
 
+# CI exports ANDROID_HOME. Local contributors may instead keep the SDK in the ignored
+# project directory so the gate does not depend on shell-profile state.
+if [[ -z "${ANDROID_HOME:-}" && -d "$PWD/.android-sdk/platforms" ]]; then
+  export ANDROID_HOME="$PWD/.android-sdk"
+  export ANDROID_SDK_ROOT="$ANDROID_HOME"
+fi
+
 FAILED=()
 run() {
   local label="$1"; shift
@@ -32,6 +39,7 @@ run "web: accessibility"   node --import tsx --test test/a11y.test.ts
 run "secrets"              python3 scripts/check-secrets.py
 run "phone numbers"        python3 scripts/check-phone-numbers.py
 run "anti-slop"            ./scripts/check-antislop.sh
+run "scripts: syntax"      bash -n scripts/build-agentcore-runtime.sh scripts/build-devpost-image.sh scripts/build-lambda.sh scripts/check-antislop.sh scripts/deploy-web.sh scripts/format-hook.sh scripts/preflight.sh scripts/verify-live-demo-drill.sh scripts/verify-submission-ready.sh
 run "android"              env -C android ./gradlew --no-build-cache --no-configuration-cache --quiet assembleDebug testDebugUnitTest lintDebug ktlintCheck
 run "agentcore: artifact"  ./scripts/build-agentcore-runtime.sh
 run "infra: tests"         npm run test -w @incaseof/infra --silent

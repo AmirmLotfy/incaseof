@@ -35,8 +35,10 @@ export interface MomentSummary {
   planId: string;
   planLabel: string;
   dueAt: string;
+  graceUntil: string;
   status: string;
   isDrill: boolean;
+  timeScale: number;
   alertId: string | null;
   alertState: string | null;
 }

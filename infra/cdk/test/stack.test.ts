@@ -247,7 +247,7 @@ describe("api", () => {
     assert.ok(Object.keys(routes).length >= 9, "expected the v1 routes");
     for (const [name, route] of Object.entries(routes)) {
       const key = String(route.Properties?.RouteKey);
-      if (key.includes("/r/") || key.includes("/i/") || key.includes("/demo/")) continue;
+      if (key === "GET /" || key.includes("/r/") || key.includes("/i/") || key.includes("/demo/")) continue;
       assert.equal(
         route.Properties?.AuthorizationType,
         "JWT",
@@ -256,7 +256,7 @@ describe("api", () => {
     }
   });
 
-  it("leaves exactly the responder routes unauthenticated, and no others", () => {
+  it("leaves exactly the service descriptor and responder routes unauthenticated", () => {
     // The signed single-Alert token is the credential, validated in the handler where
     // consent and membership can be re-checked too. This asserts the exception stays an
     // exception: a new route cannot join the unauthenticated set by accident.
@@ -267,6 +267,7 @@ describe("api", () => {
       .sort();
 
     assert.deepEqual(open, [
+      "GET /",
       "GET /i/{signedToken}",
       "GET /r/{signedToken}",
       "POST /v1/i/{signedToken}/accept",
@@ -288,9 +289,10 @@ describe("api", () => {
     // An unauthenticated route whose path carries no token would be open to everyone.
     const routes = synth().findResources("AWS::ApiGatewayV2::Route");
     for (const route of Object.values(routes)) {
-      if (route.Properties?.AuthorizationType === "JWT") continue;
+      const key = String(route.Properties?.RouteKey);
+      if (route.Properties?.AuthorizationType === "JWT" || key === "GET /") continue;
       assert.match(
-        String(route.Properties?.RouteKey),
+        key,
         /\{signedToken\}/,
         "an unauthenticated route takes no token",
       );
@@ -299,7 +301,11 @@ describe("api", () => {
     const demoRoutes = synth("demo").findResources("AWS::ApiGatewayV2::Route");
     for (const route of Object.values(demoRoutes)) {
       const key = String(route.Properties?.RouteKey);
-      if (route.Properties?.AuthorizationType === "JWT" || key.includes("/demo/")) continue;
+      if (
+        route.Properties?.AuthorizationType === "JWT" ||
+        key === "GET /" ||
+        key.includes("/demo/")
+      ) continue;
       assert.match(key, /\{signedToken\}/);
     }
   });

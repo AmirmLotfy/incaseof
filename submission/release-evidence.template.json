@@ -41,6 +41,7 @@
   "gates": [],
   "screenshots": [],
   "videoUrl": null,
+  "blogUrls": [],
   "builderIdSupplied": false,
-  "notes": ["Copy this template to release-evidence.json only after live acceptance."]
+  "notes": ["Keep status NOT_ACCEPTED until scripts/verify-submission-ready.sh passes."]
 }

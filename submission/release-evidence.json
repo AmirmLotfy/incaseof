@@ -4,7 +4,7 @@
   "sourceCommitAtStart": "6ef1e7119ffc34cd3f20fb4cd27db4a0e56aa13b",
   "acceptedCommit": null,
   "tag": null,
-  "verifiedAt": "2026-09-04T15:00:53Z",
+  "verifiedAt": "2026-09-05T00:47:05Z",
   "aws": {
     "accountIdRedacted": true,
     "deploymentPrincipal": "ephemeral least-privileged IAM user; deleted after deployment",
@@ -75,7 +75,7 @@
   },
   "canary": {
     "sourceModelId": "us.amazon.nova-2-lite-v1:0",
-    "deployedModelId": "us.anthropic.claude-sonnet-4-6",
+    "deployedLegacyModelId": "us.anthropic.claude-sonnet-4-6",
     "runtimeInitializationReached": true,
     "runtimeReadyForRequest": false,
     "runtimeInvocationId": null,
@@ -88,27 +88,57 @@
       "Direct Bedrock inference returns Operation not allowed pending AWS account verification."
     ]
   },
+  "liveDeterministicDrill": {
+    "verifiedAt": "2026-09-05T00:47:05Z",
+    "directApi": true,
+    "syntheticTenant": true,
+    "timeScale": 0.02,
+    "planId": "296d2f6c-665a-4b1f-b758-1e2e1c4abf75",
+    "momentId": "4aadb215-3f52-5fd2-a707-5e0f62bdb8ed",
+    "alertId": "39d0714b-23d3-4f30-9623-1929d7dc627a",
+    "safeSinkReferences": [
+      "safe-sink:39d0714b-23d3-4f30-9623-1929d7dc627a:PUSH",
+      "safe-sink:39d0714b-23d3-4f30-9623-1929d7dc627a:SMS"
+    ],
+    "terminalState": "RESOLVED",
+    "auditEventCount": 11,
+    "auditEvents": [
+      "MOMENT_DUE",
+      "STATE_SELF_CONTACT",
+      "ACTION_QUEUED",
+      "ACTION_ACCEPTED",
+      "ACTION_QUEUED",
+      "ACTION_ACCEPTED",
+      "ACTION_QUEUED",
+      "ACTION_ACCEPTED",
+      "STATE_CIRCLE_ESCALATION",
+      "ALERT_CLAIMED",
+      "RESPONDER_VERIFIED"
+    ],
+    "modelCompileIncluded": false,
+    "note": "scripts/verify-live-demo-drill.sh passed against the direct demo API. The same deployed Scheduler, Step Functions, SQS worker, signed responder authorization, checking lease and explicit-resolution path completed. Plan compilation remained on the separately recorded 503 fallback."
+  },
   "gates": [
     {
       "name": "unified-preflight",
       "status": "PASSED",
-      "verifiedAt": "2026-09-04T10:57:00Z",
-      "details": "17/17 gates; 375 Python tests; 43 CDK assertions; 42 API routes in parity; 12 Playwright accessibility cases"
+      "verifiedAt": "2026-09-05T01:16:03Z",
+      "details": "18/18 gates; 376 Python tests; 43 CDK assertions; 43 API routes in parity; 13 Playwright browser/accessibility cases"
     },
     {
       "name": "github-actions",
       "status": "PASSED",
-      "verifiedAt": "2026-09-04T15:00:53Z",
-      "details": "Run 33886624526; Python, Web, Android, Guardrails and Infrastructure all passed on commit 4850bd00b0b8776c848770db4df6859962c9bb82"
+      "verifiedAt": "2026-09-04T15:04:54Z",
+      "details": "Run 33887114294; Python, Web, Android, Guardrails and Infrastructure all passed on commit 39327e80a1fdfbe52b393eb188a175c2ed137524"
     }
   ],
   "sourceControl": {
     "branch": "codex/hackathon-final",
-    "headCommit": "4850bd00b0b8776c848770db4df6859962c9bb82",
+    "headCommitAtLastGreenRun": "39327e80a1fdfbe52b393eb188a175c2ed137524",
     "publicBranchPushed": true,
     "pullRequest": "https://github.com/AmirmLotfy/incaseof/pull/15",
     "pullRequestState": "DRAFT",
-    "githubActionsRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/33886624526"
+    "githubActionsRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/33887114294"
   },
   "artifacts": {
     "architecturePngSha256": "07261fbe70c5be2a02f9088d3ccf5dd0577aaa49cf1a2c5278c412e3d2ef0509",
@@ -122,6 +152,7 @@
     ]
   },
   "videoUrl": null,
+  "blogUrls": [],
   "builderIdSupplied": false,
   "notes": [
     "This is a truthful partial evidence manifest, not an acceptance record.",

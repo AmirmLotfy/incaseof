@@ -44,10 +44,10 @@ jq -n \
   '{apiUrl: $apiUrl, cognitoDomain: $cognitoDomain, webClientId: $webClientId}' \
   > "$runtime_dir/runtime-config.json"
 
-aws s3 sync apps/marketing/out "s3://$marketing_bucket" --only-show-errors
+aws s3 sync apps/marketing/out "s3://$marketing_bucket" --delete --only-show-errors
 aws s3 cp "$runtime_dir/runtime-config.json" "s3://$marketing_bucket/runtime-config.json" \
   --cache-control 'no-store' --content-type 'application/json' --only-show-errors
-aws s3 sync apps/responder/out "s3://$responder_bucket" --only-show-errors
+aws s3 sync apps/responder/out "s3://$responder_bucket" --delete --only-show-errors
 aws cloudfront create-invalidation --distribution-id "$distribution_id" --paths '/*' >/dev/null
 
 echo "Static clients published through CloudFront."

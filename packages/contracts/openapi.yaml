@@ -19,6 +19,7 @@ servers:
   - url: https://api.incaof.com
 
 tags:
+  - name: service
   - name: plans
   - name: moments
   - name: circle
@@ -28,6 +29,24 @@ tags:
   - name: demo
 
 paths:
+  /:
+    get:
+      tags: [service]
+      summary: Describe the public API without exposing tenant data
+      security: []
+      responses:
+        "200":
+          description: API descriptor
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [service, status, productBoundary]
+                properties:
+                  service: { const: "In Case Of API" }
+                  status: { const: "ok" }
+                  productBoundary: { type: string }
+
   /v1/plans/compile:
     post:
       tags: [plans]

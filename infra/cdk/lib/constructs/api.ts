@@ -137,6 +137,18 @@ export class Api extends Construct {
 
     const integration = new HttpLambdaIntegration("ApiIntegration", this.handler);
 
+    // A stable public descriptor lets hosting and judges verify that the canonical API
+    // is reachable without creating an account or touching tenant state.
+    const service: Array<[string, apigw.HttpMethod]> = [["/", apigw.HttpMethod.GET]];
+    for (const [routePath, method] of service) {
+      this.httpApi.addRoutes({
+        path: routePath,
+        methods: [method],
+        integration,
+        authorizer: new apigw.HttpNoneAuthorizer(),
+      });
+    }
+
     // Routes are declared explicitly rather than as a proxy. A proxy route would let a
     // path reach the handler before anyone decided it should exist, and this is the
     // surface where "what can be asked for" is a security property.

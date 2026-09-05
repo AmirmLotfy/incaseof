@@ -218,6 +218,30 @@ button:focus-visible {
   gap: 1rem;
 }
 
+.app-actions,
+.app-plan-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+.app-actions {
+  margin-top: 1.25rem;
+}
+
+.app-actions .app-button {
+  margin-top: 0;
+}
+
+.app-plan-actions {
+  justify-content: flex-end;
+}
+
+.app-invitation {
+  margin-top: 1rem;
+}
+
 .app-plan {
   border-top: 1px solid var(--ico-stone);
   padding-top: 1rem;

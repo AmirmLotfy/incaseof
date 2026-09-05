@@ -118,6 +118,92 @@ async function mockIncidentApi(page: Page, invalid = false): Promise<void> {
   }));
 }
 
+async function mockConfiguredApp(page: Page, calls: string[]): Promise<void> {
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem("ico.web.access-token", "synthetic-test-token");
+  });
+  await page.route("**/runtime-config.json", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({
+      apiUrl: "https://api.test.invalid",
+      cognitoDomain: "auth.test.invalid",
+      webClientId: "web-test",
+    }),
+  }));
+  await page.route("https://api.test.invalid/**", async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    if (request.method() === "OPTIONS") {
+      return route.fulfill({
+        status: 204,
+        headers: {
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET,POST,DELETE,OPTIONS",
+          "access-control-allow-headers": "authorization,content-type,idempotency-key",
+        },
+        body: "",
+      });
+    }
+    calls.push(`${request.method()} ${url.pathname}`);
+
+    assert.equal(request.headers().authorization, "Bearer synthetic-test-token");
+    if (request.method() !== "GET") {
+      assert.ok(request.headers()["idempotency-key"], `${url.pathname} omitted Idempotency-Key`);
+    }
+
+    const json = (body: unknown, status = 200) => route.fulfill({
+      status,
+      contentType: "application/json",
+      headers: { "access-control-allow-origin": "*" },
+      body: JSON.stringify(body),
+    });
+    if (request.method() === "GET" && url.pathname === "/v1/plans") {
+      return json({ plans: [{ planId: "plan-1", label: "Evening check", type: "ROUTINE", active: true, paused: false }] });
+    }
+    if (request.method() === "GET" && url.pathname === "/v1/moments/next") {
+      return json({
+        momentId: "moment-1",
+        planId: "plan-1",
+        planLabel: "Evening check",
+        dueAt: new Date(Date.now() - 60_000).toISOString(),
+        graceUntil: new Date(Date.now() + 9 * 60_000).toISOString(),
+        status: "DUE",
+        isDrill: true,
+        timeScale: 0.02,
+        alertId: "alert-1",
+        alertState: "SELF_CONTACT",
+      });
+    }
+    if (request.method() === "GET" && url.pathname === "/v1/circle") {
+      return json({ members: [{ memberId: "member-1", displayName: "Maya", relationship: "Sister", role: "PRIMARY", status: "ACCEPTED" }] });
+    }
+    if (request.method() === "GET" && url.pathname === "/v1/history") {
+      return json({ history: [] });
+    }
+    if (request.method() === "POST" && url.pathname.endsWith("/confirm")) {
+      return json({ alertId: "alert-1", state: "RESOLVED" });
+    }
+    if (request.method() === "POST" && url.pathname.endsWith("/extend")) {
+      assert.equal((request.postDataJSON() as { seconds: number }).seconds, 1800);
+      return json({ momentId: "moment-1", dueAt: new Date().toISOString(), graceUntil: new Date().toISOString() });
+    }
+    if (request.method() === "POST" && url.pathname.endsWith("/cancel")) {
+      return json({ momentId: "moment-1", status: "CANCELLED" });
+    }
+    if (request.method() === "DELETE" && url.pathname === "/v1/circle/members/member-1") {
+      return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" }, body: "" });
+    }
+    if (request.method() === "POST" && url.pathname === "/v1/circle/invitations") {
+      return json({ invitationId: "invite-1", status: "PENDING", inviteUrl: "https://incaof.com/i/synthetic" }, 201);
+    }
+    if (request.method() === "POST" && url.pathname === "/v1/circle/invitations/invite-1/resend") {
+      return json({ invitationId: "invite-1", status: "PENDING", inviteUrl: "https://incaof.com/i/refreshed" });
+    }
+    return json({ title: "Unexpected test route" }, 501);
+  });
+}
+
 async function violations(page: Page) {
   const result = await new AxeBuilder({ page }).withTags(STANDARD).analyze();
   return result.violations.map(
@@ -267,6 +353,40 @@ describe("marketing site accessibility", () => {
       await page.close();
     });
   }
+
+  it("the configured web app exposes real Moment and Circle mutations", async () => {
+    const page = await newPage();
+    const calls: string[] = [];
+    await mockConfiguredApp(page, calls);
+    page.on("dialog", (dialog) => void dialog.accept());
+    await page.goto(`${MARKETING}/app`);
+    await page.getByRole("heading", { name: "Plans" }).waitFor();
+
+    const found = await violations(page);
+    assert.deepEqual(found, [], `\n    ${found.join("\n    ")}\n`);
+
+    for (const [label, method, path] of [
+      [/I.m okay/i, "POST", "/v1/moments/moment-1/confirm"],
+      [/Give me 30 minutes/i, "POST", "/v1/moments/moment-1/extend"],
+      [/Cancel this moment/i, "POST", "/v1/moments/moment-1/cancel"],
+      [/Remove/i, "DELETE", "/v1/circle/members/member-1"],
+    ] as const) {
+      const expected = `${method} ${path}`;
+      await Promise.all([
+        page.waitForRequest((request) => request.method() === method && new URL(request.url()).pathname === path),
+        page.getByRole("button", { name: label }).click(),
+      ]);
+      assert.ok(calls.includes(expected), `${expected} was not called`);
+    }
+
+    await page.getByLabel("Invite someone").fill("Omar");
+    await page.getByRole("button", { name: "Create invitation" }).click();
+    await page.getByRole("button", { name: "Refresh consent link" }).waitFor();
+    await page.getByRole("button", { name: "Refresh consent link" }).click();
+    assert.ok(calls.includes("POST /v1/circle/invitations"));
+    assert.ok(calls.includes("POST /v1/circle/invitations/invite-1/resend"));
+    await page.close();
+  });
 
   for (const [label, width, height] of [
     ["a small phone", 320, 568],

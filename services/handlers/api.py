@@ -115,8 +115,18 @@ def handler(event: dict[str, Any], _context: Any = None) -> dict[str, Any]:
 
 
 def _dispatch(event: dict[str, Any]) -> dict[str, Any]:
-    ctx = bootstrap.build()
     route = event.get("routeKey", "")
+    if route == "GET /":
+        return _response(
+            200,
+            {
+                "service": "In Case Of API",
+                "status": "ok",
+                "productBoundary": "Monitors expected moments, not people.",
+            },
+        )
+
+    ctx = bootstrap.build()
     params = event.get("pathParameters") or {}
 
     if (

@@ -2,9 +2,9 @@
 
 **Someone notices.**
 
-In Case of is an Android-first autonomous personal safety agent. Tell it what should happen. If an
-expected Moment does not happen, In Case of starts with you and works through the Circle you
-approved until the uncertainty is resolved.
+In Case of is an Android-first contingency utility. Tell it what should happen. If an expected
+Moment does not happen, In Case of starts with you and works through the Circle you approved until
+the uncertainty is resolved.
 
 **It monitors the plan, not the person.**
 
@@ -159,7 +159,7 @@ stateDiagram-v2
 
     CIRCLE_ESCALATION --> ESCALATION_EXHAUSTED: All Circle Rungs Contacted
     RESOLVED --> [*]: Loop Closed (Terminal)
-    ESCALATION_EXHAUSTED --> [*]: Emergency Logged (Terminal)
+    ESCALATION_EXHAUSTED --> [*]: Unresolved Outcome Recorded (Terminal)
 ```
 
 ---

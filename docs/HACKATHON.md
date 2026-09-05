@@ -7,9 +7,9 @@ In Case Of closes uncertainty; it does not decide whether someone is in danger.
 
 ## General information
 
-**Project name:** In Case Of - ICO
+**Project name:** In Case Of — ICO (16/50 characters)
 
-**Elevator pitch:** ICO quietly watches expected moments, takes safe action through governed AWS agents, and asks for human judgment only when it matters.
+**Elevator pitch:** ICO quietly watches expected moments, takes safe action through governed AWS agents, and asks for human judgment only when it matters. (134/200 characters)
 
 **Track:** Everyday Agents
 
@@ -18,6 +18,27 @@ In Case Of closes uncertainty; it does not decide whether someone is in danger.
 **Live demo:** https://incaof.com/demo
 
 **Android:** https://incaof.com/downloads/in-case-of.apk
+
+**Try it out links:**
+
+- Live judge demo: https://incaof.com/demo
+- Authenticated web app: https://incaof.com/app
+- Android demo APK: https://incaof.com/downloads/in-case-of.apk
+- Public source: https://github.com/AmirmLotfy/incaseof
+
+**Public code-repository URL:** https://github.com/AmirmLotfy/incaseof
+
+**Project image:** `submission/devpost/in-case-of-project-1800x1200.png` — generate only
+after the accepted live captures exist.
+
+**Architecture upload:** `submission/architecture/in-case-of-architecture.png` (required);
+the editable SVG and one-page PDF are beside it.
+
+**AWS Builder ID:** `[USER INPUT REQUIRED]`
+
+**Public demo-video URL:** `[USER INPUT REQUIRED AFTER YOUTUBE/VIMEO UPLOAD]`
+
+**Optional builder.aws post URLs:** `[PUBLISH AFTER LIVE ACCEPTANCE; RECORD AT LEAST ONE]`
 
 ## About the project
 
@@ -71,3 +92,10 @@ Python, TypeScript, Kotlin, Jetpack Compose, Next.js, Strands Agents SDK, Amazon
 8. Optionally install the signed APK and choose **Try judge demo**.
 
 No payment or personal phone number is required. Demo identities are synthetic, delivery is redirected to a safe sink, and tokens shown in Developer Trace are redacted.
+
+## Screenshot uploads
+
+Use the real deployed captures listed in `submission/screenshots/README.md`. The minimum gallery
+sequence is: marketing desktop/mobile, web plan preview, Android home/create/Circle/Drill,
+responder claim/lease/resolve, audit timeline, and redacted Developer Trace. Do not upload emulator
+captures containing unrelated system notifications or any image assembled from fabricated UI.

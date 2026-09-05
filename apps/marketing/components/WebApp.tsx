@@ -27,7 +27,7 @@ export function WebApp() {
   const [inviteName, setInviteName] = useState("");
   const [inviteRelationship, setInviteRelationship] = useState("");
   const [inviteRole, setInviteRole] = useState<CircleMemberSummary["role"]>("PRIMARY");
-  const [inviteUrl, setInviteUrl] = useState("");
+  const [pendingInvitation, setPendingInvitation] = useState<InvitationSummary | null>(null);
   const [utterance, setUtterance] = useState("Check on me every evening at 9 PM.");
   const [preview, setPreview] = useState<CompileResult | null>(null);
   const [busy, setBusy] = useState(false);
@@ -154,6 +154,50 @@ export function WebApp() {
             <h3>{moment.planLabel}</h3>
             <p className="mono">{new Date(moment.dueAt).toLocaleString()}</p>
             <p>{moment.alertState ?? moment.status}{moment.isDrill ? " · Drill" : ""}</p>
+            <div className="app-actions" aria-label="Expected moment actions">
+              {moment.alertId && moment.alertState !== "RESOLVED" && moment.alertState !== "CANCELLED" && (
+                <button
+                  className="cta app-button"
+                  disabled={busy}
+                  onClick={() => run(async () => {
+                    await api(config as RuntimeConfig, accessToken, `/v1/moments/${moment.momentId}/confirm`, {
+                      method: "POST",
+                      headers: { "idempotency-key": idempotencyKey() },
+                    });
+                    setNotice("You confirmed this moment. The Alert is resolved.");
+                    await refresh(config as RuntimeConfig, accessToken);
+                  })}
+                >I’m okay</button>
+              )}
+              <button
+                className="app-link"
+                disabled={busy || moment.status === "CANCELLED" || moment.status === "RESOLVED"}
+                onClick={() => run(async () => {
+                  await api(config as RuntimeConfig, accessToken, `/v1/moments/${moment.momentId}/extend`, {
+                    method: "POST",
+                    headers: { "idempotency-key": idempotencyKey() },
+                    body: JSON.stringify({ seconds: 1800 }),
+                  });
+                  setNotice("This moment was moved 30 minutes. The plan itself did not change.");
+                  await refresh(config as RuntimeConfig, accessToken);
+                })}
+              >Give me 30 minutes</button>
+              <button
+                className="app-link"
+                disabled={busy || moment.status === "CANCELLED" || moment.status === "RESOLVED"}
+                onClick={() => {
+                  if (!window.confirm("Cancel this expected moment? This does not delete or pause the plan.")) return;
+                  void run(async () => {
+                    await api(config as RuntimeConfig, accessToken, `/v1/moments/${moment.momentId}/cancel`, {
+                      method: "POST",
+                      headers: { "idempotency-key": idempotencyKey() },
+                    });
+                    setNotice("This expected moment was cancelled. The plan remains available.");
+                    await refresh(config as RuntimeConfig, accessToken);
+                  });
+                }}
+              >Cancel this moment</button>
+            </div>
           </div>
         ) : <p className="app-muted">Nothing is expected right now.</p>}
         <div className="app-plan-list">
@@ -197,7 +241,26 @@ export function WebApp() {
               {circle.map((member) => (
                 <li key={member.memberId} className="app-plan">
                   <div><h3>{member.displayName}</h3><p>{member.relationship || "Circle member"} · {member.role}</p></div>
-                  <span className="mono">{member.status}</span>
+                  <div className="app-plan-actions">
+                    <span className="mono">{member.status}</span>
+                    {member.status !== "REMOVED" && (
+                      <button
+                        className="app-link"
+                        disabled={busy}
+                        onClick={() => {
+                          if (!window.confirm(`Remove ${member.displayName} from your Circle? Their active consent will be withdrawn.`)) return;
+                          void run(async () => {
+                            await api(config as RuntimeConfig, accessToken, `/v1/circle/members/${member.memberId}`, {
+                              method: "DELETE",
+                              headers: { "idempotency-key": idempotencyKey() },
+                            });
+                            setNotice(`${member.displayName} was removed and their active consent was withdrawn.`);
+                            await refresh(config as RuntimeConfig, accessToken);
+                          });
+                        }}
+                      >Remove</button>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>
@@ -215,11 +278,23 @@ export function WebApp() {
               body: JSON.stringify({ displayName: inviteName.trim(), relationship: inviteRelationship.trim() || null, role: inviteRole }),
             });
             setInviteName(""); setInviteRelationship("");
-            setInviteUrl(invitation.inviteUrl);
+            setPendingInvitation(invitation);
             setNotice("Invitation created. Share the scoped link; consent is still pending.");
             await refresh(config as RuntimeConfig, accessToken);
           })}>Create invitation</button>
-          {inviteUrl && <p className="app-muted">Consent link: <a href={inviteUrl} target="_blank" rel="noreferrer">Open or copy invitation</a></p>}
+          {pendingInvitation && (
+            <div className="app-invitation" aria-live="polite">
+              <p className="app-muted">Consent link: <a href={pendingInvitation.inviteUrl} target="_blank" rel="noreferrer">Open or copy invitation</a></p>
+              <button className="app-link" disabled={busy} onClick={() => run(async () => {
+                const refreshed = await api<InvitationSummary>(config as RuntimeConfig, accessToken, `/v1/circle/invitations/${pendingInvitation.invitationId}/resend`, {
+                  method: "POST",
+                  headers: { "idempotency-key": idempotencyKey() },
+                });
+                setPendingInvitation(refreshed);
+                setNotice("A fresh seven-day consent link is ready. The previous link no longer needs to be shared.");
+              })}>Refresh consent link</button>
+            </div>
+          )}
         </div>
 
         <div className="app-section">

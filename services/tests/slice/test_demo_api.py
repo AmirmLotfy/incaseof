@@ -29,6 +29,23 @@ def _body(response: dict[str, Any]) -> dict[str, Any]:
     return cast(dict[str, Any], json.loads(response["body"]))
 
 
+def test_service_descriptor_is_public_and_side_effect_free(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def unexpected_bootstrap() -> None:
+        pytest.fail("the public descriptor must not bootstrap tenant infrastructure")
+
+    monkeypatch.setattr(bootstrap, "build", unexpected_bootstrap)
+    response = api.handler(_call("GET /"))
+
+    assert response["statusCode"] == 200
+    assert _body(response) == {
+        "service": "In Case Of API",
+        "status": "ok",
+        "productBoundary": "Monitors expected moments, not people.",
+    }
+
+
 def test_public_demo_session_is_isolated_and_runs_real_plan_handlers(
     a_slice: Slice,
     monkeypatch: pytest.MonkeyPatch,

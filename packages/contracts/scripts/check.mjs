@@ -51,7 +51,7 @@ for (const [path, operations] of Object.entries(spec.paths ?? {})) {
 const apiMd = readFileSync(join(repoRoot, "docs", "API.md"), "utf8");
 const documented = new Set();
 for (const line of apiMd.split("\n")) {
-  const m = line.match(/^\s*(GET|POST|PUT|PATCH|DELETE)\s+(\/\S+)/);
+  const m = line.match(/^\s*(GET|POST|PUT|PATCH|DELETE)\s+(\/\S*)/);
   if (m) documented.add(`${m[1]} ${shape(m[2])}`);
 }
 

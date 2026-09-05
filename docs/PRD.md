@@ -18,8 +18,8 @@ wearables, activity tracking).
 There is a useful layer between them. A person can say *"this is what I expect to happen,"* and
 if it does not happen, software can quietly start resolving the uncertainty.
 
-> **In Case of is an autonomous personal safety agent that watches for expected moments in
-> someone's life and works to close the loop when one does not happen.**
+> **In Case of is a contingency utility that watches for expected moments in someone's life and
+> works to close the loop when one does not happen.**
 
 It does **nothing** while everything is normal. When an expected event is unresolved it can:
 
@@ -195,8 +195,8 @@ with the worked example in `packages/test-fixtures/`.
 
 ## 10. Functional scope
 
-**Authentication (P0):** email or phone via Cognito, profile, timezone, locale, verified mobile
-number. *Later:* passkeys, Google sign-in. Hackathon success must not depend on complex auth.
+**Authentication (P0):** email via Cognito, profile, timezone and locale. *Later:* passkeys,
+phone sign-in and Google sign-in. Hackathon success must not depend on complex auth.
 
 **Circle:** display name, relationship label, priority, verified phone, supported channels,
 accepted status, plan permissions, context permissions.
@@ -207,13 +207,13 @@ source, permissions, relevant Plan, and policy version.
 **Responders need no app.** Hard requirement. Channels: SMS, WhatsApp (P1), voice (P1), and a
 signed web link that works without sign-up for that one Alert.
 
-**Resolution methods:** self-confirmation · trusted verification · verified call response. Every
+**Resolution methods:** explicit self-confirmation · explicit trusted verification. Every
 resolution records who, when, how, source, plan version, incident id.
 
-**Drill Mode:** *Test this plan* runs the **same production workflow engine** with an accelerated
+**Drill Mode:** *Test this plan* runs the **same deployed workflow engine** with an accelerated
 schedule. There is no fake demo code path — see `docs/DEMO.md`.
 
-**Plan Health:** objective facts only (`2/2 Circle members verified`, `Voice tested Aug 20`).
+**Plan Health:** objective facts only (`2/2 Circle members verified`, `Push tested Aug 20`).
 Never an AI score like "Safety 92/100."
 
 ---

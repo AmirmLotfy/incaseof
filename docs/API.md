@@ -10,6 +10,12 @@ token audiences. The machine-readable definition lives in `packages/contracts/op
 
 ---
 
+## Public service
+
+```text
+GET    /      service descriptor; no tenant data
+```
+
 ## Plans
 
 ```

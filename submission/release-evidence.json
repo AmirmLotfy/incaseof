@@ -4,7 +4,7 @@
   "sourceCommitAtStart": "6ef1e7119ffc34cd3f20fb4cd27db4a0e56aa13b",
   "acceptedCommit": null,
   "tag": null,
-  "verifiedAt": "2026-09-05T12:37:01Z",
+  "verifiedAt": "2026-09-05T21:03:56Z",
   "aws": {
     "accountIdRedacted": true,
     "deploymentPrincipal": "protected GitHub OIDC role ico-github-demo-deploy with project-specific CloudFormation executor ico-demo-cfn-exec; no long-lived AWS access key",
@@ -17,9 +17,9 @@
       "protectedEnvironment": "demo",
       "requiredReviewPassed": true,
       "immutableRepositorySubjectPinned": true,
-      "verificationRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/33966283739",
+      "verificationRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/33991694814",
       "verificationAttempt": 1,
-      "verifiedAt": "2026-09-05T12:35:13Z",
+      "verifiedAt": "2026-09-05T21:01:52Z",
       "canonicalApiVerified": true,
       "fullCdkDeploymentVerified": true,
       "cloudFormationExecutionRole": "ico-demo-cfn-exec",
@@ -82,15 +82,23 @@
       "correctiveAction": "Make Lambda staging an explicit CI/preflight and recovery step, rebuild the exact artifact, then redeploy and repeat live verification."
     },
     "lastDeploymentAttempt": {
-      "verifiedAt": "2026-09-05T12:35:13Z",
-      "sourceCommit": "a99fefda3254ac27bd83f6b4d776752f16bb0c5f",
+      "verifiedAt": "2026-09-05T21:01:52Z",
+      "sourceCommit": "864a16827005d7e4f5e824194a25793ed6c3ad85",
       "result": "PASSED_QUOTA_SAFE_OIDC_SCOPED_ROLES",
       "stackStatus": "UPDATE_COMPLETE",
       "routeCount": 53,
       "canonicalApiDescriptor": true,
       "demoSessionIssued": true,
       "agentCoreRuntimePreserved": true,
-      "note": "Reviewer-gated GitHub Actions run 33966283739 built exact artifacts from the Nova source commit, deployed through short-lived OIDC credentials and ico-demo-cfn-exec, preserved the quota-blocked AgentCore Runtime exactly, and passed the canonical API check. A normal runtime rollout remains blocked until the version quota is restored."
+      "note": "Reviewer-gated GitHub Actions run 33991694814 built exact artifacts, deployed the durable delivery repair through short-lived OIDC credentials and ico-demo-cfn-exec, preserved the quota-blocked AgentCore Runtime exactly, and passed the canonical API check. A normal runtime rollout remains blocked until the version quota is restored."
+    },
+    "deliveryRepair": {
+      "sourceCommit": "864a16827005d7e4f5e824194a25793ed6c3ad85",
+      "deploymentRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/33991694814",
+      "outboxRecoverySchedule": "ENABLED_RATE_1_MINUTE",
+      "actionQueueVisibilityTimeoutSeconds": 360,
+      "agentCoreRuntimePreserved": true,
+      "liveDrillPassed": true
     }
   },
   "urls": {
@@ -135,20 +143,22 @@
     ]
   },
   "liveDeterministicDrill": {
-    "verifiedAt": "2026-09-05T12:37:01Z",
+    "verifiedAt": "2026-09-05T21:03:56Z",
     "directApi": true,
-    "canonicalApi": true,
+    "canonicalApi": false,
+    "canonicalApiMappingVerified": true,
     "syntheticTenant": true,
     "timeScale": 0.02,
-    "planId": "5ed67d2c-6c78-421c-a460-2b67aaa77a36",
-    "momentId": "87e1a9bf-a721-57c5-aa15-69ca5bbc1fc4",
-    "alertId": "1ebed127-aa00-498b-96d6-9cece5bfc9bd",
+    "planId": "8870c8dc-3c80-40ec-a189-c64afa5ab84a",
+    "momentId": "36c1810a-380f-5d27-8273-8a62c64f367e",
+    "alertId": "84d3d2cd-1c6a-4abc-ac7e-a517f6f6cc37",
+    "workflowExecutionArnRedacted": "arn:aws:states:us-east-1:<account-id-redacted>:execution:WorkflowEscalation797C0498-vkUJVS19c0Dm:alert-84d3d2cd-1c6a-4abc-ac7e-a517f6f6cc37",
     "safeSinkReferences": [
-      "safe-sink:1ebed127-aa00-498b-96d6-9cece5bfc9bd:PUSH",
-      "safe-sink:1ebed127-aa00-498b-96d6-9cece5bfc9bd:SMS"
+      "safe-sink:84d3d2cd-1c6a-4abc-ac7e-a517f6f6cc37:PUSH",
+      "safe-sink:84d3d2cd-1c6a-4abc-ac7e-a517f6f6cc37:SMS"
     ],
     "terminalState": "RESOLVED",
-    "auditEventCount": 11,
+    "auditEventCount": 13,
     "auditEvents": [
       "MOMENT_DUE",
       "STATE_SELF_CONTACT",
@@ -159,30 +169,35 @@
       "ACTION_QUEUED",
       "ACTION_ACCEPTED",
       "STATE_CIRCLE_ESCALATION",
+      "ACTION_QUEUED",
+      "ACTION_ACCEPTED",
       "ALERT_CLAIMED",
       "RESPONDER_VERIFIED"
     ],
+    "durableOutboxRows": 4,
+    "durableOutboxUniqueKeys": 4,
+    "durableOutboxTerminalStatuses": ["ACCEPTED", "ACCEPTED", "ACCEPTED", "ACCEPTED"],
     "modelCompileIncluded": false,
-    "note": "scripts/verify-live-demo-drill.sh passed against canonical api.incaof.com after the scoped-role OIDC deployment. The deployed Scheduler, Step Functions, SQS worker, signed responder authorization, checking lease and explicit-resolution path completed. Plan compilation remains on the separately recorded 503 fallback."
+    "note": "scripts/verify-live-demo-drill.sh passed against the deployed direct API after scoped-role OIDC run 33991694814. The deployed Scheduler, Step Functions, SQS worker, durable outbox, signed responder authorization, checking lease and explicit-resolution path completed at the Alert boundary. Plan compilation remains on the separately recorded 503 fallback."
   },
   "gates": [
     {
       "name": "unified-preflight",
       "status": "PASSED",
-      "verifiedAt": "2026-09-05T12:27:34Z",
-      "details": "19/19 gates; exact Lambda and AgentCore artifacts; 377 Python tests; 45 CDK assertions; 53 API routes in parity; 14 Playwright browser/accessibility cases"
+      "verifiedAt": "2026-09-05T20:58:41Z",
+      "details": "19/19 local gates on the delivery repair plus green CI on the final workflow fix; exact Lambda and AgentCore artifacts; 398 Python tests; 47 CDK assertions; 53 API routes in parity; 14 Playwright browser/accessibility cases"
     },
     {
       "name": "github-actions",
       "status": "PASSED",
-      "verifiedAt": "2026-09-05T12:30:49Z",
-      "details": "Run 33966117147; Python, Web, Android, Guardrails and Infrastructure all passed on commit a99fefda3254ac27bd83f6b4d776752f16bb0c5f, including exact Lambda and AgentCore artifact builds"
+      "verifiedAt": "2026-09-05T20:58:41Z",
+      "details": "Run 33991543380; Python, Web, Android, Guardrails and Infrastructure all passed on commit 864a16827005d7e4f5e824194a25793ed6c3ad85, including exact Lambda and AgentCore artifact builds"
     },
     {
       "name": "github-oidc-deployment-identity",
       "status": "PASSED_FULL_QUOTA_SAFE_DEPLOYMENT",
-      "verifiedAt": "2026-09-05T12:35:13Z",
-      "details": "Run 33966283739 passed required demo-environment review on commit a99fefda3254ac27bd83f6b4d776752f16bb0c5f, obtained short-lived credentials as ico-github-demo-deploy using the immutable repository OIDC subject, published exact assets, updated IcoStack-demo through ico-demo-cfn-exec while preserving the quota-blocked AgentCore version, proved the recorded stack RoleARN, and verified the canonical API mapping."
+      "verifiedAt": "2026-09-05T21:01:52Z",
+      "details": "Run 33991694814 passed required demo-environment review on commit 864a16827005d7e4f5e824194a25793ed6c3ad85, obtained short-lived credentials as ico-github-demo-deploy using the immutable repository OIDC subject, published exact assets, updated IcoStack-demo through ico-demo-cfn-exec while preserving the quota-blocked AgentCore version, proved the recorded stack RoleARN, and verified the canonical API mapping."
     },
     {
       "name": "android-in-app-demo",
@@ -193,11 +208,11 @@
   ],
   "sourceControl": {
     "branch": "codex/hackathon-final",
-    "headCommitAtLastGreenRun": "a99fefda3254ac27bd83f6b4d776752f16bb0c5f",
+    "headCommitAtLastGreenRun": "864a16827005d7e4f5e824194a25793ed6c3ad85",
     "publicBranchPushed": true,
     "pullRequest": "https://github.com/AmirmLotfy/incaseof/pull/15",
     "pullRequestState": "DRAFT",
-    "githubActionsRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/33966117147"
+    "githubActionsRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/33991543380"
   },
   "artifacts": {
     "architecturePngSha256": "176687736f479c1efa93a24fa7d95c6761bb1a4c31e6497bf66e75cf6729d43d",

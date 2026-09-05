@@ -1,6 +1,6 @@
 # In Case Of - capability and release evidence matrix
 
-Updated: 2026-09-05. Branch: `codex/hackathon-final`.
+Updated: 2026-09-06. Branch: `codex/hackathon-final`.
 
 In Case Of closes uncertainty; it does not decide whether someone is in danger.
 
@@ -10,7 +10,7 @@ The Egypt/US production plan is authorized: public Google Play, Arabic/English,
 push/SMS, a $100 monthly operating target, and funded admission limits. Hackathon
 and production acceptance remain separate. Neither release is accepted.
 
-**Safety repair locally verified.** The recovery review reproduced two provider calls for
+**Safety repair deployed and live verified.** The recovery review reproduced two provider calls for
 one replayed SQS body, contact after consent withdrawal, a lost-action window before SQS
 enqueue, and missing real subject recipients. The repair adds transactional outbox records,
 a one-minute recovery relay, conditional worker ownership, explicit subject recipients,
@@ -18,23 +18,28 @@ pinned responder identities, strong authorization reads, atomic outcomes/audit e
 UNKNOWN provider outcomes. Worker sends with unknown outcomes are never blindly retried.
 Existing legacy action locks require reconciliation, not replay.
 
-The complete preflight now passes with 397 Python tests and 47 CDK assertions. Focused
+The complete preflight now passes with 398 Python tests and 47 CDK assertions. Focused
 regressions cover sequential and concurrent replay, enqueue failure, pre-provider failure,
 ambiguous provider acceptance, worker death, consent withdrawal, recipient reassignment,
 checking and resolution races, terminal-alert reconciliation, pagination, subject adapters,
-and outcome/audit atomicity. The quota-preserving CDK diff adds the relay and updates
-the application functions without replacing or modifying the deployed AgentCore Runtime.
-These remain local/PR facts until the scoped OIDC deployment and live drill complete.
+outcome/audit atomicity, and Step Functions identity across a pending-delivery wait. Protected
+OIDC run `33991694814` deployed the relay and application functions without replacing or
+modifying the AgentCore Runtime. A fresh live Drill on that commit completed the deterministic
+path with four distinct durable ACCEPTED outcomes and 13 audit events.
+
+The first repair deployment run, `33990483025`, rolled back cleanly because the scoped
+CloudFormation executor did not have `events:DescribeRule`. The recovery timer now uses the
+already-authorized EventBridge Scheduler service; runs `33991066635` and `33991694814`
+completed with no resource replacement and with the quota-blocked AgentCore Runtime preserved.
 
 AWS login was restored on September 5. The configured session is root: provider
 inspection only; deployments continue through protected scoped GitHub OIDC. Fresh
 inspection confirms `IcoStack-demo=UPDATE_COMPLETE` and `Versions per Agent=0`.
 AWS Support API inspection is unavailable under the current support subscription.
 
-Next resumable actions: push the verified repair, pass CI, deploy it through scoped OIDC,
-and run a new deterministic drill; implement production interfaces and country readiness;
-refresh support cases through the console; deploy the corrected AI runtime only after the
-version quota and artifact gates pass.
+Next resumable actions: implement production interfaces and country readiness; refresh support
+cases through the console; deploy the corrected AI runtime only after the version quota and
+artifact gates pass; then rerun the public drill with the live model leg.
 Production account lifecycle, Arabic coverage, phone verification, carrier receipts,
 capacity admission, Play delivery and physical-country evidence remain outstanding.
 
@@ -58,7 +63,7 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 | Moment lifecycle | Partially live verified | The deployed Scheduler materialized a due Alert in the synthetic judge tenant; get/next/confirm/extend/cancel and recurring creation remain covered locally | Live confirm, extend, cancel and recurring-next-Moment evidence |
 | Alert lifecycle | Partially live verified | A signed synthetic responder link was policy-gated until Circle escalation, then claim created `CHECKING` and explicit resolve produced `RESOLVED` | Private-window UI capture plus live release, extend, conflict and lease-expiry evidence |
 | History | Locally verified | Owner-indexed terminal Alert query; API/Android mapping | Resolved deployed drill visible on clients |
-| Workflow | Live verified without the model leg | A deployed accelerated Drill produced 11 audit events through Scheduler, Standard Step Functions, SQS, worker, responder lease and explicit resolution | Deployed execution ARN plus a complete AgentCore-to-workflow trace after model access is restored |
+| Workflow | Live verified without the model leg | Commit `864a168` produced 13 audit events through Scheduler, Standard Step Functions, SQS, durable outbox, worker, responder lease and explicit resolution; execution `alert-84d3d2cd-1c6a-4abc-ac7e-a517f6f6cc37` preserved identity across delivery waits | Complete AgentCore-to-workflow trace after model access is restored |
 | Public judge demo | Demo-only; partially live verified | Fresh isolated sessions, draft creation and a complete deterministic Drill succeed on the direct API; web and Android use the same real handlers with no browser fixtures or local-data fallback; demo device registration is impossible | Deploy the expanded Android demo surface, Agent compile and public `/demo` edge hosting |
 | Demo delivery | Demo-only; live verified | The deployed worker accepted real queued PUSH/SMS attempts and recorded redacted `safe-sink:` provider references in the audit timeline | Judge-facing UI capture after edge hosting |
 | SMS | Implemented, not live verified | Worker is sole `sns:Publish` principal; endpoints resolved at dispatch | One permitted project-owned verified test number |
@@ -76,9 +81,9 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 ## Current automated evidence
 
 - Unified preflight: all 19 gates pass on 2026-09-05 after the delivery repair.
-- Python: Ruff format/lint, mypy and all 397 tests pass.
+- Python: Ruff format/lint, mypy and all 398 tests pass.
 - Contract parity: 53 method/path routes agree across OpenAPI, CDK and handler; authenticated and demo Android client routes are deployed in the correct environment templates.
-- Infrastructure: 47 CDK assertions and synthesis pass, including exact Nova resources, runtime session lifecycle, AgentCore user-context invocation permissions, the one-minute outbox recovery rule, the six-timeout SQS visibility window, the demo-only quota-recovery guard and the single API-scoped Lambda invocation permission.
+- Infrastructure: 47 CDK assertions and synthesis pass, including exact Nova resources, runtime session lifecycle, AgentCore user-context invocation permissions, the one-minute outbox recovery schedule, the six-timeout SQS visibility window, the demo-only quota-recovery guard and the single API-scoped Lambda invocation permission.
 - Web: marketing and responder lint, typecheck and production static builds; 14 Playwright browser/accessibility cases.
 - Android: unit tests, release lint, ktlint, R8, package/signature inspection and fail-closed configuration checks pass. All 3 connected accessibility tests pass on both API 26 and API 37.
 - Android release identity: `com.incaof.app` v0.2.0 (`versionCode=2`), SHA-256 `db118074e6df54477212f2155674360a04a7b3eb69e2aacd168f6785d6cc60b3`, signing certificate SHA-256 `f12d1890545e420f5a2e10fa1475f21c2fa5463028f57fc3643daa1bc42bbd62`.
@@ -86,9 +91,9 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 - AWS core: `IcoStack-demo` is stable at `UPDATE_COMPLETE`; the API exposes all 53 explicit routes and uses one source-scoped invocation permission. The existing AgentCore Runtime remains deliberately preserved because the account's applied `Versions per Agent` quota is zero.
 - AWS quota evidence: active AgentCore sessions were restored via approved request `451f1b8fde074b51bcb3aacaa2042ba8vNxnmcUj`; version request `b38dff125c3e4b1493e58c7fca4ed88bEgBdMI37` is `CASE_OPENED`.
 - AWS account-verification evidence: support case `178838741100092` remains `UNASSIGNED`; a factual update is prepared but has not been sent without action-time confirmation.
-- Public source evidence: commit `c7ff033f4fb5729a605b9354bb5f034bd90c3a54` is pushed to `codex/hackathon-final`; draft PR 15 has a fully green GitHub Actions run (`33962601126`) across Python, web, Android, guardrails and infrastructure, including exact Lambda and AgentCore artifact builds.
-- Deployment identity: protected-environment run `33962736106` passed required review, exchanged GitHub OIDC for short-lived `ico-github-demo-deploy` credentials using the exact immutable repository subject, published exact assets, updated `IcoStack-demo` through the service-family-scoped `ico-demo-cfn-exec` role and verified the canonical API mapping. No long-lived AWS key or shared AdministratorAccess executor was used.
-- Live deterministic Drill: after the scoped-role OIDC deployment, the canonical `api.incaof.com` verifier created synthetic plan `05b83895-b41d-4975-a06b-d7d762e2760c`, accelerated Moment `88071223-5461-58ec-a090-6d54cc9d0861`, and resolved Alert `b6c5c253-067b-41a6-8651-df67a4fe439e`. Eleven deployed audit events ended `RESPONDER_VERIFIED`; worker references were restricted to `safe-sink:`. The AgentCore compile was not part of this proof and still returns the designed 503 fallback.
+- Public source evidence: commit `864a16827005d7e4f5e824194a25793ed6c3ad85` is pushed to `codex/hackathon-final`; draft PR 15 has fully green run `33991543380` across Python, web, Android, guardrails and infrastructure, including exact Lambda and AgentCore artifact builds.
+- Deployment identity: protected-environment run `33991694814` passed required review, exchanged GitHub OIDC for short-lived `ico-github-demo-deploy` credentials using the exact immutable repository subject, published exact assets, updated `IcoStack-demo` through the service-family-scoped `ico-demo-cfn-exec` role and verified the canonical API mapping. No long-lived AWS key or shared AdministratorAccess executor was used. The AgentCore Runtime was preserved because the account quota remains zero.
+- Live deterministic Drill: after that scoped-role OIDC deployment, the direct API verifier created synthetic plan `8870c8dc-3c80-40ec-a189-c64afa5ab84a`, accelerated Moment `36c1810a-380f-5d27-8273-8a62c64f367e`, and resolved Alert `84d3d2cd-1c6a-4abc-ac7e-a517f6f6cc37`. Thirteen deployed audit events include four distinct ACTION_QUEUED/ACTION_ACCEPTED pairs, Circle escalation, responder claim and `RESPONDER_VERIFIED`; all four outbox rows are terminal ACCEPTED and worker references are restricted to `safe-sink:`. The AgentCore compile was not part of this proof and still returns the designed 503 fallback.
 - Release negative test: `assembleRelease` refuses to run without explicit backend and signing inputs.
 
 ## Hard blockers before a ready claim

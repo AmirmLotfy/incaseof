@@ -100,6 +100,7 @@ docs/        product, architecture, domain, security and design contracts
 | [`docs/AI-SAFETY.md`](docs/AI-SAFETY.md) | Agent boundaries, tool surface, evaluation |
 | [`docs/SECURITY.md`](docs/SECURITY.md) | Threat model, responder tokens, data protection |
 | [`docs/API.md`](docs/API.md) | HTTP surface |
+| [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | OIDC deployment and quota-blocked recovery procedure |
 | [`docs/DEMO.md`](docs/DEMO.md) | Demo time compression and submission |
 | [`docs/HACKATHON.md`](docs/HACKATHON.md) | Devpost submission narrative and track qualification |
 | [`docs/DEMO-VIDEO-SCRIPT.md`](docs/DEMO-VIDEO-SCRIPT.md) | 4:30 video pitch storyboard and narration |

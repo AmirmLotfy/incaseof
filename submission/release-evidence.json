@@ -124,14 +124,14 @@
     {
       "name": "unified-preflight",
       "status": "PASSED",
-      "verifiedAt": "2026-09-05T02:34:42Z",
-      "details": "18/18 gates; 377 Python tests; 43 CDK assertions; 53 API routes in parity; 14 Playwright browser/accessibility cases"
+      "verifiedAt": "2026-09-05T03:18:29Z",
+      "details": "18/18 gates; 377 Python tests; 44 CDK assertions; 53 API routes in parity; 14 Playwright browser/accessibility cases"
     },
     {
       "name": "github-actions",
       "status": "PASSED",
-      "verifiedAt": "2026-09-05T02:22:00Z",
-      "details": "Run 33938504566; Python, Web, Android, Guardrails and Infrastructure all passed on commit c173ee99c0b084f32ba2d0d5d1ec3dc9f39e23a2"
+      "verifiedAt": "2026-09-05T02:55:00Z",
+      "details": "Run 33939503535; Python, Web, Android, Guardrails and Infrastructure all passed on commit 9ff23284851f1251760e0fe1231398dc215b730d"
     },
     {
       "name": "android-in-app-demo",
@@ -142,11 +142,11 @@
   ],
   "sourceControl": {
     "branch": "codex/hackathon-final",
-    "headCommitAtLastGreenRun": "c173ee99c0b084f32ba2d0d5d1ec3dc9f39e23a2",
+    "headCommitAtLastGreenRun": "9ff23284851f1251760e0fe1231398dc215b730d",
     "publicBranchPushed": true,
     "pullRequest": "https://github.com/AmirmLotfy/incaseof/pull/15",
     "pullRequestState": "DRAFT",
-    "githubActionsRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/33938504566"
+    "githubActionsRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/33939503535"
   },
   "artifacts": {
     "architecturePngSha256": "07261fbe70c5be2a02f9088d3ccf5dd0577aaa49cf1a2c5278c412e3d2ef0509",

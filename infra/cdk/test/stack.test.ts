@@ -412,6 +412,43 @@ describe("agentcore", () => {
     assert.doesNotMatch(policyText, /dynamodb:|scheduler:|sqs:|sns:/i);
   });
 
+  it("can preserve the deployed demo runtime while an account quota blocks new versions", () => {
+    const app = new App({
+      context: {
+        skipEdgeHosting: "true",
+        preserveDeployedAgentCoreRuntime: "true",
+        preservedAgentCoreArtifactBucketTemplate: "cdk-assets-${AWS::AccountId}",
+        preservedAgentCoreArtifactKey: "deployed-runtime.zip",
+        preservedAgentCoreModelId: "us.anthropic.claude-sonnet-4-6",
+      },
+    });
+    const stack = new IcoStack(app, "IcoStack-demo-preserved-runtime", {
+      environment: ENVIRONMENTS.demo,
+      env: { account: "123456789012", region: "us-east-1" },
+    });
+    const template = Template.fromStack(stack);
+
+    template.hasResourceProperties("AWS::BedrockAgentCore::Runtime", {
+      Description: "ICO Strands compiler using Claude Sonnet 4.6 through Bedrock",
+      EnvironmentVariables: {
+        AWS_BEDROCK_MODEL_ID: "us.anthropic.claude-sonnet-4-6",
+        PYTHONUNBUFFERED: "1",
+      },
+      AgentRuntimeArtifact: {
+        CodeConfiguration: {
+          Code: {
+            S3: {
+              Bucket: { "Fn::Sub": "cdk-assets-${AWS::AccountId}" },
+              Prefix: "deployed-runtime.zip",
+            },
+          },
+        },
+      },
+    });
+    const runtimes = template.findResources("AWS::BedrockAgentCore::Runtime");
+    assert.equal(Object.values(runtimes)[0]?.Properties?.LifecycleConfiguration, undefined);
+  });
+
   it("attaches a default-deny policy engine to the role-only Gateway in ENFORCE mode", () => {
     const template = synth();
     template.resourceCountIs("AWS::BedrockAgentCore::PolicyEngine", 1);

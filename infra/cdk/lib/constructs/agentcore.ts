@@ -1,9 +1,10 @@
-import { Arn, RemovalPolicy, Stack } from "aws-cdk-lib";
+import { Arn, Fn, RemovalPolicy, Stack } from "aws-cdk-lib";
 import * as agentcore from "aws-cdk-lib/aws-bedrockagentcore";
 import * as iam from "aws-cdk-lib/aws-iam";
 import type * as kms from "aws-cdk-lib/aws-kms";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as logs from "aws-cdk-lib/aws-logs";
+import * as s3 from "aws-cdk-lib/aws-s3";
 import * as s3assets from "aws-cdk-lib/aws-s3-assets";
 import { Construct } from "constructs";
 import * as path from "node:path";
@@ -39,16 +40,39 @@ export class AgentCore extends Construct {
     super(scope, id);
 
     const stack = Stack.of(this);
+    const preserveRuntime = this.node.tryGetContext("preserveDeployedAgentCoreRuntime") === "true";
+    if (preserveRuntime && props.environment.name !== "demo") {
+      throw new Error("preserveDeployedAgentCoreRuntime is allowed only for the demo environment");
+    }
+    const preservedArtifactBucketTemplate = this.node.tryGetContext(
+      "preservedAgentCoreArtifactBucketTemplate",
+    ) as string | undefined;
+    const preservedArtifactKey = this.node.tryGetContext("preservedAgentCoreArtifactKey") as
+      | string
+      | undefined;
+    const preservedModelId = this.node.tryGetContext("preservedAgentCoreModelId") as
+      | string
+      | undefined;
+    if (
+      preserveRuntime &&
+      (!preservedArtifactBucketTemplate || !preservedArtifactKey || !preservedModelId)
+    ) {
+      throw new Error(
+        "preserving the demo runtime requires its existing S3 bucket, key and model ID",
+      );
+    }
+    const runtimeModelId = preserveRuntime ? (preservedModelId as string) : "us.amazon.nova-2-lite-v1:0";
+    const foundationModelId = runtimeModelId.replace(/^us\./, "");
     const modelResources = [
       Arn.format(
         {
           service: "bedrock",
           resource: "inference-profile",
-          resourceName: "us.amazon.nova-2-lite-v1:0",
+          resourceName: runtimeModelId,
         },
         stack,
       ),
-      `arn:${stack.partition}:bedrock:*::foundation-model/amazon.nova-2-lite-v1:0`,
+      `arn:${stack.partition}:bedrock:*::foundation-model/${foundationModelId}`,
     ];
 
     this.runtimeRole = new iam.Role(this, "RuntimeRole", {
@@ -74,12 +98,29 @@ export class AgentCore extends Construct {
       }),
     );
 
-    const artifact = new s3assets.Asset(this, "RuntimeArtifact", { path: RUNTIME_ASSET });
-    artifact.grantRead(this.runtimeRole);
+    let artifactBucket: string;
+    let artifactKey: string;
+    if (preserveRuntime) {
+      artifactBucket = Fn.sub(preservedArtifactBucketTemplate as string);
+      artifactKey = preservedArtifactKey as string;
+      const deployedBucket = s3.Bucket.fromBucketName(
+        this,
+        "PreservedRuntimeArtifactBucket",
+        artifactBucket,
+      );
+      deployedBucket.grantRead(this.runtimeRole);
+    } else {
+      const artifact = new s3assets.Asset(this, "RuntimeArtifact", { path: RUNTIME_ASSET });
+      artifact.grantRead(this.runtimeRole);
+      artifactBucket = artifact.s3BucketName;
+      artifactKey = artifact.s3ObjectKey;
+    }
 
     this.runtime = new agentcore.CfnRuntime(this, "Runtime", {
       agentRuntimeName: `ico_${props.environment.name}_compiler`,
-      description: "ICO Strands compiler using Amazon Nova 2 Lite through Bedrock",
+      description: preserveRuntime
+        ? "ICO Strands compiler using Claude Sonnet 4.6 through Bedrock"
+        : "ICO Strands compiler using Amazon Nova 2 Lite through Bedrock",
       roleArn: this.runtimeRole.roleArn,
       protocolConfiguration: "HTTP",
       networkConfiguration: { networkMode: "PUBLIC" },
@@ -87,8 +128,8 @@ export class AgentCore extends Construct {
         codeConfiguration: {
           code: {
             s3: {
-              bucket: artifact.s3BucketName,
-              prefix: artifact.s3ObjectKey,
+              bucket: artifactBucket,
+              prefix: artifactKey,
             },
           },
           entryPoint: ["main.py"],
@@ -96,13 +137,15 @@ export class AgentCore extends Construct {
         },
       },
       environmentVariables: {
-        AWS_BEDROCK_MODEL_ID: "us.amazon.nova-2-lite-v1:0",
+        AWS_BEDROCK_MODEL_ID: runtimeModelId,
         PYTHONUNBUFFERED: "1",
       },
-      lifecycleConfiguration: {
-        idleRuntimeSessionTimeout: 60,
-        maxLifetime: 3600,
-      },
+      lifecycleConfiguration: preserveRuntime
+        ? undefined
+        : {
+            idleRuntimeSessionTimeout: 60,
+            maxLifetime: 3600,
+          },
       tags: {
         Project: "in-case-of",
         Environment: props.environment.name,

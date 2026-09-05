@@ -40,7 +40,7 @@ run "secrets"              python3 scripts/check-secrets.py
 run "phone numbers"        python3 scripts/check-phone-numbers.py
 run "anti-slop"            ./scripts/check-antislop.sh
 run "scripts: syntax"      bash -c 'bash -n scripts/*.sh && for script in scripts/*.mjs; do node --check "$script"; done'
-run "android"              env -C android ./gradlew --no-build-cache --no-configuration-cache --quiet assembleDebug testDebugUnitTest lintDebug ktlintCheck
+run "android"              env -C android ./gradlew --no-daemon --no-build-cache --no-configuration-cache --quiet assembleDebug testDebugUnitTest lintDebug ktlintCheck
 run "agentcore: artifact"  ./scripts/build-agentcore-runtime.sh
 run "infra: tests"         npm run test -w @incaseof/infra --silent
 run "cdk synth"            env -C infra/cdk npx --no-install cdk synth --quiet

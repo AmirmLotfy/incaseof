@@ -97,6 +97,76 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Readiness" }
 
+  /v1/phone-verifications:
+    post:
+      tags: [account]
+      summary: Send a code to verify the authenticated subject's phone
+      description: The phone is KMS-encrypted and is never returned by this API.
+      security: [{ cognito: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [phoneNumber]
+              properties:
+                phoneNumber: { type: string, pattern: '^\+(?:20|1)[0-9]{10,12}$' }
+      responses:
+        "202":
+          description: Verification code accepted for delivery
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PhoneVerification" }
+        "429": { $ref: "#/components/responses/Problem" }
+        "503": { $ref: "#/components/responses/Problem" }
+
+  /v1/phone-verifications/{verificationId}/confirm:
+    post:
+      tags: [account]
+      summary: Confirm a phone verification code
+      security: [{ cognito: [] }]
+      parameters: [{ $ref: "#/components/parameters/VerificationId" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [otp]
+              properties:
+                otp: { type: string, pattern: '^[0-9]{6}$' }
+      responses:
+        "200":
+          description: Phone verified
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PhoneVerification" }
+        "404": { $ref: "#/components/responses/Problem" }
+        "410": { $ref: "#/components/responses/Problem" }
+        "422": { $ref: "#/components/responses/Problem" }
+        "503": { $ref: "#/components/responses/Problem" }
+
+  /v1/phone:
+    delete:
+      tags: [account]
+      summary: Revoke the authenticated subject's current phone
+      security: [{ cognito: [] }]
+      responses:
+        "200":
+          description: Phone revoked or already absent
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [phoneVerified, status]
+                properties:
+                  phoneVerified: { type: boolean, const: false }
+                  status: { type: string, const: REVOKED }
+
   /v1/plans/compile:
     post:
       tags: [plans]
@@ -592,6 +662,7 @@ components:
     MemberId: { name: memberId, in: path, required: true, schema: { type: string, format: uuid } }
     InvitationId: { name: invitationId, in: path, required: true, schema: { type: string, format: uuid } }
     DeviceId: { name: deviceId, in: path, required: true, schema: { type: string, format: uuid } }
+    VerificationId: { name: verificationId, in: path, required: true, schema: { type: string, format: uuid } }
     SignedToken: { name: signedToken, in: path, required: true, schema: { type: string } }
     IdempotencyKey:
       name: Idempotency-Key
@@ -614,6 +685,15 @@ components:
                 type: string
                 description: Stable machine code. Never leaks another user's data.
   schemas:
+    PhoneVerification:
+      type: object
+      additionalProperties: false
+      required: [verificationId, status]
+      properties:
+        verificationId: { type: string, format: uuid }
+        status: { type: string, enum: [SENT, VERIFIED] }
+        expiresAt: { type: string, format: date-time }
+        phoneVerified: { type: boolean }
     Profile:
       type: object
       additionalProperties: false

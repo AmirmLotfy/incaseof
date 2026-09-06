@@ -22,12 +22,21 @@ GET    /      service descriptor; no tenant data
 GET    /v1/profile       profile and locale settings; never contact endpoints
 PATCH  /v1/profile       create or update display name, locale, timezone, and country
 GET    /v1/readiness     account, channel, responder, and plan-capacity status
+POST   /v1/phone-verifications                          send a phone ownership code
+POST   /v1/phone-verifications/{verificationId}/confirm confirm a six-digit code
+DELETE /v1/phone                                         revoke the current phone
 ```
 
 The first launch markets are Egypt and the United States, with Arabic and English locales.
 Production activation fails closed while admissions are paused, while the profile is incomplete,
 or when a plan requires an unverified subject or responder channel. Readiness exposes stable reason
 codes and booleans without returning phone numbers, push tokens, or provider endpoint identifiers.
+
+Phone starts accept only an E.164 mobile number matching the authenticated profile's EG or US
+country. The response contains an opaque verification id and expiry, never the phone. Starts are
+limited to one per minute and five per UTC day per account. The provider and DynamoDB both enforce
+five attempts and a ten-minute lifetime. Revocation changes the endpoint to `REVOKED`; it cannot
+satisfy readiness or delivery authorization.
 
 ## Plans
 

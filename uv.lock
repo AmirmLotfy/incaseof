@@ -165,6 +165,9 @@ dynamodb = [
 kms = [
     { name = "mypy-boto3-kms" },
 ]
+pinpoint = [
+    { name = "mypy-boto3-pinpoint" },
+]
 scheduler = [
     { name = "mypy-boto3-scheduler" },
 ]
@@ -453,7 +456,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "awscrt" },
-    { name = "boto3-stubs", extra = ["dynamodb", "kms", "scheduler", "secretsmanager", "sns", "sqs", "stepfunctions"] },
+    { name = "boto3-stubs", extra = ["dynamodb", "kms", "pinpoint", "scheduler", "secretsmanager", "sns", "sqs", "stepfunctions"] },
     { name = "moto", extra = ["dynamodb"] },
     { name = "mypy" },
     { name = "pytest" },
@@ -475,7 +478,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "awscrt", specifier = "==0.36.2" },
-    { name = "boto3-stubs", extras = ["dynamodb", "kms", "scheduler", "secretsmanager", "sns", "sqs", "stepfunctions"], specifier = "==1.43.78" },
+    { name = "boto3-stubs", extras = ["dynamodb", "kms", "pinpoint", "scheduler", "secretsmanager", "sns", "sqs", "stepfunctions"], specifier = "==1.43.78" },
     { name = "moto", extras = ["dynamodb"], specifier = "==5.2.3" },
     { name = "mypy", specifier = "==2.3.1" },
     { name = "pytest", specifier = "==9.1.1" },
@@ -658,6 +661,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/56/a5/a63234e7787019443c52f720afea57cf1a1d22a6e8e077b3c6a3916fdd98/mypy_boto3_kms-1.43.12.tar.gz", hash = "sha256:a4d23f018422a79bc4a886676f63eba548a98b06f5dcd0395e424d7c472eb340", size = 30688, upload-time = "2026-05-20T20:01:23.801Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/36/17/9d36757acee0987ef78220d1868f1ceb0cf458928444f5a81e98a4de3b44/mypy_boto3_kms-1.43.12-py3-none-any.whl", hash = "sha256:4a74f7b4aa9fcce9a1021ad2586059f2374a4b89baa251e57e6acc16282fd782", size = 39009, upload-time = "2026-05-20T20:01:20.104Z" },
+]
+
+[[package]]
+name = "mypy-boto3-pinpoint"
+version = "1.43.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/4f/23/83c39d1bf56af76e398521045e1c894a24bb87e3318628409b2bd325c6ed/mypy_boto3_pinpoint-1.43.0.tar.gz", hash = "sha256:9cc1bb995c79dc2a843686760099ef31bce7f9920afd37f579e05cf0fb09e747", size = 50951, upload-time = "2026-04-29T23:04:25.653Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b1/ee/ce995d1e26a7fc0830132bd49b5abb18dd512ff6149643c42d4f7c8ad1eb/mypy_boto3_pinpoint-1.43.0-py3-none-any.whl", hash = "sha256:88b74e8b06ef0dbc934ff91ad77e3af95fde3e26a27820a5671b3df7a2891cea", size = 53480, upload-time = "2026-04-29T23:04:21.63Z" },
 ]
 
 [[package]]

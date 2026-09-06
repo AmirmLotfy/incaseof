@@ -41,6 +41,19 @@ export class IcoStack extends Stack {
     });
     const messaging = new Messaging(this, "Messaging", { key: storage.key });
     const pushPlatformArn = this.node.tryGetContext("pushPlatformArn") as string | undefined;
+    const otpApplicationId = this.node.tryGetContext("otpApplicationId") as string | undefined;
+    const otpOriginationIdentity = this.node.tryGetContext("otpOriginationIdentity") as
+      | string
+      | undefined;
+    const otpBrandName = this.node.tryGetContext("otpBrandName") as string | undefined;
+    const configuredOtpValues = [otpApplicationId, otpOriginationIdentity, otpBrandName].filter(
+      Boolean,
+    );
+    if (configuredOtpValues.length !== 0 && configuredOtpValues.length !== 3) {
+      throw new Error(
+        "OTP requires otpApplicationId, otpOriginationIdentity and otpBrandName together",
+      );
+    }
 
     const compute = new Compute(this, "Compute", {
       environment: props.environment,
@@ -74,6 +87,9 @@ export class IcoStack extends Stack {
       key: storage.key,
       pushPlatformArn,
       agentCoreRuntimeArn: agentCore.runtime.attrAgentRuntimeArn,
+      otpApplicationId,
+      otpOriginationIdentity,
+      otpBrandName,
     });
 
     const skipEdgeHosting = this.node.tryGetContext("skipEdgeHosting") === "true";

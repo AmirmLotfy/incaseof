@@ -114,6 +114,32 @@ def test_an_unverified_endpoint_refuses_to_decrypt(
         endpoints.reveal(stored)
 
 
+def test_phone_verification_can_reveal_then_conditionally_verify_and_revoke(
+    endpoints: DynamoEndpointRepository,
+) -> None:
+    endpoints.save(
+        endpoint_id="e-current",
+        person_id=MAYA,
+        endpoint_type=EndpointType.PHONE,
+        value=NUMBER,
+        status=EndpointStatus.VERIFIED,
+    )
+    stored = endpoints.save_candidate(
+        endpoint_id="e-verify",
+        person_id=MAYA,
+        endpoint_type=EndpointType.PHONE,
+        value=NUMBER,
+    )
+    assert endpoints.reveal_for_verification(stored) == NUMBER
+    current = endpoints.for_person(MAYA, EndpointType.PHONE)
+    assert current is not None and current.endpoint_id == "e-current"
+    assert endpoints.revoke_candidate(MAYA, EndpointType.PHONE, "e-verify")
+    candidate = endpoints.candidate(MAYA, EndpointType.PHONE, "e-verify")
+    assert candidate is not None and candidate.status is EndpointStatus.REVOKED
+    current = endpoints.for_person(MAYA, EndpointType.PHONE)
+    assert current is not None and current.endpoint_id == "e-current" and current.is_usable
+
+
 def test_the_repr_never_shows_the_value(endpoints: DynamoEndpointRepository) -> None:
     """A repr ends up in tracebacks, logs and error trackers."""
     endpoint = endpoints.save(

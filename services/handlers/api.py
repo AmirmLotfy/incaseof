@@ -56,6 +56,14 @@ from services.domain.invitation import CircleInvitation, InvitationStatus
 from services.domain.invitation_token import issue as issue_invitation_token
 from services.domain.invitation_token import verify as verify_invitation_token
 from services.domain.moment import ExpectedMoment, MomentStatus
+from services.domain.phone_verification import (
+    OtpProviderUnavailable,
+    OtpSendRejected,
+    PhoneVerification,
+    PhoneVerificationRateLimited,
+    PhoneVerificationStatus,
+    validate_phone_for_country,
+)
 from services.domain.plan import Channel, Plan, PlanVersion, ResponderRole
 from services.domain.resolution import ResolutionSource
 from services.domain.responder_token import TokenError
@@ -126,6 +134,12 @@ def handler(event: dict[str, Any], _context: Any = None) -> dict[str, Any]:
         return _problem(409, "This is already closed", "ALERT_CLOSED")
     except LeaseConflict:
         return _problem(409, "Someone else is already checking", "LEASE_HELD")
+    except PhoneVerificationRateLimited:
+        return _problem(429, "Try phone verification again later", "PHONE_RATE_LIMITED")
+    except OtpProviderUnavailable:
+        return _problem(503, "Phone verification is temporarily unavailable", "OTP_UNAVAILABLE")
+    except OtpSendRejected:
+        return _problem(503, "Phone verification cannot send right now", "OTP_SEND_REJECTED")
     except DomainError as error:
         return _problem(422, str(error), "INVALID_REQUEST")
     except (KeyError, TypeError, ValueError, json.JSONDecodeError):
@@ -168,6 +182,14 @@ def _dispatch(event: dict[str, Any]) -> dict[str, Any]:
         return _update_profile(ctx, event, _caller(event))
     if route == "GET /v1/readiness":
         return _readiness_response(ctx, _caller(event))
+    if route == "POST /v1/phone-verifications":
+        return _start_phone_verification(ctx, event, _caller(event))
+    if route == "POST /v1/phone-verifications/{verificationId}/confirm":
+        return _confirm_phone_verification(
+            ctx, event, str(params["verificationId"]), _caller(event)
+        )
+    if route == "DELETE /v1/phone":
+        return _revoke_phone(ctx, _caller(event))
     if route == "POST /v1/plans/compile":
         return _compile(ctx, event)
     if route == "POST /v1/plans":
@@ -758,6 +780,10 @@ def _update_profile(
             country=country,
         )
     repository.save(profile)
+    if current is not None and current.country is not profile.country and ctx.endpoints is not None:
+        phone = ctx.endpoints.for_person(person, EndpointType.PHONE)
+        if phone is not None:
+            ctx.endpoints.revoke(person, EndpointType.PHONE, phone.endpoint_id)
     return _response(200, _profile_view(profile))
 
 
@@ -829,6 +855,168 @@ def _account_readiness(ctx: bootstrap.Context, person: PersonId) -> dict[str, An
 
 def _readiness_response(ctx: bootstrap.Context, person: PersonId) -> dict[str, Any]:
     return _response(200, _account_readiness(ctx, person))
+
+
+def _phone_persistence(ctx: bootstrap.Context) -> tuple[Any, Any]:
+    if ctx.endpoints is None or ctx.phone_verifications is None:
+        raise RuntimeError("phone verification persistence is not configured")
+    return ctx.endpoints, ctx.phone_verifications
+
+
+def _phone_dependencies(ctx: bootstrap.Context) -> tuple[Any, Any, Any]:
+    endpoints, challenges = _phone_persistence(ctx)
+    if ctx.otp_provider is None:
+        raise OtpProviderUnavailable("OTP provider is not configured")
+    return endpoints, challenges, ctx.otp_provider
+
+
+def _start_phone_verification(
+    ctx: bootstrap.Context, event: dict[str, Any], person: PersonId
+) -> dict[str, Any]:
+    endpoints, challenges, provider = _phone_dependencies(ctx)
+    profile = _profile_repository(ctx).get(person)
+    if profile is None or profile.status is not AccountStatus.ACTIVE:
+        return _problem(409, "Complete your account profile", "PROFILE_REQUIRED")
+    if profile.country not in _allowed_countries():
+        return _problem(409, "This country is not available", "COUNTRY_UNSUPPORTED")
+
+    payload = _body(event)
+    if set(payload) != {"phoneNumber"} or not isinstance(payload["phoneNumber"], str):
+        raise ValueError("phoneNumber is required")
+    destination = validate_phone_for_country(payload["phoneNumber"], profile.country)
+    now = ctx.now()
+    current_phone = endpoints.for_person(person, EndpointType.PHONE)
+    verification_id = uuid_factory()
+    endpoint_id = uuid_factory()
+    challenge = PhoneVerification(
+        verification_id=verification_id,
+        person_id=person,
+        endpoint_id=endpoint_id,
+        provider_reference=uuid_factory(),
+        country=profile.country,
+        status=PhoneVerificationStatus.RESERVED,
+        attempts=0,
+        created_at=now,
+        expires_at=now + timedelta(minutes=10),
+        previous_endpoint_id=current_phone.endpoint_id if current_phone else None,
+    )
+    challenges.reserve(challenge)
+    try:
+        endpoint = endpoints.save_candidate(
+            endpoint_id=endpoint_id,
+            person_id=person,
+            endpoint_type=EndpointType.PHONE,
+            value=destination,
+        )
+        sealed_destination = endpoints.reveal_for_verification(endpoint)
+        provider.send(destination=sealed_destination, reference=challenge.provider_reference)
+        try:
+            challenge = challenges.mark_sent(challenge, now)
+        except PhoneVerificationRateLimited:
+            # Provider acceptance already happened. Never resend to repair a persistence
+            # race; RESERVED challenges remain verifiable by design.
+            current = challenges.get(person, verification_id)
+            if current is None or current.endpoint_id != endpoint_id:
+                raise
+            challenge = current
+    except (OtpProviderUnavailable, OtpSendRejected):
+        endpoints.revoke_candidate(person, EndpointType.PHONE, endpoint_id)
+        challenges.mark_failed(challenge)
+        raise
+    return _response(
+        202,
+        {
+            "verificationId": challenge.verification_id,
+            "status": PhoneVerificationStatus.SENT.value,
+            "expiresAt": challenge.expires_at.isoformat(),
+        },
+    )
+
+
+def _confirm_phone_verification(
+    ctx: bootstrap.Context,
+    event: dict[str, Any],
+    verification_id: str,
+    person: PersonId,
+) -> dict[str, Any]:
+    endpoints, challenges = _phone_persistence(ctx)
+    payload = _body(event)
+    if set(payload) != {"otp"} or not isinstance(payload["otp"], str):
+        raise ValueError("otp is required")
+    otp = payload["otp"]
+    if len(otp) != 6 or not otp.isascii() or not otp.isdigit():
+        raise ValueError("otp must contain exactly six ASCII digits")
+
+    challenge = challenges.get(person, verification_id)
+    if challenge is None:
+        return _problem(404, "Phone verification was not found", "OTP_NOT_FOUND")
+    if challenge.status is PhoneVerificationStatus.VERIFIED:
+        active = endpoints.for_person(person, EndpointType.PHONE)
+        if active is not None and active.endpoint_id == challenge.endpoint_id and active.is_usable:
+            return _response(
+                200,
+                {
+                    "verificationId": challenge.verification_id,
+                    "status": "VERIFIED",
+                    "phoneVerified": True,
+                },
+            )
+        return _problem(409, "The phone number changed", "PHONE_CHANGED")
+    profile = _profile_repository(ctx).get(person)
+    if (
+        profile is None
+        or profile.status is not AccountStatus.ACTIVE
+        or profile.country is not challenge.country
+        or profile.country not in _allowed_countries()
+    ):
+        endpoints.revoke_candidate(person, EndpointType.PHONE, challenge.endpoint_id)
+        return _problem(409, "The account country changed", "COUNTRY_CHANGED")
+    now = ctx.now()
+    if now > challenge.expires_at:
+        if challenge.status in {PhoneVerificationStatus.RESERVED, PhoneVerificationStatus.SENT}:
+            challenges.mark_failed(challenge)
+        endpoints.revoke_candidate(person, EndpointType.PHONE, challenge.endpoint_id)
+        return _problem(410, "Phone verification has expired", "OTP_EXPIRED")
+    if challenge.status in {PhoneVerificationStatus.FAILED, PhoneVerificationStatus.EXPIRED}:
+        return _problem(409, "Phone verification is no longer active", "OTP_INACTIVE")
+
+    endpoint = endpoints.candidate(person, EndpointType.PHONE, challenge.endpoint_id)
+    if endpoint is None or endpoint.endpoint_id != challenge.endpoint_id:
+        return _problem(409, "The phone number changed", "PHONE_CHANGED")
+    destination = endpoints.reveal_for_verification(endpoint)
+    if ctx.otp_provider is None:
+        raise OtpProviderUnavailable("OTP provider is not configured")
+    provider = ctx.otp_provider
+    if not provider.verify(
+        destination=destination, reference=challenge.provider_reference, otp=otp
+    ):
+        challenge = challenges.record_invalid_attempt(challenge, now)
+        if challenge.status is PhoneVerificationStatus.FAILED:
+            endpoints.revoke_candidate(person, EndpointType.PHONE, challenge.endpoint_id)
+        return _problem(422, "The verification code is invalid", "OTP_INVALID")
+
+    challenge = challenges.mark_verified(challenge, endpoint, now)
+    endpoint = endpoints.for_person(person, EndpointType.PHONE)
+    if (
+        challenge is None
+        or endpoint is None
+        or endpoint.endpoint_id != challenge.endpoint_id
+        or not endpoint.is_usable
+    ):
+        return _problem(409, "The phone number changed", "PHONE_CHANGED")
+    return _response(
+        200,
+        {"verificationId": challenge.verification_id, "status": "VERIFIED", "phoneVerified": True},
+    )
+
+
+def _revoke_phone(ctx: bootstrap.Context, person: PersonId) -> dict[str, Any]:
+    if ctx.endpoints is None:
+        raise RuntimeError("endpoint repository is not configured")
+    endpoint = ctx.endpoints.for_person(person, EndpointType.PHONE)
+    if endpoint is not None:
+        ctx.endpoints.revoke(person, EndpointType.PHONE, endpoint.endpoint_id)
+    return _response(200, {"phoneVerified": False, "status": "REVOKED"})
 
 
 def _activation_readiness_problem(

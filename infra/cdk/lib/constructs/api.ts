@@ -1,4 +1,4 @@
-import { Duration, RemovalPolicy } from "aws-cdk-lib";
+import { Duration, RemovalPolicy, Stack } from "aws-cdk-lib";
 import * as apigw from "aws-cdk-lib/aws-apigatewayv2";
 import { HttpJwtAuthorizer } from "aws-cdk-lib/aws-apigatewayv2-authorizers";
 import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
@@ -27,6 +27,9 @@ export interface ApiProps {
   readonly key: kms.IKey;
   readonly pushPlatformArn?: string;
   readonly agentCoreRuntimeArn: string;
+  readonly otpApplicationId?: string;
+  readonly otpOriginationIdentity?: string;
+  readonly otpBrandName?: string;
 }
 
 /**
@@ -66,6 +69,13 @@ export class Api extends Construct {
         ICO_ADMISSIONS_OPEN: String(props.environment.admissionsOpen),
         ICO_MAX_ACTIVE_PLANS_PER_ACCOUNT: String(props.environment.maxActivePlansPerAccount),
         ...(props.pushPlatformArn ? { ICO_PUSH_PLATFORM_ARN: props.pushPlatformArn } : {}),
+        ...(props.otpApplicationId && props.otpOriginationIdentity && props.otpBrandName
+          ? {
+              ICO_OTP_APPLICATION_ID: props.otpApplicationId,
+              ICO_OTP_ORIGINATION_ID: props.otpOriginationIdentity,
+              ICO_OTP_BRAND_NAME: props.otpBrandName,
+            }
+          : {}),
         PYTHONUNBUFFERED: "1",
       },
       logGroup: new logs.LogGroup(this, "HandlerLogs", {
@@ -87,6 +97,21 @@ export class Api extends Construct {
         resources: [props.agentCoreRuntimeArn, `${props.agentCoreRuntimeArn}/runtime-endpoint/*`],
       }),
     );
+
+    if (props.otpApplicationId) {
+      this.handler.addToRolePolicy(
+        new iam.PolicyStatement({
+          actions: ["mobiletargeting:SendOTPMessage", "mobiletargeting:VerifyOTPMessage"],
+          resources: [
+            Stack.of(this).formatArn({
+              service: "mobiletargeting",
+              resource: "apps",
+              resourceName: props.otpApplicationId,
+            }),
+          ],
+        }),
+      );
+    }
 
     if (props.pushPlatformArn) {
       this.handler.addToRolePolicy(
@@ -169,6 +194,9 @@ export class Api extends Construct {
       ["/v1/profile", apigw.HttpMethod.GET],
       ["/v1/profile", apigw.HttpMethod.PATCH],
       ["/v1/readiness", apigw.HttpMethod.GET],
+      ["/v1/phone-verifications", apigw.HttpMethod.POST],
+      ["/v1/phone-verifications/{verificationId}/confirm", apigw.HttpMethod.POST],
+      ["/v1/phone", apigw.HttpMethod.DELETE],
       ["/v1/plans/compile", apigw.HttpMethod.POST],
       ["/v1/plans", apigw.HttpMethod.POST],
       ["/v1/moments/next", apigw.HttpMethod.GET],

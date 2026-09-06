@@ -46,9 +46,34 @@ class EndpointRepository(Protocol):
         self, person_id: PersonId, endpoint_type: EndpointType
     ) -> ContactEndpoint | None: ...
 
+    def save_candidate(
+        self,
+        *,
+        endpoint_id: str,
+        person_id: PersonId,
+        endpoint_type: EndpointType,
+        value: str,
+    ) -> ContactEndpoint: ...
+
+    def candidate(
+        self, person_id: PersonId, endpoint_type: EndpointType, endpoint_id: str
+    ) -> ContactEndpoint | None: ...
+
     def reveal(self, endpoint: ContactEndpoint) -> str:
         """Decrypt, for the single purpose of sending. Never log the result."""
         ...
+
+    def reveal_for_verification(self, endpoint: ContactEndpoint) -> str:
+        """Decrypt an unverified phone only for the OTP provider call."""
+        ...
+
+    def revoke(
+        self, person_id: PersonId, endpoint_type: EndpointType, endpoint_id: str
+    ) -> bool: ...
+
+    def revoke_candidate(
+        self, person_id: PersonId, endpoint_type: EndpointType, endpoint_id: str
+    ) -> bool: ...
 
     def delete(
         self, person_id: PersonId, endpoint_type: EndpointType, endpoint_id: str
@@ -88,16 +113,32 @@ class DynamoEndpointRepository:
             status=status,
             verified_at=verified_at,
         )
+        self.table.put_item(Item=self._item(endpoint, f"ENDPOINT#{endpoint_type.value}"))
+        return endpoint
+
+    def save_candidate(
+        self,
+        *,
+        endpoint_id: str,
+        person_id: PersonId,
+        endpoint_type: EndpointType,
+        value: str,
+    ) -> ContactEndpoint:
+        sealed = self.kms.encrypt(
+            KeyId=self.key_id,
+            Plaintext=value.encode(),
+            EncryptionContext=self._context(person_id, endpoint_type),
+        )["CiphertextBlob"]
+        endpoint = ContactEndpoint(
+            endpoint_id=endpoint_id,
+            person_id=person_id,
+            endpoint_type=endpoint_type,
+            ciphertext=sealed,
+            status=EndpointStatus.UNVERIFIED,
+        )
         self.table.put_item(
-            Item={
-                "pk": keys.person(person_id),
-                "sk": f"ENDPOINT#{endpoint_type.value}",
-                "endpointId": endpoint_id,
-                "endpointType": endpoint_type.value,
-                "status": status.value,
-                "ciphertext": sealed,
-                "verifiedAt": verified_at.isoformat() if verified_at else None,
-            }
+            Item=self._item(endpoint, f"ENDPOINT_CANDIDATE#{endpoint_type.value}#{endpoint_id}"),
+            ConditionExpression="attribute_not_exists(pk)",
         )
         return endpoint
 
@@ -111,14 +152,30 @@ class DynamoEndpointRepository:
         if not item:
             return None
 
+        return self._from_item(person_id, item)
+
+    def candidate(
+        self, person_id: PersonId, endpoint_type: EndpointType, endpoint_id: str
+    ) -> ContactEndpoint | None:
+        item = self.table.get_item(
+            ConsistentRead=True,
+            Key={
+                "pk": keys.person(person_id),
+                "sk": f"ENDPOINT_CANDIDATE#{endpoint_type.value}#{endpoint_id}",
+            },
+        ).get("Item")
+        return self._from_item(person_id, item) if item else None
+
+    @staticmethod
+    def _from_item(person_id: PersonId, item: dict[str, Any]) -> ContactEndpoint:
         verified = item.get("verifiedAt")
         return ContactEndpoint(
             endpoint_id=str(item["endpointId"]),
             person_id=person_id,
             endpoint_type=EndpointType(str(item["endpointType"])),
-            ciphertext=bytes(item["ciphertext"].value)  # type: ignore[union-attr]
+            ciphertext=bytes(item["ciphertext"].value)
             if hasattr(item["ciphertext"], "value")
-            else bytes(item["ciphertext"]),  # type: ignore[arg-type]
+            else bytes(item["ciphertext"]),
             status=EndpointStatus(str(item["status"])),
             verified_at=datetime.fromisoformat(str(verified)) if verified else None,
         )
@@ -134,11 +191,73 @@ class DynamoEndpointRepository:
                 f"endpoint {endpoint.endpoint_id} is {endpoint.status}; only a verified "
                 f"endpoint may be contacted"
             )
+        return self._decrypt(endpoint)
+
+    def reveal_for_verification(self, endpoint: ContactEndpoint) -> str:
+        if endpoint.endpoint_type is not EndpointType.PHONE or endpoint.status not in {
+            EndpointStatus.UNVERIFIED,
+            EndpointStatus.VERIFIED,
+        }:
+            raise ValueError("only a current phone endpoint may be verified")
+        return self._decrypt(endpoint)
+
+    def _decrypt(self, endpoint: ContactEndpoint) -> str:
         result = self.kms.decrypt(
             CiphertextBlob=endpoint.ciphertext,
             EncryptionContext=self._context(endpoint.person_id, endpoint.endpoint_type),
         )
         return str(result["Plaintext"].decode())
+
+    def revoke(self, person_id: PersonId, endpoint_type: EndpointType, endpoint_id: str) -> bool:
+        try:
+            self.table.update_item(
+                Key={"pk": keys.person(person_id), "sk": f"ENDPOINT#{endpoint_type.value}"},
+                UpdateExpression="SET #status = :revoked REMOVE verifiedAt",
+                ConditionExpression="#endpoint = :id AND #status <> :revoked",
+                ExpressionAttributeNames={"#endpoint": "endpointId", "#status": "status"},
+                ExpressionAttributeValues={
+                    ":id": endpoint_id,
+                    ":revoked": EndpointStatus.REVOKED.value,
+                },
+            )
+        except self.table.meta.client.exceptions.ConditionalCheckFailedException:
+            return False
+        return True
+
+    def revoke_candidate(
+        self, person_id: PersonId, endpoint_type: EndpointType, endpoint_id: str
+    ) -> bool:
+        key = {
+            "pk": keys.person(person_id),
+            "sk": f"ENDPOINT_CANDIDATE#{endpoint_type.value}#{endpoint_id}",
+        }
+        try:
+            self.table.update_item(
+                Key=key,
+                UpdateExpression="SET #status = :revoked",
+                ConditionExpression="#endpoint = :id AND #status = :pending",
+                ExpressionAttributeNames={"#endpoint": "endpointId", "#status": "status"},
+                ExpressionAttributeValues={
+                    ":id": endpoint_id,
+                    ":pending": EndpointStatus.UNVERIFIED.value,
+                    ":revoked": EndpointStatus.REVOKED.value,
+                },
+            )
+        except self.table.meta.client.exceptions.ConditionalCheckFailedException:
+            return False
+        return True
+
+    @staticmethod
+    def _item(endpoint: ContactEndpoint, sk: str) -> dict[str, Any]:
+        return {
+            "pk": keys.person(endpoint.person_id),
+            "sk": sk,
+            "endpointId": endpoint.endpoint_id,
+            "endpointType": endpoint.endpoint_type.value,
+            "status": endpoint.status.value,
+            "ciphertext": endpoint.ciphertext,
+            "verifiedAt": endpoint.verified_at.isoformat() if endpoint.verified_at else None,
+        }
 
     def delete(self, person_id: PersonId, endpoint_type: EndpointType, endpoint_id: str) -> bool:
         current = self.for_person(person_id, endpoint_type)

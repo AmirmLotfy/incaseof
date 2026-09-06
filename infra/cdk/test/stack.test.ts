@@ -262,6 +262,51 @@ describe("hosting", () => {
 });
 
 describe("api", () => {
+  it("configures OTP only as one complete, least-privilege provider boundary", () => {
+    const app = new App({
+      context: {
+        otpApplicationId: "otp-app",
+        otpOriginationIdentity: "+12025550199",
+        otpBrandName: "In Case Of",
+      },
+    });
+    const stack = new IcoStack(app, "IcoStack-otp", {
+      environment: ENVIRONMENTS.staging,
+      env: { account: "123456789012", region: "us-east-1" },
+    });
+    const template = Template.fromStack(stack);
+    template.hasResourceProperties("AWS::Lambda::Function", {
+      Environment: {
+        Variables: Match.objectLike({
+          ICO_OTP_APPLICATION_ID: "otp-app",
+          ICO_OTP_ORIGINATION_ID: "+12025550199",
+          ICO_OTP_BRAND_NAME: "In Case Of",
+        }),
+      },
+    });
+    const policies = template.findResources("AWS::IAM::Policy");
+    const otpStatement = Object.values(policies)
+      .flatMap((policy) => policy.Properties?.PolicyDocument?.Statement ?? [])
+      .find((statement) =>
+        JSON.stringify(statement.Action).includes("mobiletargeting:SendOTPMessage"),
+      );
+    assert.deepEqual(otpStatement?.Action, [
+      "mobiletargeting:SendOTPMessage",
+      "mobiletargeting:VerifyOTPMessage",
+    ]);
+    assert.match(JSON.stringify(otpStatement?.Resource), /apps\/?otp-app/);
+    assert.notEqual(otpStatement?.Resource, "*");
+
+    assert.throws(
+      () =>
+        new IcoStack(new App({ context: { otpApplicationId: "partial" } }), "IcoStack-partial", {
+          environment: ENVIRONMENTS.dev,
+          env: { account: "123456789012", region: "us-east-1" },
+        }),
+      /requires otpApplicationId, otpOriginationIdentity and otpBrandName together/,
+    );
+  });
+
   it("puts every subject-facing route behind the authorizer", () => {
     const routes = synth().findResources("AWS::ApiGatewayV2::Route");
     assert.ok(Object.keys(routes).length >= 9, "expected the v1 routes");

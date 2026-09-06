@@ -38,6 +38,13 @@ from services.adapters.dynamo import (
     DynamoPlanRepository,
 )
 from services.adapters.endpoints import DynamoEndpointRepository, EndpointRepository
+from services.adapters.otp import (
+    DynamoPhoneVerificationRepository,
+    OtpProvider,
+    PhoneVerificationRepository,
+    PinpointOtpProvider,
+    pinpoint_client,
+)
 from services.adapters.outbox import DynamoOutbox
 from services.adapters.profile import DynamoProfileRepository
 from services.adapters.queue import ActionQueue, SqsActionQueue
@@ -102,6 +109,8 @@ class Context:
     outbox: DynamoOutbox | None = None
     profiles: ProfileRepository | None = None
     endpoints: EndpointRepository | None = None
+    phone_verifications: PhoneVerificationRepository | None = None
+    otp_provider: OtpProvider | None = None
 
     def now(self) -> datetime:
         return self.clock.now()
@@ -144,6 +153,8 @@ def build(*, schedule_target_arn: str | None = None) -> Context:
         outbox=DynamoOutbox(table),
         profiles=DynamoProfileRepository(table),
         endpoints=endpoints,
+        phone_verifications=DynamoPhoneVerificationRepository(table),
+        otp_provider=_otp_provider(),
     )
 
 
@@ -152,6 +163,21 @@ def _endpoints(table: Any) -> DynamoEndpointRepository | None:
     if not key_id:
         return None
     return DynamoEndpointRepository(table=table, kms=boto3.client("kms"), key_id=key_id)
+
+
+def _otp_provider() -> OtpProvider | None:
+    names = ("ICO_OTP_APPLICATION_ID", "ICO_OTP_ORIGINATION_ID", "ICO_OTP_BRAND_NAME")
+    values = tuple(os.environ.get(name) for name in names)
+    if not any(values):
+        return None
+    if not all(values):
+        raise RuntimeError("OTP provider configuration is incomplete")
+    return PinpointOtpProvider(
+        client=pinpoint_client(boto3),
+        application_id=str(values[0]),
+        origination_identity=str(values[1]),
+        brand_name=str(values[2]),
+    )
 
 
 def _devices(endpoints: DynamoEndpointRepository | None) -> DeviceRegistry | None:

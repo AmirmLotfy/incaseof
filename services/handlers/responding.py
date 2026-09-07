@@ -42,7 +42,7 @@ class IncidentView:
     plan_label: str
     expected_at: datetime
     state: str
-    tried: list[str]
+    tried: list[dict[str, str]]
     owner_name: str | None
     lease_expires_at: datetime | None
     can_claim: bool
@@ -110,7 +110,7 @@ def view(ctx: bootstrap.Context, token: str) -> IncidentView:
     circle = ctx.circles.get(CircleId(plan.circle_id)) if plan else None
 
     tried = [
-        str(event.get("eventType"))
+        {"at": str(event.get("at")), "event": str(event.get("eventType"))}
         for event in ctx.audit.for_alert(alert.alert_id)
         if str(event.get("eventType"))
         in {"ACTION_QUEUED", "ACTION_ACCEPTED", "ACTION_DELIVERED", "CHANNEL_UNAVAILABLE"}

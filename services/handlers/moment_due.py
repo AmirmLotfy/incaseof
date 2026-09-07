@@ -14,12 +14,15 @@ import json
 import logging
 import os
 from typing import Any
+from uuid import NAMESPACE_URL, uuid5
 
 import boto3
 
 from services.domain.alert import Alert, AlertState
+from services.domain.clock import TimeScale
 from services.domain.escalation import Ladder, LadderState
 from services.domain.ids import AlertId, IdFactory, MomentId, uuid_factory
+from services.domain.moment import MomentStatus
 from services.handlers import bootstrap
 
 log = logging.getLogger(__name__)
@@ -42,12 +45,20 @@ def open_alert(
         # nothing wrong.
         return None, False
 
+    if moment.status in {MomentStatus.RESOLVED, MomentStatus.CANCELLED}:
+        return None, False
     version = ctx.plans.get_version(moment.version_id)
     if version is None:
         raise RuntimeError(
             f"moment {moment_id} pins version {moment.version_id}, which no longer exists"
         )
 
+    plan = ctx.plans.get_plan(version.plan_id)
+    if plan is None:
+        raise RuntimeError(f"version {version.version_id} points at missing plan {version.plan_id}")
+
+    if not moment.is_drill and (not plan.is_active or plan.active_version_id != version.version_id):
+        return None, False
     now = ctx.now()
     candidate = Alert(
         alert_id=AlertId(new_id()),
@@ -57,10 +68,13 @@ def open_alert(
         opened_at=moment.due_at,
         ladder=Ladder(
             version=version,
-            state=LadderState(started_at=moment.grace_until, scale=ctx.scale),
+            state=LadderState(
+                started_at=moment.grace_until,
+                scale=TimeScale(moment.time_scale),
+            ),
         ),
     )
-    alert = ctx.alerts.open_for_moment(candidate)
+    alert = ctx.alerts.open_for_moment(candidate, subject_person_id=plan.subject_person_id)
     opened = alert.alert_id == candidate.alert_id
 
     if opened:
@@ -86,6 +100,8 @@ def handler(event: dict[str, Any], context: Any = None) -> dict[str, Any]:
     if alert is None:
         return {"status": "NO_SUCH_MOMENT", "momentId": moment_id}
     if not opened:
+        if not alert.is_terminal:
+            _start_escalation(ctx, alert.alert_id)
         return {"status": "ALREADY_OPEN", "alertId": alert.alert_id}
 
     # Queue the next occurrence before escalating. A recurring plan that only ever fires
@@ -123,7 +139,14 @@ def _queue_next_occurrence(ctx: bootstrap.Context, moment_id: MomentId) -> Any:
         if version is None:
             return None
 
-        return planning.schedule_following_moment(ctx, version, after=moment.due_at)
+        return planning.schedule_following_moment(
+            ctx,
+            version,
+            after=moment.due_at,
+            new_id=lambda: str(
+                uuid5(NAMESPACE_URL, f"ico:following:{moment_id}:{version.version_id}")
+            ),
+        )
     except Exception:
         log.warning("could not queue the next occurrence for %s", moment_id, exc_info=True)
         return None

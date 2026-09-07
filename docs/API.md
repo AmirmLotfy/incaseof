@@ -4,10 +4,39 @@
 > expectations and works to close the loop.**
 
 API Gateway HTTP API. All `/v1/*` routes require a Cognito-authenticated principal except the
-`/r/*` responder routes, which authenticate with a signed single-Alert token
-(`docs/SECURITY.md` §2). The machine-readable definition lives in `packages/contracts/openapi.yaml`.
+explicit signed-link operations under `/v1/r/*` and `/v1/i/*`, plus `/v1/demo/*` in the
+isolated demo stack. Responder, invitation and demo sessions use separate narrow, expiring
+token audiences. The machine-readable definition lives in `packages/contracts/openapi.yaml`.
 
 ---
+
+## Public service
+
+```text
+GET    /      service descriptor; no tenant data
+```
+
+## Account and readiness
+
+```text
+GET    /v1/profile       profile and locale settings; never contact endpoints
+PATCH  /v1/profile       create or update display name, locale, timezone, and country
+GET    /v1/readiness     account, channel, responder, and plan-capacity status
+POST   /v1/phone-verifications                          send a phone ownership code
+POST   /v1/phone-verifications/{verificationId}/confirm confirm a six-digit code
+DELETE /v1/phone                                         revoke the current phone
+```
+
+The first launch markets are Egypt and the United States, with Arabic and English locales.
+Production activation fails closed while admissions are paused, while the profile is incomplete,
+or when a plan requires an unverified subject or responder channel. Readiness exposes stable reason
+codes and booleans without returning phone numbers, push tokens, or provider endpoint identifiers.
+
+Phone starts accept only an E.164 mobile number matching the authenticated profile's EG or US
+country. The response contains an opaque verification id and expiry, never the phone. Starts are
+limited to one per minute and five per UTC day per account. The provider and DynamoDB both enforce
+five attempts and a ten-minute lifetime. Revocation changes the endpoint to `REVOKED`; it cannot
+satisfy readiness or delivery authorization.
 
 ## Plans
 
@@ -16,6 +45,7 @@ POST   /v1/plans/compile              natural language → validated CompiledPla
 POST   /v1/plans                      create from a compiled plan
 GET    /v1/plans
 GET    /v1/plans/{planId}
+GET    /v1/history                     terminal Alert history for the signed-in subject
 POST   /v1/plans/{planId}/activate
 POST   /v1/plans/{planId}/pause
 POST   /v1/plans/{planId}/resume
@@ -43,6 +73,16 @@ GET    /v1/circle
 POST   /v1/circle/invitations
 POST   /v1/circle/invitations/{id}/resend
 DELETE /v1/circle/members/{id}
+GET    /i/{signedToken}
+POST   /v1/i/{signedToken}/accept
+POST   /v1/i/{signedToken}/decline
+```
+
+## Devices
+
+```text
+POST   /v1/devices
+DELETE /v1/devices/{deviceId}
 ```
 
 ## Alerts
@@ -65,18 +105,46 @@ POST   /v1/r/{token}/unable
 POST   /v1/r/{token}/resolve
 ```
 
-## Voice (P1)
+## Public judge demo (synthetic tenant, demo stack only)
 
+```text
+POST   /v1/demo/session
+POST   /v1/demo/plans/compile
+POST   /v1/demo/plans
+GET    /v1/demo/plans
+GET    /v1/demo/plans/{planId}
+POST   /v1/demo/plans/{planId}/activate
+POST   /v1/demo/plans/{planId}/pause
+POST   /v1/demo/plans/{planId}/resume
+POST   /v1/demo/plans/{planId}/test
+GET    /v1/demo/moments/next
+POST   /v1/demo/moments/{momentId}/confirm
+POST   /v1/demo/moments/{momentId}/extend
+GET    /v1/demo/circle
+POST   /v1/demo/circle/invitations
+GET    /v1/demo/history
+GET    /v1/demo/alerts/{alertId}
+POST   /v1/demo/alerts/{alertId}/claim
+GET    /v1/demo/alerts/{alertId}/timeline
+GET    /v1/demo/alerts/{alertId}/responder-link
 ```
-POST   /v1/voice/session
-```
+
+Each session is isolated under a random synthetic subject, expires after 30 minutes and has
+accepted fixture roles but no real contact endpoints. These routes return `404` outside the
+demo environment. They still run the same compiler, repositories, Scheduler and workflow.
+There is deliberately no demo device-registration route: judge sessions can only use the
+safe delivery sink and can never attach a phone or other contact endpoint.
+
+Voice is deferred and intentionally absent from the P0 public API. There is no placeholder
+route implying that an unsupported channel exists.
 
 ---
 
 ## Conventions
 
-- **Idempotency:** every mutating endpoint accepts `Idempotency-Key`. Replays return the original
-  result rather than acting twice.
+- **Idempotency:** every state-changing authenticated endpoint that schedules work, sends an
+  invitation or changes Alert ownership requires `Idempotency-Key`. Signed responder operations
+  are scoped to one Alert and remain transition-idempotent.
 - **Errors:** RFC 9457 `application/problem+json`. Authorization failures are `403` with a stable
   `reason_code`; they never explain *why* in a way that leaks another user's data.
 - **Versioning:** `/v1` prefix. Responder routes are deliberately short (`/r/...`) because they are

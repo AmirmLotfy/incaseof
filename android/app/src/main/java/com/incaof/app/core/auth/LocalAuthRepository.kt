@@ -39,6 +39,14 @@ class LocalAuthRepository(
         return Result.success(Unit)
     }
 
+    override suspend fun requestPasswordReset(email: String): Result<Unit> = Result.success(Unit)
+
+    override suspend fun confirmPasswordReset(
+        email: String,
+        code: String,
+        newPassword: String,
+    ): Result<Unit> = Result.success(Unit)
+
     override suspend fun signOut() {
         _session.value = AuthState.SignedOut
     }

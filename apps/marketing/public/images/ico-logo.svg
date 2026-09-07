@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 50" width="160" height="50" fill="none">
+  <style>
+    .ico-ink { fill: #171A18; }
+    .ico-stroke { stroke: #171A18; }
+    .ico-signal { fill: #E85B2A; }
+    @media (prefers-color-scheme: dark) {
+      .ico-ink { fill: #F2F1EB; }
+      .ico-stroke { stroke: #F2F1EB; }
+      .ico-signal { fill: #FF8055; }
+    }
+  </style>
+  <!-- Letter I -->
+  <rect x="8" y="10" width="10" height="30" rx="3" class="ico-ink" />
+  
+  <!-- Letter C -->
+  <path d="M52 13 C40 13 32 20 32 25 C32 30 40 37 52 37 C56 37 59 36 61 34" stroke-width="8" stroke-linecap="round" fill="none" class="ico-stroke" />
+  
+  <!-- Letter O with Signal Orange center marker -->
+  <circle cx="86" cy="25" r="14" stroke-width="8" fill="none" class="ico-stroke" />
+  <circle cx="86" cy="25" r="4.5" class="ico-signal" />
+
+  <!-- Subtitle: IN CASE OF -->
+  <text x="114" y="22" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="9" font-weight="700" letter-spacing="1.5" class="ico-ink">IN CASE</text>
+  <text x="114" y="33" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="9" font-weight="700" letter-spacing="1.5" class="ico-signal">OF</text>
+</svg>

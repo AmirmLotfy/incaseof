@@ -55,4 +55,18 @@
     <string name="cd_status_all_clear">Status: all clear. Nothing needs your attention.</string>
     <string name="cd_status_action_needed">Status: action needed. In Case of is waiting for your check.</string>
     <string name="cd_confirm_okay">Confirm that you are okay. This resolves tonight\'s check.</string>
+
+    <!-- Drill Mode -->
+    <string name="drill_title">Testing Plan</string>
+    <string name="drill_timing_banner">Demo timing is controlled by the deployed environment</string>
+    <string name="drill_step_scheduled">Compressed schedule active</string>
+    <string name="drill_step_notification">Android check notification received</string>
+    <string name="drill_step_self_contact">Self-contact unanswered</string>
+    <string name="drill_step_circle">Circle member notified</string>
+    <string name="drill_step_claimed">Circle member claimed alert</string>
+    <string name="drill_step_paused">Backup escalation paused (10m lease)</string>
+    <string name="drill_step_resolved">Resolved: contact verified</string>
+    <string name="drill_ready">Plan verified and ready</string>
+    <string name="drill_trace_title">TELEMETRY TRACE</string>
+    <string name="drill_action_done">Done</string>
 </resources>

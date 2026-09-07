@@ -22,6 +22,7 @@ from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import Any
 
+from services.agent.config import MODEL_ID
 from services.domain.agent_decision import AgentDecision, PolicyResult
 from services.domain.alert import Alert
 from services.domain.authorization import (
@@ -84,7 +85,7 @@ class Gateway:
     # Bound at construction rather than discovered. The model cannot name a circle, so it
     # cannot reach one it was not given.
     circle_id: CircleId | None = None
-    model_id: str = "gemini-3.7-flash"
+    model_id: str = MODEL_ID
     input_hash: str = ""
     new_id: IdFactory = uuid_factory
 

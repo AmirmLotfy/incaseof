@@ -39,7 +39,7 @@ export class Messaging extends Construct {
       enforceSSL: true,
       // Long enough for a provider call plus its callback, short enough that a stuck
       // message returns for another attempt while the Alert is still live.
-      visibilityTimeout: Duration.seconds(120),
+      visibilityTimeout: Duration.seconds(360),
       retentionPeriod: Duration.days(4),
       deadLetterQueue: {
         queue: this.actionDlq,

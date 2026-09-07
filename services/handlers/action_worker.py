@@ -9,65 +9,117 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from services.adapters.contact import Delivery, DeliveryStatus
+from services.adapters.contact import (
+    Delivery,
+    DeliveryRecipient,
+    DeliveryStatus,
+    ProviderNotInvoked,
+)
 from services.adapters.queue import ActionIntent
+from services.domain.authorization import evaluate_contact
 from services.domain.circle import CircleMember
+from services.domain.idempotency import key_for
 from services.domain.ids import CircleId, PlanId
 from services.handlers import bootstrap, escalation
 
 BatchResponse = dict[str, list[dict[str, str]]]
 
 
+class DeliveryDeferred(Exception):
+    """No provider call happened; checking temporarily owns the Alert."""
+
+
 def deliver(ctx: bootstrap.Context, intent: ActionIntent) -> Delivery:
     """Send one message, or explain in the timeline why it was not sent."""
     now = ctx.now()
+    if ctx.outbox is None:
+        raise RuntimeError("a durable worker ledger is required")
+    row = ctx.outbox.get(intent.idempotency_key)
+    if row is None or row.get("intent") != json.loads(intent.to_json()):
+        # Legacy/untrusted queue payloads cannot authorize an external action.
+        _record(ctx, intent, "ACTION_SUPPRESSED", now, reason="UNREGISTERED_INTENT")
+        raise ValueError("unregistered intent requires DLQ reconciliation")
+    if row["status"] != "PENDING":
+        outcome = row.get("outcome", {})
+        return Delivery(
+            DeliveryStatus.UNKNOWN if row["status"] == "SENDING" else DeliveryStatus(row["status"]),
+            provider_reference=outcome.get("provider_reference"),
+            error_code=outcome.get("reason"),
+        )
     alert = ctx.alerts.get(intent.alert_id)
-
-    if alert is None or alert.is_terminal:
-        # Invariant 4. The Alert closed while this sat on the queue; contacting somebody
-        # now would be about a situation that is already resolved.
-        _record(ctx, intent, "ACTION_SUPPRESSED", now, reason="ALERT_CLOSED")
-        return Delivery(status=DeliveryStatus.FAILED, error_code="ALERT_CLOSED")
-
-    if not intent.channel.is_available_in_p0:
-        # CALL rungs compile, schedule and dispatch exactly like any other. They report
-        # here rather than being removed from the model, so a plan written today keeps
-        # working unchanged when voice lands — and the gap is visible in the timeline
-        # rather than silent.
-        _record(ctx, intent, "CHANNEL_UNAVAILABLE", now)
-        return Delivery(status=DeliveryStatus.CHANNEL_UNAVAILABLE)
-
-    if ctx.sender is None:
-        _record(ctx, intent, "ACTION_SUPPRESSED", now, reason="NO_SENDER")
-        return Delivery(status=DeliveryStatus.FAILED, error_code="NO_SENDER")
-
-    member = _recipient(ctx, intent)
-    subject_name = _subject_name(ctx, intent)
-
-    body = (
-        escalation.responder_body(ctx, alert, subject_name)
-        if intent.action.is_responder_directed
-        else "Everything okay?"
-    )
-    link = (
-        escalation.responder_link(ctx, alert, member, now)
-        if member is not None and intent.action.is_responder_directed
-        else None
-    )
-
-    result = ctx.sender.send(
-        alert_id=intent.alert_id,
-        member=member,
-        channel=intent.channel,
-        body=body,
-        link=link,
-    )
-
-    _record(
-        ctx,
-        intent,
-        _event_for(result),
+    if alert is not None and alert.is_paused:
+        # Keep PENDING. The durable relay retries after checking releases/expires.
+        return Delivery(DeliveryStatus.FAILED, error_code="CHECKING")
+    if not ctx.outbox.begin(intent, now):
+        return Delivery(DeliveryStatus.UNKNOWN, error_code="ATTEMPT_ALREADY_OWNED")
+    result = Delivery(DeliveryStatus.FAILED, error_code="ALERT_CLOSED")
+    event = "ACTION_SUPPRESSED"
+    provider_started = False
+    try:
+        # Fresh reads after taking ownership; authorization is checked at delivery time.
+        alert = ctx.alerts.get(intent.alert_id)
+        if alert is not None and not alert.is_terminal:
+            if alert.is_paused:
+                # Claim raced with taking worker ownership; do not contact the backup.
+                ctx.outbox.defer(intent)
+                return Delivery(DeliveryStatus.FAILED, error_code="CHECKING_RACE")
+            else:
+                recipient = _recipient(ctx, intent)
+                if recipient is None:
+                    result = Delivery(DeliveryStatus.FAILED, error_code="NOT_AUTHORIZED")
+                    event = "CONTACT_DENIED"
+                elif ctx.sender is None:
+                    result = Delivery(DeliveryStatus.CHANNEL_UNAVAILABLE)
+                    event = "CHANNEL_UNAVAILABLE"
+                else:
+                    body = (
+                        escalation.responder_body(ctx, alert, _subject_name(ctx, intent))
+                        if intent.action.is_responder_directed
+                        else "Everything okay?"
+                    )
+                    link = (
+                        escalation.responder_link(ctx, alert, recipient, now)
+                        if isinstance(recipient, CircleMember)
+                        else None
+                    )
+                    latest = ctx.alerts.get(intent.alert_id)
+                    if latest is None or latest.is_terminal:
+                        result = Delivery(DeliveryStatus.FAILED, error_code="ALERT_CLOSED")
+                        event = "ACTION_SUPPRESSED"
+                    elif latest.is_paused:
+                        ctx.outbox.defer(intent)
+                        return Delivery(DeliveryStatus.FAILED, error_code="CHECKING_RACE")
+                    else:
+                        provider_started = True
+                        result = ctx.sender.send(
+                            alert_id=intent.alert_id,
+                            member=recipient,
+                            channel=intent.channel,
+                            body=body,
+                            link=link,
+                        )
+                        event = _event_for(result)
+    except DeliveryDeferred:
+        ctx.outbox.defer(intent)
+        return Delivery(DeliveryStatus.FAILED, error_code="CHECKING")
+    except ProviderNotInvoked:
+        ctx.outbox.defer(intent)
+        raise
+    except Exception as error:
+        if not provider_started:
+            ctx.outbox.defer(intent)
+            raise
+        # No exception from an attempted provider call proves it was not accepted.
+        result = Delivery(
+            DeliveryStatus.UNKNOWN if provider_started else DeliveryStatus.FAILED,
+            error_code=type(error).__name__,
+        )
+        event = _event_for(result)
+    ctx.outbox.finish(
+        intent.idempotency_key,
+        result.status.value,
         now,
+        event_type=event,
         reason=result.error_code,
         provider_reference=result.provider_reference,
     )
@@ -82,6 +134,8 @@ def _event_for(result: Delivery) -> str:
     that is never coming. `CHANNEL_UNAVAILABLE` says the honest thing instead: nothing was
     attempted on this channel, so do not wait on it.
     """
+    if result.status is DeliveryStatus.UNKNOWN:
+        return "ACTION_OUTCOME_UNKNOWN"
     if result.status is DeliveryStatus.CHANNEL_UNAVAILABLE:
         return "CHANNEL_UNAVAILABLE"
     # ACCEPTED, not SENT: the provider has custody. Delivery is a separate event that only
@@ -89,18 +143,51 @@ def _event_for(result: Delivery) -> str:
     return "ACTION_ACCEPTED" if result.succeeded else "ACTION_FAILED"
 
 
-def _recipient(ctx: bootstrap.Context, intent: ActionIntent) -> CircleMember | None:
-    """Resolve the role to a person, at the last possible moment."""
-    if intent.target_role is None:
-        return None
+def _recipient(
+    ctx: bootstrap.Context, intent: ActionIntent
+) -> CircleMember | DeliveryRecipient | None:
+    """Revalidate the pinned intent, current consent and recipient at the send boundary."""
     alert = ctx.alerts.get(intent.alert_id)
-    if alert is None:
+    if alert is not None and alert.is_paused:
+        raise DeliveryDeferred()
+    if alert is None or alert.is_terminal:
+        return None
+    step = alert.version.step(intent.sequence)
+    if (
+        step.step_id != intent.step_id
+        or step.action != intent.action
+        or step.action.channel != intent.channel
+        or step.target_role != intent.target_role
+        or key_for(intent.alert_id, step.step_id).value != intent.idempotency_key
+    ):
         return None
     plan = ctx.plans.get_plan(PlanId(alert.version.plan_id))
     if plan is None:
         return None
+    if step.action.is_subject_directed:
+        if intent.recipient_id != plan.subject_person_id:
+            return None
+        return DeliveryRecipient(plan.subject_person_id, "subject", is_subject=True)
     circle = ctx.circles.get(CircleId(plan.circle_id))
-    return circle.member_for_role(intent.target_role) if circle else None
+    if circle is None:
+        return None
+    decision = evaluate_contact(
+        alert=alert,
+        circle=circle,
+        consents=ctx.circles.consents_for(plan.plan_id),
+        sequence=step.sequence,
+        plan_id=plan.plan_id,
+        now=ctx.now(),
+    )
+    member = decision.member
+    if (
+        not decision.allowed
+        or member is None
+        or member.person_id != intent.recipient_id
+        or str(member.membership_id) != intent.membership_id
+    ):
+        return None
+    return member
 
 
 def _subject_name(ctx: bootstrap.Context, intent: ActionIntent) -> str:

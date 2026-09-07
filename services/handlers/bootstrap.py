@@ -17,18 +17,36 @@ from functools import lru_cache
 from typing import Any
 
 import boto3
+from botocore.config import Config
 
-from services.adapters.contact import ChannelRouter, ContactSender, PushSender, SmsSender
+from services.adapters.contact import (
+    ChannelRouter,
+    ContactSender,
+    PushSender,
+    SafeDemoSender,
+    SmsSender,
+)
+from services.adapters.devices import DeviceRegistry, SnsDeviceRegistry
 from services.adapters.dynamo import (
     DynamoActionLog,
     DynamoAlertRepository,
     DynamoAuditLog,
     DynamoCircleRepository,
     DynamoDecisionLog,
+    DynamoInvitationRepository,
     DynamoMomentRepository,
     DynamoPlanRepository,
 )
-from services.adapters.endpoints import DynamoEndpointRepository
+from services.adapters.endpoints import DynamoEndpointRepository, EndpointRepository
+from services.adapters.otp import (
+    DynamoPhoneVerificationRepository,
+    OtpProvider,
+    PhoneVerificationRepository,
+    PinpointOtpProvider,
+    pinpoint_client,
+)
+from services.adapters.outbox import DynamoOutbox
+from services.adapters.profile import DynamoProfileRepository
 from services.adapters.queue import ActionQueue, SqsActionQueue
 from services.adapters.scheduling import EventBridgeMomentScheduler, MomentScheduler
 from services.domain.clock import REAL_TIME, Clock, SystemClock, TimeScale
@@ -39,8 +57,10 @@ from services.domain.ports import (
     AuditLog,
     CircleRepository,
     DecisionLog,
+    InvitationRepository,
     MomentRepository,
     PlanRepository,
+    ProfileRepository,
 )
 
 
@@ -84,6 +104,13 @@ class Context:
     sender: ContactSender | None = None
     decisions: DecisionLog | None = None
     signing_key: bytes = b""
+    invitations: InvitationRepository | None = None
+    devices: DeviceRegistry | None = None
+    outbox: DynamoOutbox | None = None
+    profiles: ProfileRepository | None = None
+    endpoints: EndpointRepository | None = None
+    phone_verifications: PhoneVerificationRepository | None = None
+    otp_provider: OtpProvider | None = None
 
     def now(self) -> datetime:
         return self.clock.now()
@@ -106,6 +133,7 @@ def build(*, schedule_target_arn: str | None = None) -> Context:
     """
     table = _table()
     scale_factor = float(os.environ.get("ICO_TIME_SCALE", "1.0"))
+    endpoints = _endpoints(table)
     return Context(
         plans=DynamoPlanRepository(table),
         moments=DynamoMomentRepository(table),
@@ -117,13 +145,53 @@ def build(*, schedule_target_arn: str | None = None) -> Context:
         scale=TimeScale(scale_factor) if scale_factor != 1.0 else REAL_TIME,
         scheduler=_scheduler(schedule_target_arn),
         queue=_queue(),
-        sender=_sender(table),
+        sender=_sender(endpoints),
         signing_key=_signing_key(),
         decisions=DynamoDecisionLog(table),
+        invitations=DynamoInvitationRepository(table),
+        devices=_devices(endpoints),
+        outbox=DynamoOutbox(table),
+        profiles=DynamoProfileRepository(table),
+        endpoints=endpoints,
+        phone_verifications=DynamoPhoneVerificationRepository(table),
+        otp_provider=_otp_provider(),
     )
 
 
-def _sender(table: Any) -> ContactSender | None:
+def _endpoints(table: Any) -> DynamoEndpointRepository | None:
+    key_id = os.environ.get("ICO_KMS_KEY_ID")
+    if not key_id:
+        return None
+    return DynamoEndpointRepository(table=table, kms=boto3.client("kms"), key_id=key_id)
+
+
+def _otp_provider() -> OtpProvider | None:
+    names = ("ICO_OTP_APPLICATION_ID", "ICO_OTP_ORIGINATION_ID", "ICO_OTP_BRAND_NAME")
+    values = tuple(os.environ.get(name) for name in names)
+    if not any(values):
+        return None
+    if not all(values):
+        raise RuntimeError("OTP provider configuration is incomplete")
+    return PinpointOtpProvider(
+        client=pinpoint_client(boto3),
+        application_id=str(values[0]),
+        origination_identity=str(values[1]),
+        brand_name=str(values[2]),
+    )
+
+
+def _devices(endpoints: DynamoEndpointRepository | None) -> DeviceRegistry | None:
+    platform_arn = os.environ.get("ICO_PUSH_PLATFORM_ARN")
+    if endpoints is None or not platform_arn:
+        return None
+    return SnsDeviceRegistry(
+        sns=boto3.client("sns"),
+        endpoints=endpoints,
+        platform_application_arn=platform_arn,
+    )
+
+
+def _sender(endpoints: DynamoEndpointRepository | None) -> ContactSender | None:
     """Delivery, on whichever channels are actually configured.
 
     Absent altogether means the worker records CHANNEL_UNAVAILABLE rather than pretending
@@ -131,12 +199,23 @@ def _sender(table: Any) -> ContactSender | None:
     reports the same way, so "push is not wired here" and "the text failed" stay distinct
     facts for whoever reads the timeline at 2am.
     """
-    key_id = os.environ.get("ICO_KMS_KEY_ID")
-    if not key_id:
+    delivery_mode = os.environ.get("ICO_DELIVERY_MODE")
+    if delivery_mode:
+        if delivery_mode != "SAFE_SINK" or os.environ.get("ICO_ENV") != "demo":
+            raise RuntimeError("ICO_DELIVERY_MODE is permitted only as SAFE_SINK in demo")
+        return SafeDemoSender()
+
+    if endpoints is None:
         return None
 
-    sns = boto3.client("sns")
-    endpoints = DynamoEndpointRepository(table=table, kms=boto3.client("kms"), key_id=key_id)
+    sns = boto3.client(
+        "sns",
+        config=Config(
+            retries={"total_max_attempts": 1, "mode": "standard"},
+            connect_timeout=5,
+            read_timeout=15,
+        ),
+    )
 
     senders: dict[Channel, Any] = {
         Channel.SMS: SmsSender(

@@ -15,8 +15,9 @@ import logging
 import os
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
+from botocore.config import Config
 from pydantic import BaseModel, Field
 
 from services.agent.compilation import (
@@ -26,16 +27,18 @@ from services.agent.compilation import (
     compile_from_draft,
     guard_utterance,
 )
-from services.agent.gateway import Gateway
+from services.agent.config import MAX_OUTPUT_TOKENS, MODEL_ID, MODEL_TEMPERATURE
 from services.agent.prompts import SYSTEM_PROMPT
-from services.agent.tools import build_tools
 from services.domain.agent_decision import hash_input
 from services.domain.errors import PlanValidationError
 from services.domain.ids import IdFactory, PlanId, uuid_factory
 
 log = logging.getLogger(__name__)
 
-DEFAULT_MODEL = "gemini-3.7-flash"
+DEFAULT_MODEL = MODEL_ID
+
+if TYPE_CHECKING:
+    from services.agent.gateway import Gateway
 
 
 class Intent(StrEnum):
@@ -90,24 +93,21 @@ DEGRADED = Reading(intents=(Intent.UNAVAILABLE,), unambiguous=False, degraded=Tr
 
 
 def _model(model_id: str = DEFAULT_MODEL) -> Any:
-    """Build the Gemini client.
+    """Build the model client.
 
-    The key comes from the environment, which in a deployed environment comes from Secrets
-    Manager. It is never a constructor default and never in the repository.
+    Amazon Bedrock uses ambient, temporary IAM credentials supplied by Lambda or
+    AgentCore. No provider API key exists in the website, APK, runtime configuration or
+    source tree.
     """
-    from strands.models.gemini import GeminiModel
+    from strands.models.bedrock import BedrockModel
 
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        raise RuntimeError("GEMINI_API_KEY is not set")
-
-    return GeminiModel(
-        client_args={"api_key": api_key},
-        model_id=model_id,
-        # Medium thinking by default. Low loses the hedge-detection that the ambiguity rule
-        # depends on; high costs latency on the path where somebody is waiting to say they
-        # are okay.
-        params={"thinking_level": "medium"},
+    return BedrockModel(
+        model_id=os.environ.get("AWS_BEDROCK_MODEL_ID", model_id),
+        region_name=os.environ.get("AWS_REGION", "us-east-1"),
+        max_tokens=MAX_OUTPUT_TOKENS,
+        temperature=MODEL_TEMPERATURE,
+        streaming=False,
+        boto_client_config=Config(retries={"max_attempts": 5, "mode": "adaptive"}),
     )
 
 
@@ -115,9 +115,28 @@ def build_agent(gateway: Gateway, *, model_id: str = DEFAULT_MODEL, model: Any =
     """Construct the agent for one authenticated subject."""
     from strands import Agent
 
+    from services.agent.tools import build_tools
+
     return Agent(
         model=model if model is not None else _model(model_id),
         tools=build_tools(gateway),
+        system_prompt=SYSTEM_PROMPT,
+    )
+
+
+def build_compile_agent(*, model_id: str = DEFAULT_MODEL, model: Any = None) -> Any:
+    """Construct the side-effect-free plan compiler used by AgentCore Runtime.
+
+    Compilation has no tools: the model can only produce typed data. The API facade then
+    re-runs the deterministic schema, timezone, contact-role and safety validators before
+    showing a preview. Keeping this separate from :func:`build_agent` also makes it
+    impossible for a compiler prompt to reach a state-changing tool by accident.
+    """
+    from strands import Agent
+
+    return Agent(
+        model=model if model is not None else _model(model_id),
+        tools=[],
         system_prompt=SYSTEM_PROMPT,
     )
 

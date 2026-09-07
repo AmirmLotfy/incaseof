@@ -1,0 +1,68 @@
+name: Verify quota-safe demo deployment
+
+on:
+  pull_request:
+    branches: [main]
+    types: [labeled]
+
+concurrency:
+  group: verify-demo-deployment
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    name: Deploy demo through scoped OIDC roles
+    if: github.event.label.name == 'verify-demo-deployment'
+    runs-on: ubuntu-latest
+    environment: demo
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v10.0.1
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: uv sync --frozen
+      - name: Configure short-lived AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.AWS_DEMO_DEPLOY_ROLE_ARN }}
+          aws-region: us-east-1
+      - name: Prove the project-specific entry role
+        run: |
+          arn="$(aws sts get-caller-identity --query Arn --output text)"
+          [[ "$arn" == arn:aws:sts::*:assumed-role/ico-github-demo-deploy/* ]]
+      - name: Build exact deployable artifacts
+        run: |
+          ./scripts/build-lambda.sh
+          ./scripts/build-agentcore-runtime.sh
+      - name: Typecheck infrastructure
+        run: npm --workspace @incaseof/infra run build
+      - name: Deploy without replacing the quota-blocked AgentCore Runtime
+        working-directory: infra/cdk
+        run: >-
+          npx cdk deploy IcoStack-demo
+          --require-approval never
+          -c env=demo
+          -c skipEdgeHosting=true
+          -c preserveDeployedAgentCoreRuntime=true
+          -c 'preservedAgentCoreArtifactBucketTemplate=cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1'
+          -c preservedAgentCoreArtifactKey=d1aafd64894e6f1d4142c58e31bf0218f8880503d2b73237b793543f3b744adf.zip
+          -c preservedAgentCoreModelId=us.anthropic.claude-sonnet-4-6
+          -c hostedZoneId=${{ vars.ICO_HOSTED_ZONE_ID }}
+          -c hostedZoneName=incaof.com
+          -c pushPlatformArn=${{ vars.ICO_FCM_PLATFORM_ARN }}
+      - name: Prove CloudFormation used the scoped executor
+        run: |
+          role="$(aws cloudformation describe-stacks --stack-name IcoStack-demo --query 'Stacks[0].RoleARN' --output text)"
+          [[ "$role" == arn:aws:iam::*:role/ico-demo-cfn-exec ]]
+      - name: Verify canonical API after deployment
+        env:
+          ICO_STACK_NAME: IcoStack-demo
+          ICO_API_DOMAIN: api.incaof.com
+        run: ./scripts/configure-api-domain.sh

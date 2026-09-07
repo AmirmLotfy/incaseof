@@ -5,6 +5,7 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import * as logs from "aws-cdk-lib/aws-logs";
+import * as scheduler from "aws-cdk-lib/aws-scheduler";
 import type * as sqs from "aws-cdk-lib/aws-sqs";
 import { Construct } from "constructs";
 import * as path from "node:path";
@@ -43,6 +44,7 @@ export class Compute extends Construct {
   readonly nextAction: lambda.Function;
   readonly dispatch: lambda.Function;
   readonly actionWorker: lambda.Function;
+  readonly outboxRelay: lambda.Function;
 
   constructor(scope: Construct, id: string, props: ComputeProps) {
     super(scope, id);
@@ -55,6 +57,7 @@ export class Compute extends Construct {
         ICO_TABLE_NAME: props.table.tableName,
         ICO_ENV: props.environment.name,
         ICO_TIME_SCALE: String(props.environment.demoTimeScale),
+        ...(props.environment.name === "demo" ? { ICO_DELIVERY_MODE: "SAFE_SINK" } : {}),
         ICO_ACTION_QUEUE_URL: props.actionQueue.queueUrl,
         // Endpoint encryption. Without it the worker records CHANNEL_UNAVAILABLE rather
         // than sending, which is the correct behaviour but not the intended one.
@@ -112,6 +115,31 @@ export class Compute extends Construct {
       // quota allows it, this caps how many can go out at once; see IcoEnvironment.
       reservedConcurrentExecutions: props.environment.reservedWorkerConcurrency,
     });
+
+    this.outboxRelay = new lambda.Function(this, "OutboxRelay", {
+      ...shared,
+      logGroup: logGroup("OutboxRelay"),
+      handler: "services.handlers.outbox_relay.handler",
+      description: "Recovers pending durable action intents; never contacts a provider.",
+      timeout: Duration.seconds(30),
+    });
+    const outboxSchedulerRole = new iam.Role(this, "OutboxSchedulerRole", {
+      assumedBy: new iam.ServicePrincipal("scheduler.amazonaws.com"),
+      description: "Invokes only the ICO durable outbox recovery function",
+    });
+    this.outboxRelay.grantInvoke(outboxSchedulerRole);
+    new scheduler.CfnSchedule(this, "OutboxRecovery", {
+      scheduleExpression: "rate(1 minute)",
+      flexibleTimeWindow: { mode: "OFF" },
+      state: "ENABLED",
+      target: {
+        arn: this.outboxRelay.functionArn,
+        roleArn: outboxSchedulerRole.roleArn,
+      },
+    });
+    props.table.grantReadWriteData(this.outboxRelay);
+    props.actionQueue.grantSendMessages(this.outboxRelay);
+    props.key.grantEncryptDecrypt(this.outboxRelay);
 
     this.actionWorker.addEventSource(
       new SqsEventSource(props.actionQueue, {

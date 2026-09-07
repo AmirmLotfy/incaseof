@@ -18,8 +18,8 @@ wearables, activity tracking).
 There is a useful layer between them. A person can say *"this is what I expect to happen,"* and
 if it does not happen, software can quietly start resolving the uncertainty.
 
-> **In Case of is an autonomous personal safety agent that watches for expected moments in
-> someone's life and works to close the loop when one does not happen.**
+> **In Case of is a contingency utility that watches for expected moments in someone's life and
+> works to close the loop when one does not happen.**
 
 It does **nothing** while everything is normal. When an expected event is unresolved it can:
 
@@ -104,7 +104,7 @@ The agent may *suggest* a plan change. Changing the plan requires explicit human
 The user must always be able to answer: What happened? Why? Who was contacted? What happens next?
 
 ### 4.7 Fail safely
-If Gemini fails, escalation continues. If the app is killed, escalation continues. If a Lambda
+If the AgentCore compiler fails, escalation continues. If the app is killed, escalation continues. If a Lambda
 retries, nobody receives duplicate calls. If a channel fails, a fallback is attempted. If a
 responder disappears, the workflow resumes.
 
@@ -184,7 +184,7 @@ language to deterministic interface is the core differentiator.
 
 **Compilation pipeline — the preview step is never skipped:**
 ```
-Gemini output → schema validation → semantic validation → contact authorization validation →
+Model output → schema validation → semantic validation → contact authorization validation →
 safety validation → simulation → human preview → explicit confirmation → Plan Version created
 ```
 
@@ -195,8 +195,8 @@ with the worked example in `packages/test-fixtures/`.
 
 ## 10. Functional scope
 
-**Authentication (P0):** email or phone via Cognito, profile, timezone, locale, verified mobile
-number. *Later:* passkeys, Google sign-in. Hackathon success must not depend on complex auth.
+**Authentication (P0):** email via Cognito, profile, timezone and locale. *Later:* passkeys,
+phone sign-in and Google sign-in. Hackathon success must not depend on complex auth.
 
 **Circle:** display name, relationship label, priority, verified phone, supported channels,
 accepted status, plan permissions, context permissions.
@@ -207,13 +207,13 @@ source, permissions, relevant Plan, and policy version.
 **Responders need no app.** Hard requirement. Channels: SMS, WhatsApp (P1), voice (P1), and a
 signed web link that works without sign-up for that one Alert.
 
-**Resolution methods:** self-confirmation · trusted verification · verified call response. Every
+**Resolution methods:** explicit self-confirmation · explicit trusted verification. Every
 resolution records who, when, how, source, plan version, incident id.
 
-**Drill Mode:** *Test this plan* runs the **same production workflow engine** with an accelerated
+**Drill Mode:** *Test this plan* runs the **same deployed workflow engine** with an accelerated
 schedule. There is no fake demo code path — see `docs/DEMO.md`.
 
-**Plan Health:** objective facts only (`2/2 Circle members verified`, `Voice tested Aug 20`).
+**Plan Health:** objective facts only (`2/2 Circle members verified`, `Push tested Aug 20`).
 Never an AI score like "Safety 92/100."
 
 ---
@@ -242,7 +242,7 @@ Committed in full. See "Schedule risk" below.
 | One-time Plan | ✓ |
 | Recurring Plan | ✓ |
 | Natural language compilation | ✓ |
-| Gemini 3.7 Flash | ✓ |
+| Strands on AgentCore with Amazon Nova 2 Lite through Bedrock | ✓ |
 | Strands Agent | ✓ |
 | AgentCore Runtime | ✓ |
 | AgentCore Gateway / Policy | ✓ |
@@ -279,15 +279,12 @@ conversational voice · Amazon Connect + IVR · WhatsApp · progressive device c
 AppFunctions · richer exceptions · plan recommendations · dark mode refinement · advanced
 multi-Circle permissions.
 
-### Known gaps, deliberately deferred
+### Recurring-plan boundary
 
-Recorded when found rather than left implicit:
-
-- **Interval plans have no end bound.** `intervalSeconds` anchors a chain to `timeOfDay` and
-  repeats indefinitely, so "check every three hours tonight" keeps checking tomorrow. A bounded
-  night is currently expressed as a `RELATIVE` or `ONE_TIME` plan, or by pausing. Adding an
-  explicit `until` to the schema is a Phase 5 change, once natural-language compilation shows
-  how people actually phrase the bound.
+`intervalSeconds` anchors a chain to `timeOfDay`. Time-limited requests also carry
+`untilAt`, the inclusive final occurrence, so "check every three hours tonight" cannot
+silently keep checking tomorrow. An omitted bound means the person reviewed and activated
+an ongoing recurrence.
 
 ### Do not build before submission
 Wear OS · iOS · browser extension · smartwatch detection · fall detection · calendar integration ·
@@ -336,7 +333,7 @@ The project is not done until **all** of these are true:
 
 ```
 ✓ User can create a Plan using natural language.
-✓ Gemini output becomes validated structured data.
+✓ AgentCore output becomes validated structured data.
 ✓ User sees exactly what will happen before activation.
 ✓ Expected Moment fires if the Android app is terminated.
 ✓ Android check notification works.
@@ -352,7 +349,7 @@ The project is not done until **all** of these are true:
 ✓ Duplicate event delivery does not duplicate external actions.
 ✓ Unauthorized Circle contact is rejected.
 ✓ Unauthorized context release is rejected.
-✓ Gemini outage does not prevent deterministic escalation.
+✓ Model outage does not prevent deterministic escalation.
 ✓ Full audit timeline is available.
 ✓ Drill Mode runs the same production workflow.
 ✓ Android app passes accessibility review.

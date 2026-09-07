@@ -10,7 +10,8 @@ info:
 
     Two authentication realms:
       * /v1/*  Cognito-authenticated principal.
-      * /r/*   a signed, single-Alert responder token. Never a broad session.
+      * /r/* and /i/*  signed, narrowly scoped tokens. Never a broad session.
+      * /v1/demo/*  a short-lived synthetic-tenant token, demo environment only.
 
     No endpoint ever returns a plaintext phone number.
 
@@ -18,13 +19,154 @@ servers:
   - url: https://api.incaof.com
 
 tags:
+  - name: service
+  - name: account
   - name: plans
   - name: moments
   - name: circle
   - name: alerts
   - name: responder
+  - name: devices
+  - name: demo
 
 paths:
+  /:
+    get:
+      tags: [service]
+      summary: Describe the public API without exposing tenant data
+      security: []
+      responses:
+        "200":
+          description: API descriptor
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [service, status, productBoundary]
+                properties:
+                  service: { const: "In Case Of API" }
+                  status: { const: "ok" }
+                  productBoundary: { type: string }
+
+  /v1/profile:
+    get:
+      tags: [account]
+      summary: Read the authenticated account profile
+      security: [{ cognito: [] }]
+      responses:
+        "200":
+          description: Profile
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Profile" }
+        "404": { $ref: "#/components/responses/Problem" }
+    patch:
+      tags: [account]
+      summary: Create or update locale, country, timezone, and display name
+      security: [{ cognito: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                displayName: { type: string, minLength: 1, maxLength: 60 }
+                locale: { type: string, enum: [en, ar] }
+                timezone: { type: string, minLength: 1, maxLength: 64 }
+                country: { type: string, enum: [EG, US] }
+      responses:
+        "200":
+          description: Saved profile
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Profile" }
+        "422": { $ref: "#/components/responses/Problem" }
+
+  /v1/readiness:
+    get:
+      tags: [account]
+      summary: Read launch-market, channel, and plan-capacity readiness
+      description: Returns status booleans and reason codes; never returns endpoint values.
+      security: [{ cognito: [] }]
+      responses:
+        "200":
+          description: Account readiness
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Readiness" }
+
+  /v1/phone-verifications:
+    post:
+      tags: [account]
+      summary: Send a code to verify the authenticated subject's phone
+      description: The phone is KMS-encrypted and is never returned by this API.
+      security: [{ cognito: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [phoneNumber]
+              properties:
+                phoneNumber: { type: string, pattern: '^\+(?:20|1)[0-9]{10,12}$' }
+      responses:
+        "202":
+          description: Verification code accepted for delivery
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PhoneVerification" }
+        "429": { $ref: "#/components/responses/Problem" }
+        "503": { $ref: "#/components/responses/Problem" }
+
+  /v1/phone-verifications/{verificationId}/confirm:
+    post:
+      tags: [account]
+      summary: Confirm a phone verification code
+      security: [{ cognito: [] }]
+      parameters: [{ $ref: "#/components/parameters/VerificationId" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [otp]
+              properties:
+                otp: { type: string, pattern: '^[0-9]{6}$' }
+      responses:
+        "200":
+          description: Phone verified
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PhoneVerification" }
+        "404": { $ref: "#/components/responses/Problem" }
+        "410": { $ref: "#/components/responses/Problem" }
+        "422": { $ref: "#/components/responses/Problem" }
+        "503": { $ref: "#/components/responses/Problem" }
+
+  /v1/phone:
+    delete:
+      tags: [account]
+      summary: Revoke the authenticated subject's current phone
+      security: [{ cognito: [] }]
+      responses:
+        "200":
+          description: Phone revoked or already absent
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [phoneVerified, status]
+                properties:
+                  phoneVerified: { type: boolean, const: false }
+                  status: { type: string, const: REVOKED }
+
   /v1/plans/compile:
     post:
       tags: [plans]
@@ -50,7 +192,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "../domain-schemas/compiled-plan.schema.json"
+                type: object
+                required: [active, requiresConfirmation, compiledPlan, plan, warnings, trace]
+                properties:
+                  active: { const: false }
+                  requiresConfirmation: { const: true }
+                  compiledPlan:
+                    $ref: "../domain-schemas/compiled-plan.schema.json"
+                  plan: { type: object }
+                  warnings: { type: array, items: { type: string } }
+                  trace: { type: object }
         "422": { $ref: "#/components/responses/Problem" }
 
   /v1/plans:
@@ -81,12 +232,21 @@ paths:
       parameters: [{ $ref: "#/components/parameters/PlanId" }]
       responses: { "200": { description: OK }, "404": { $ref: "#/components/responses/Problem" } }
 
+  /v1/history:
+    get:
+      tags: [alerts]
+      summary: List the authenticated subject's terminal Alerts as truthful history
+      security: [{ cognito: [] }]
+      responses: { "200": { description: OK } }
+
   /v1/plans/{planId}/activate:
     post:
       tags: [plans]
       summary: Activate a plan, creating an immutable PlanVersion
       security: [{ cognito: [] }]
-      parameters: [{ $ref: "#/components/parameters/PlanId" }]
+      parameters:
+        - $ref: "#/components/parameters/PlanId"
+        - $ref: "#/components/parameters/IdempotencyKey"
       responses: { "200": { description: Activated } }
 
   /v1/plans/{planId}/pause:
@@ -94,7 +254,9 @@ paths:
       tags: [plans]
       summary: Pause a plan
       security: [{ cognito: [] }]
-      parameters: [{ $ref: "#/components/parameters/PlanId" }]
+      parameters:
+        - $ref: "#/components/parameters/PlanId"
+        - $ref: "#/components/parameters/IdempotencyKey"
       responses: { "200": { description: Paused } }
 
   /v1/plans/{planId}/resume:
@@ -102,7 +264,9 @@ paths:
       tags: [plans]
       summary: Resume a plan
       security: [{ cognito: [] }]
-      parameters: [{ $ref: "#/components/parameters/PlanId" }]
+      parameters:
+        - $ref: "#/components/parameters/PlanId"
+        - $ref: "#/components/parameters/IdempotencyKey"
       responses: { "200": { description: Resumed } }
 
   /v1/plans/{planId}/test:
@@ -111,7 +275,9 @@ paths:
       summary: Drill Mode — run the real workflow on a compressed schedule
       description: Uses the production workflow engine. There is no demo-only code path.
       security: [{ cognito: [] }]
-      parameters: [{ $ref: "#/components/parameters/PlanId" }]
+      parameters:
+        - $ref: "#/components/parameters/PlanId"
+        - $ref: "#/components/parameters/IdempotencyKey"
       responses: { "202": { description: Drill started } }
 
   /v1/moments/next:
@@ -145,7 +311,9 @@ paths:
       summary: Extend this Moment only
       description: Affects tonight alone. It never mutates the recurring plan.
       security: [{ cognito: [] }]
-      parameters: [{ $ref: "#/components/parameters/MomentId" }]
+      parameters:
+        - $ref: "#/components/parameters/MomentId"
+        - $ref: "#/components/parameters/IdempotencyKey"
       responses: { "200": { description: Extended } }
 
   /v1/moments/{momentId}/cancel:
@@ -153,7 +321,9 @@ paths:
       tags: [moments]
       summary: Cancel a Moment before escalation
       security: [{ cognito: [] }]
-      parameters: [{ $ref: "#/components/parameters/MomentId" }]
+      parameters:
+        - $ref: "#/components/parameters/MomentId"
+        - $ref: "#/components/parameters/IdempotencyKey"
       responses: { "200": { description: Cancelled } }
 
   /v1/circle:
@@ -169,6 +339,7 @@ paths:
       summary: Invite someone to a Circle
       description: Nobody becomes a safety contact without explicit acceptance.
       security: [{ cognito: [] }]
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
       responses: { "201": { description: Invited } }
 
   /v1/circle/invitations/{invitationId}/resend:
@@ -176,7 +347,9 @@ paths:
       tags: [circle]
       summary: Resend an invitation
       security: [{ cognito: [] }]
-      parameters: [{ $ref: "#/components/parameters/InvitationId" }]
+      parameters:
+        - $ref: "#/components/parameters/InvitationId"
+        - $ref: "#/components/parameters/IdempotencyKey"
       responses: { "200": { description: Resent } }
 
   /v1/circle/members/{memberId}:
@@ -184,7 +357,48 @@ paths:
       tags: [circle]
       summary: Remove a Circle member
       security: [{ cognito: [] }]
-      parameters: [{ $ref: "#/components/parameters/MemberId" }]
+      parameters:
+        - $ref: "#/components/parameters/MemberId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses: { "204": { description: Removed } }
+
+  /i/{signedToken}:
+    get:
+      tags: [circle]
+      summary: Read a Circle invitation without creating an account
+      security: []
+      parameters: [{ $ref: "#/components/parameters/SignedToken" }]
+      responses: { "200": { description: Invitation }, "403": { $ref: "#/components/responses/Problem" } }
+
+  /v1/i/{signedToken}/accept:
+    post:
+      tags: [circle]
+      summary: Accept a Circle invitation and its scoped plan consent
+      security: []
+      parameters: [{ $ref: "#/components/parameters/SignedToken" }]
+      responses: { "200": { description: Accepted }, "409": { $ref: "#/components/responses/Problem" } }
+
+  /v1/i/{signedToken}/decline:
+    post:
+      tags: [circle]
+      summary: Decline a Circle invitation
+      security: []
+      parameters: [{ $ref: "#/components/parameters/SignedToken" }]
+      responses: { "200": { description: Declined }, "409": { $ref: "#/components/responses/Problem" } }
+
+  /v1/devices:
+    post:
+      tags: [devices]
+      summary: Register an FCM device for the authenticated subject
+      security: [{ cognito: [] }]
+      responses: { "201": { description: Registered }, "503": { $ref: "#/components/responses/Problem" } }
+
+  /v1/devices/{deviceId}:
+    delete:
+      tags: [devices]
+      summary: Remove one of the authenticated subject's devices
+      security: [{ cognito: [] }]
+      parameters: [{ $ref: "#/components/parameters/DeviceId" }]
       responses: { "204": { description: Removed } }
 
   /v1/alerts/{alertId}:
@@ -215,7 +429,9 @@ paths:
       tags: [alerts]
       summary: Release a claim — escalation resumes immediately
       security: [{ cognito: [] }]
-      parameters: [{ $ref: "#/components/parameters/AlertId" }]
+      parameters:
+        - $ref: "#/components/parameters/AlertId"
+        - $ref: "#/components/parameters/IdempotencyKey"
       responses: { "200": { description: Released } }
 
   /v1/alerts/{alertId}/resolve:
@@ -235,6 +451,163 @@ paths:
       security: [{ cognito: [] }]
       parameters: [{ $ref: "#/components/parameters/AlertId" }]
       responses: { "200": { description: OK } }
+
+  /v1/demo/session:
+    post:
+      tags: [demo]
+      summary: Start an isolated synthetic judge session (demo stack only)
+      security: []
+      responses: { "201": { description: Short-lived demo session issued } }
+
+  /v1/demo/plans/compile:
+    post:
+      tags: [demo]
+      summary: Compile a plan inside the synthetic judge tenant
+      security: []
+      responses: { "200": { description: Preview }, "403": { $ref: "#/components/responses/Problem" } }
+
+  /v1/demo/plans:
+    get:
+      tags: [demo]
+      summary: List plans inside the synthetic judge tenant
+      security: []
+      responses: { "200": { description: OK } }
+    post:
+      tags: [demo]
+      summary: Create a draft inside the synthetic judge tenant
+      security: []
+      responses: { "201": { description: Created } }
+
+  /v1/demo/plans/{planId}:
+    get:
+      tags: [demo]
+      summary: Get a plan inside the synthetic judge tenant
+      security: []
+      parameters: [{ $ref: "#/components/parameters/PlanId" }]
+      responses: { "200": { description: OK } }
+
+  /v1/demo/plans/{planId}/activate:
+    post:
+      tags: [demo]
+      summary: Activate a consented synthetic judge plan
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/PlanId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses: { "200": { description: Activated } }
+
+  /v1/demo/plans/{planId}/pause:
+    post:
+      tags: [demo]
+      summary: Pause a synthetic judge plan
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/PlanId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses: { "200": { description: Paused } }
+
+  /v1/demo/plans/{planId}/resume:
+    post:
+      tags: [demo]
+      summary: Resume a synthetic judge plan
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/PlanId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses: { "200": { description: Resumed } }
+
+  /v1/demo/plans/{planId}/test:
+    post:
+      tags: [demo]
+      summary: Start a real accelerated Drill for the synthetic judge tenant
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/PlanId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses: { "202": { description: Drill started } }
+
+  /v1/demo/moments/next:
+    get:
+      tags: [demo]
+      summary: Get the synthetic judge tenant's next Moment
+      security: []
+      responses: { "200": { description: OK } }
+
+  /v1/demo/moments/{momentId}/confirm:
+    post:
+      tags: [demo]
+      summary: Confirm the synthetic judge Moment
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/MomentId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses: { "200": { description: Confirmed } }
+
+  /v1/demo/moments/{momentId}/extend:
+    post:
+      tags: [demo]
+      summary: Extend the synthetic judge Moment
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/MomentId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses: { "200": { description: Extended } }
+
+  /v1/demo/circle:
+    get:
+      tags: [demo]
+      summary: List accepted synthetic Circle roles
+      security: []
+      responses: { "200": { description: OK } }
+
+  /v1/demo/circle/invitations:
+    post:
+      tags: [demo]
+      summary: Create a synthetic Circle invitation
+      security: []
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      responses: { "201": { description: Invitation created } }
+
+  /v1/demo/history:
+    get:
+      tags: [demo]
+      summary: List the synthetic judge tenant's resolved Moments
+      security: []
+      responses: { "200": { description: OK } }
+
+  /v1/demo/alerts/{alertId}:
+    get:
+      tags: [demo]
+      summary: Get the synthetic judge tenant's Alert
+      security: []
+      parameters: [{ $ref: "#/components/parameters/AlertId" }]
+      responses: { "200": { description: OK } }
+
+  /v1/demo/alerts/{alertId}/claim:
+    post:
+      tags: [demo]
+      summary: Claim a synthetic judge Alert
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/AlertId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses: { "200": { description: Claimed } }
+
+  /v1/demo/alerts/{alertId}/timeline:
+    get:
+      tags: [demo]
+      summary: Get the real audit timeline for the synthetic judge tenant
+      security: []
+      parameters: [{ $ref: "#/components/parameters/AlertId" }]
+      responses: { "200": { description: OK } }
+
+  /v1/demo/alerts/{alertId}/responder-link:
+    get:
+      tags: [demo]
+      summary: Mint a synthetic responder link for the current demo Alert
+      security: []
+      parameters: [{ $ref: "#/components/parameters/AlertId" }]
+      responses: { "200": { description: Narrow single-Alert responder URL } }
 
   /r/{signedToken}:
     get:
@@ -276,13 +649,6 @@ paths:
       parameters: [{ $ref: "#/components/parameters/SignedToken" }]
       responses: { "200": { description: Resolved } }
 
-  /v1/voice/session:
-    post:
-      tags: [responder]
-      summary: Start a voice session (P1)
-      security: [{ cognito: [] }]
-      responses: { "501": { description: Not implemented in P0 } }
-
 components:
   securitySchemes:
     cognito:
@@ -295,11 +661,13 @@ components:
     AlertId: { name: alertId, in: path, required: true, schema: { type: string, format: uuid } }
     MemberId: { name: memberId, in: path, required: true, schema: { type: string, format: uuid } }
     InvitationId: { name: invitationId, in: path, required: true, schema: { type: string, format: uuid } }
+    DeviceId: { name: deviceId, in: path, required: true, schema: { type: string, format: uuid } }
+    VerificationId: { name: verificationId, in: path, required: true, schema: { type: string, format: uuid } }
     SignedToken: { name: signedToken, in: path, required: true, schema: { type: string } }
     IdempotencyKey:
       name: Idempotency-Key
       in: header
-      required: false
+      required: true
       schema: { type: string }
       description: Replays return the original result rather than acting twice.
   responses:
@@ -316,3 +684,57 @@ components:
               reason_code:
                 type: string
                 description: Stable machine code. Never leaks another user's data.
+  schemas:
+    PhoneVerification:
+      type: object
+      additionalProperties: false
+      required: [verificationId, status]
+      properties:
+        verificationId: { type: string, format: uuid }
+        status: { type: string, enum: [SENT, VERIFIED] }
+        expiresAt: { type: string, format: date-time }
+        phoneVerified: { type: boolean }
+    Profile:
+      type: object
+      additionalProperties: false
+      required: [displayName, locale, timezone, country, status, createdAt, updatedAt]
+      properties:
+        displayName: { type: string, minLength: 1, maxLength: 60 }
+        locale: { type: string, enum: [en, ar] }
+        timezone: { type: string }
+        country: { type: string, enum: [EG, US] }
+        status: { type: string, enum: [ACTIVE, DELETION_PENDING, DELETED] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    Readiness:
+      type: object
+      additionalProperties: false
+      required:
+        - profileReady
+        - countrySupported
+        - admissionsOpen
+        - activePlanCount
+        - maxActivePlans
+        - remainingPlanCapacity
+        - subjectChannels
+        - acceptedResponderCount
+        - accountReady
+        - reasons
+      properties:
+        profileReady: { type: boolean }
+        countrySupported: { type: boolean }
+        admissionsOpen: { type: boolean }
+        activePlanCount: { type: integer, minimum: 0 }
+        maxActivePlans: { type: integer, minimum: 1 }
+        remainingPlanCapacity: { type: integer, minimum: 0 }
+        subjectChannels:
+          type: object
+          additionalProperties: false
+          required: [push, sms, call]
+          properties:
+            push: { type: boolean }
+            sms: { type: boolean }
+            call: { const: false }
+        acceptedResponderCount: { type: integer, minimum: 0 }
+        accountReady: { type: boolean }
+        reasons: { type: array, items: { type: string } }

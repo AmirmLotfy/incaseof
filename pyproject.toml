@@ -9,9 +9,8 @@ license = { text = "Apache-2.0" }
 # Versions are PINNED, never ranged. A safety product must build identically
 # tomorrow; a transitive minor bump is not an acceptable source of surprise.
 dependencies = [
-    "strands-agents[gemini]==1.53.0",
-    "strands-agents-tools==0.8.6",
-    "google-genai==2.19.0",
+    "bedrock-agentcore==1.22.0",
+    "strands-agents==1.54.0",
     "pydantic==2.13.4",
     "boto3==1.43.78",
     "aws-lambda-powertools==3.34.0",
@@ -29,7 +28,7 @@ dev = [
     # Required by botocore to read `aws login` credentials locally. The AWS CLI bundles
     # its own copy; Lambda uses IAM roles and needs neither.
     "awscrt==0.36.2",
-    "boto3-stubs[dynamodb,kms,scheduler,secretsmanager,sns,sqs,stepfunctions]==1.43.78",
+    "boto3-stubs[dynamodb,kms,pinpoint,scheduler,secretsmanager,sns,sqs,stepfunctions]==1.43.78",
 ]
 
 [build-system]
@@ -41,7 +40,7 @@ packages = ["services"]
 
 [tool.pytest.ini_options]
 testpaths = ["services/tests", "evals"]
-# Live-model evals cost money and need GEMINI_API_KEY; opt in with `-m eval`.
+# Live-model evals cost money and need AWS Bedrock access; opt in with `-m eval`.
 addopts = "-q --strict-markers -m 'not eval'"
 markers = [
     "eval: agent evaluation, runs against a live model. Excluded from the default run.",

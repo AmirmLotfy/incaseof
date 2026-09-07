@@ -1,5 +1,5 @@
 {
-  "app": "npx tsx bin/incaseof.ts",
+  "app": "node --import tsx bin/incaseof.ts",
   "watch": {
     "include": [
       "**"

@@ -38,17 +38,20 @@ rsync -a --quiet packages/domain-schemas "$TARGET/packages/"
 
 # Runtime dependencies, listed explicitly rather than exported from pyproject.
 #
-# The project depends on the whole agent stack — strands, google-genai and their transitive
-# tree — none of which these handlers import. Exporting everything would ship tens of
+# The project depends on the whole agent stack — Strands, AgentCore Runtime and their
+# transitive tree — none of which these handlers import. Exporting everything would ship tens of
 # megabytes of unused code to every function, slow every cold start, and drag in packages
 # with no wheel for Lambda's platform.
 #
-# boto3 and botocore are omitted deliberately: the runtime already provides them, and using
-# AWS's build avoids a version skew between the SDK and the environment it runs in.
+# boto3 and botocore are pinned because the API facade invokes AgentCore Runtime, whose
+# client is not guaranteed to exist in Lambda's preinstalled SDK version. Shipping the pair
+# together avoids a boto3/botocore version skew at cold start.
 #
 # The agent Lambda in Phase 5 needs a different set, and gets its own asset.
 cat > "$TARGET/requirements.txt" <<'REQ'
 jsonschema==4.26.0
+boto3==1.43.78
+botocore==1.43.78
 REQ
 
 uv pip install \
@@ -60,11 +63,22 @@ uv pip install \
   --quiet
 
 # Fail loudly here rather than at cold start in production.
-for required in services/domain/compiler.py packages/domain-schemas/compiled-plan.schema.json; do
+for required in \
+  services/domain/compiler.py \
+  services/handlers/agent_tool_target.py \
+  services/adapters/agentcore.py \
+  packages/domain-schemas/compiled-plan.schema.json \
+  boto3/__init__.py \
+  botocore/__init__.py; do
   if [ ! -f "$TARGET/$required" ]; then
     echo "ERROR: $required is missing from the package" >&2
     exit 1
   fi
 done
+
+native_validator="$(find "$TARGET" -name 'rpds*.so' -print -quit)"
+if [ -n "$native_validator" ]; then
+  file "$native_validator" | grep -q "ELF 64-bit.*x86-64"
+fi
 
 printf 'staged %s (%s)\n' "$TARGET" "$(du -sh "$TARGET" | cut -f1)"

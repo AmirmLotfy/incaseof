@@ -115,54 +115,15 @@ cd infra/cdk && npx cdk synth             # add -c env=demo for the demo stack
 - **Material3 does not bundle icons.** `material-icons-core` is a separate dependency.
 - Hilt, KSP and Room are deliberately absent — see `android/gradle/libs.versions.toml`.
 
-## Phase state
+## Capability state
 
-**Phase 0 complete**: contracts, schemas, scaffold, guardrails, CI.
-**Phase 1 complete**: deterministic domain core. Pure — no AWS, no model, no ambient clock.
-`docs/PRODUCT-STATES.md` is enforced by a parity test that reads the document.
-**Phase 2 complete**: infrastructure. DynamoDB adapters with conditional writes, EventBridge
-Scheduler, Step Functions escalation, SQS outbox, Cognito, HTTP API. Synthesised and asserted;
-**not yet deployed** — that needs the AWS CLI, credentials and explicit approval.
-**Phase 3 complete**: the Android shell — Cognito auth, Home (all-clear and action-needed),
-Plans, Plan detail, Circle, History, notifications with a working "I'M OKAY" action, four-tab
-navigation. Runs against a local data source until the stack is deployed.
-**Phase 4 complete**: the deterministic vertical slice. Plan → Moment → missed → Alert →
-Circle contacted → claimed → resolved, proven end to end by `services/tests/slice/`, which
-drives the real handlers, domain, policy layer and DynamoDB semantics. Only EventBridge,
-SQS and Step Functions are played by the driver, and only because they exist to move time
-and messages. Drill Mode runs the same engine compressed.
+`docs/CAPABILITIES.md` is the only status source. Do not add phase-complete or production-ready
+claims here: source, local tests, CI, a deployed stack and a judge-visible live run are different
+evidence levels.
 
-**Not yet proven, and blocked on deployment**: a Moment firing while the phone is off, real
-FCM/SMS delivery, and the live demo. Those need the AWS CLI, credentials and an explicit
-decision to deploy.
-
-**Phase 5 complete**: Strands + Gemini behind the policy layer. One agent, eight tools, none
-of which can name a person or an endpoint. Every proposal is recorded as an `AGENT_DECISION`
-with ALLOW/DENY, denials included. Model output is validated twice — Pydantic for shape, then
-the JSON Schema contract — before the existing semantic and safety layers run. Any model
-failure degrades to explicit buttons; escalation timing is unaffected because the timers are
-in EventBridge.
-
-**Not yet run against the real model**: `GEMINI_API_KEY` is not set, so the live eval suite
-has never executed. The suite and harness exist and the boundary is proven structurally.
-
-**Phase 6 complete**: the web. The responder Incident Room at `/r/{token}` — no account,
-no sign-up, one action, and an explicit sentence that claiming is not resolving. The
-marketing site with the product's own timeline as the brand device, all nine sections from
-§73–§84. A judge walkthrough at `/demo`.
-
-**Not connected to a live backend**: both apps run against a labelled local data source
-until the stack is deployed. The banner says so on every surface that shows one.
-
-**Deployed** to `IcoStack-dev` in account 828547077857, us-east-1. API at
-`https://enr3ucs1cd.execute-api.us-east-1.amazonaws.com`. Verified in production: an
-unauthenticated `/v1` route returns 401, a forged responder link returns 403 by real HMAC
-rejection (recorded as `bad_signature` in the audit trail), and garbage and forged tokens
-return byte-identical responses.
-
-**Account constraints worth knowing**: Lambda concurrency quota is 10 (new-account default),
-so no function may reserve any. The account is signed in as **root**, which contradicts
-`.claude/rules/aws.md` — scoping a deployment role is outstanding.
-
-**Phase 7 is next**: polish — real channels, Drill Mode in the app, the trace UI, motion,
-error states, performance, screenshots.
+The locked model path is Strands on Amazon Bedrock AgentCore Runtime using
+`us.amazon.nova-2-lite-v1:0` through IAM. Compilation is side-effect free and every returned
+draft is revalidated by deterministic code. The current demo stack and scoped GitHub OIDC deployment have live evidence in
+`docs/CAPABILITIES.md`; the legacy dev stack is not the release environment.
+A restored local root session is for inspection only. Deploy through the protected,
+scoped GitHub OIDC path after exact-artifact validation and a reviewed CDK diff.

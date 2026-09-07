@@ -16,6 +16,10 @@ export interface IcoEnvironment {
   /** Whether the surface must display a persistent "Demo timing enabled" banner. */
   readonly showsDemoBanner: boolean;
   readonly region: string;
+  /** Whether a new plan may reserve monitoring capacity in this environment. */
+  readonly admissionsOpen: boolean;
+  /** Per-account ceiling while the launch budget and throughput are being validated. */
+  readonly maxActivePlansPerAccount: number;
   /**
    * Concurrency reserved for the action worker, or undefined to leave it unreserved.
    *
@@ -32,13 +36,29 @@ export interface IcoEnvironment {
 }
 
 export const ENVIRONMENTS: Record<EnvName, IcoEnvironment> = {
-  dev: { name: "dev", demoTimeScale: 1.0, showsDemoBanner: false, region: "us-east-1" },
-  demo: { name: "demo", demoTimeScale: 0.02, showsDemoBanner: true, region: "us-east-1" },
+  dev: {
+    name: "dev",
+    demoTimeScale: 1.0,
+    showsDemoBanner: false,
+    region: "us-east-1",
+    admissionsOpen: true,
+    maxActivePlansPerAccount: 3,
+  },
+  demo: {
+    name: "demo",
+    demoTimeScale: 0.02,
+    showsDemoBanner: true,
+    region: "us-east-1",
+    admissionsOpen: true,
+    maxActivePlansPerAccount: 3,
+  },
   staging: {
     name: "staging",
     demoTimeScale: 1.0,
     showsDemoBanner: false,
     region: "us-east-1",
+    admissionsOpen: false,
+    maxActivePlansPerAccount: 3,
     reservedWorkerConcurrency: 10,
   },
   prod: {
@@ -46,6 +66,8 @@ export const ENVIRONMENTS: Record<EnvName, IcoEnvironment> = {
     demoTimeScale: 1.0,
     showsDemoBanner: false,
     region: "us-east-1",
+    admissionsOpen: false,
+    maxActivePlansPerAccount: 3,
     reservedWorkerConcurrency: 20,
   },
 };

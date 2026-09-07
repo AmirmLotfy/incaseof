@@ -16,7 +16,7 @@
                       ▼
                 Strands Agent
                       │
-              Gemini 3.7 Flash
+          Amazon Nova 2 Lite via Bedrock
                       │
                    proposes
                       │
@@ -76,7 +76,7 @@ Those are application state.
        ▼                  ▼
   Strands Agent       Action Outbox
        │                  │
-Gemini 3.7 Flash          ▼
+Nova via Bedrock          ▼
        │                 SQS
        ▼                  │
 AgentCore Gateway         ▼
@@ -96,7 +96,7 @@ Domain services
 | Identity | Amazon Cognito | Managed, hackathon-appropriate, no custom auth |
 | Public API | API Gateway HTTP API | Not GraphQL — no need |
 | Compute | Lambda | Account/Circle/Plan/Moment/Alert APIs, callbacks, workers |
-| Agent hosting | AgentCore Runtime | Container-based, so a Gemini-backed Strands agent runs fine |
+| Agent hosting | AgentCore Runtime | Managed Strands compiler with IAM-authenticated Bedrock inference |
 | Database | DynamoDB | Single-table, access-pattern driven |
 | **Scheduling** | **EventBridge Scheduler** | **The phone must never own safety timers** |
 | Durable orchestration | Step Functions **Standard** | Delay, retry, escalation, human callback, lease, fallback |
@@ -104,7 +104,7 @@ Domain services
 | Push | FCM | Android device delivery |
 | SMS | AWS End User Messaging / SNS | P0 external contact channel |
 | Voice | Amazon Connect | **P1** — provisioning lead time, see PRD §12 |
-| Secrets | Secrets Manager | Gemini key, provider creds, signing secrets. Never in the APK |
+| Secrets | Secrets Manager | Signing and provider credentials. The Bedrock model uses IAM, not an API key |
 | Encryption | KMS | Phone endpoints, sensitive context, optional location |
 | Infrastructure | AWS CDK | Reconstructable from Git. No console-managed resources |
 
@@ -158,7 +158,7 @@ and the reliability suite) by replaying scheduler and SQS deliveries.
 
 | Failure | Behaviour |
 |---|---|
-| Gemini unavailable / invalid JSON / timeout | Escalation continues. UI falls back to deterministic buttons |
+| Model unavailable / invalid JSON / timeout | Escalation continues. UI falls back to deterministic buttons |
 | App killed | Escalation continues — timers live in EventBridge, not the device |
 | Lambda retry | No duplicate external action (idempotency key) |
 | Channel provider fails | Fallback channel attempted; failure recorded as an ActionAttempt |

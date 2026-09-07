@@ -1,0 +1,264 @@
+{
+  "schemaVersion": 1,
+  "status": "NOT_ACCEPTED",
+  "sourceCommitAtStart": "6ef1e7119ffc34cd3f20fb4cd27db4a0e56aa13b",
+  "acceptedCommit": null,
+  "tag": null,
+  "verifiedAt": "2026-09-07T00:04:30Z",
+  "aws": {
+    "accountIdRedacted": true,
+    "deploymentPrincipal": "protected GitHub OIDC role ico-github-demo-deploy with project-specific CloudFormation executor ico-demo-cfn-exec; no long-lived AWS access key",
+    "stackName": "IcoStack-demo",
+    "stackStatus": "UPDATE_COMPLETE",
+    "region": "us-east-1",
+    "githubOidc": {
+      "roleName": "ico-github-demo-deploy",
+      "longLivedAwsKeysUsed": false,
+      "protectedEnvironment": "demo",
+      "requiredReviewPassed": true,
+      "immutableRepositorySubjectPinned": true,
+      "verificationRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/34068460193",
+      "verificationAttempt": 1,
+      "verifiedAt": "2026-09-07T00:04:30Z",
+      "canonicalApiVerified": true,
+      "fullCdkDeploymentVerified": true,
+      "cloudFormationExecutionRole": "ico-demo-cfn-exec",
+      "sharedAdministratorExecutorUsed": false
+    },
+    "apiId": "84t16g8eoe",
+    "route53NameserversDelegated": true,
+    "dnsDelegationVerifiedAt": "2026-09-05T01:24:02Z",
+    "agentCoreRuntimeId": "ico_demo_compiler-6NwvbhBK5L",
+    "agentCoreRuntimeVersion": "1",
+    "agentCoreRuntimeStatus": "READY",
+    "agentCoreGatewayId": "ico-demo-gateway-bz8rejtzur",
+    "policyEngineId": "ico_demo_policy-b0h8t4ph27",
+    "stateMachineName": "WorkflowEscalation797C0498-vkUJVS19c0Dm",
+    "cloudWatchDashboard": "ico-demo-health",
+    "alarmSummary": {
+      "ok": 8,
+      "alarm": 0,
+      "insufficientData": 0
+    },
+    "fcm": {
+      "platformApplicationEnabled": true,
+      "registeredEndpointEnabled": true,
+      "api37MessageId": "c10723f5-9d2b-578c-91d1-40e145dc9104",
+      "androidNotificationId": 1001,
+      "physicalDeviceVerified": false
+    },
+    "edgeHostingStatus": "BLOCKED_ACCOUNT_VERIFICATION",
+    "accountVerificationCase": {
+      "caseId": "178838741100092",
+      "status": "UNASSIGNED",
+      "lastCheckedAt": "2026-09-04T15:00:53Z",
+      "replyPreparedNotSent": true
+    },
+    "agentCoreQuotaRequests": {
+      "activeSessionWorkloads": {
+        "requestId": "451f1b8fde074b51bcb3aacaa2042ba8vNxnmcUj",
+        "status": "APPROVED"
+      },
+      "versionsPerAgent": {
+        "requestId": "b38dff125c3e4b1493e58c7fca4ed88bEgBdMI37",
+        "caseId": "178851871600399",
+        "status": "CASE_OPENED"
+      }
+    },
+    "previousDeploymentFailure": {
+      "verifiedAt": "2026-09-05T03:27:30Z",
+      "sourceCommit": "3624de83036c4b70ffc7302c3f093f9db46433f0",
+      "result": "ROLLED_BACK",
+      "stackStatus": "UPDATE_ROLLBACK_COMPLETE",
+      "reason": "Per-route API Gateway invoke permissions exceeded Lambda's 20480-byte resource-policy limit; no failed route changes remained live.",
+      "correctiveAction": "Use one source-scoped API-wide invoke permission and retain explicit route declarations; regression assertion added locally and rollout not retried until CI passes."
+    },
+    "previousDeploymentVerificationFailure": {
+      "verifiedAt": "2026-09-05T03:35:00Z",
+      "sourceCommit": "f7c73bf3b1462541eb75c2560a2fbbdc72a09795",
+      "result": "STACK_UPDATE_COMPLETE_POSTDEPLOY_VERIFICATION_FAILED",
+      "stackStatus": "UPDATE_COMPLETE",
+      "reason": "API routes and the consolidated invoke permission deployed, but the manual recovery command had not restaged the ignored Lambda artifact; GET / reached an older handler and returned 404.",
+      "correctiveAction": "Make Lambda staging an explicit CI/preflight and recovery step, rebuild the exact artifact, then redeploy and repeat live verification."
+    },
+    "lastDeploymentAttempt": {
+      "verifiedAt": "2026-09-07T00:04:30Z",
+      "sourceCommit": "157db81a89b595f031291747a6bca5181a865652",
+      "result": "PASSED_QUOTA_SAFE_OIDC_SCOPED_ROLES",
+      "stackStatus": "UPDATE_COMPLETE",
+      "routeCount": 59,
+      "canonicalApiDescriptor": true,
+      "demoSessionIssued": true,
+      "agentCoreRuntimePreserved": true,
+      "note": "Reviewer-gated GitHub Actions run 34068460193 built exact artifacts, deployed the durable phone-verification foundation through short-lived OIDC credentials and ico-demo-cfn-exec, preserved the quota-blocked AgentCore Runtime exactly, and passed the canonical API check. OTP provider configuration remains intentionally absent until registered origins are approved."
+    },
+    "deliveryRepair": {
+      "sourceCommit": "864a16827005d7e4f5e824194a25793ed6c3ad85",
+      "deploymentRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/33991694814",
+      "outboxRecoverySchedule": "ENABLED_RATE_1_MINUTE",
+      "actionQueueVisibilityTimeoutSeconds": 360,
+      "agentCoreRuntimePreserved": true,
+      "liveDrillPassed": true
+    },
+    "accountFoundation": {
+      "sourceCommit": "1f4900c1b800d7503d2b0f7e3c69420fbea652a5",
+      "ciRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/33993924810",
+      "deploymentRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/33994094652",
+      "profileRoutesDeployed": true,
+      "readinessRouteDeployed": true,
+      "canonicalApiDescriptorStatus": 200,
+      "unauthenticatedProfileStatus": 401,
+      "unauthenticatedReadinessStatus": 401,
+      "agentCoreRuntimePreserved": true
+    },
+    "phoneVerification": {
+      "sourceCommit": "157db81a89b595f031291747a6bca5181a865652",
+      "ciRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/34068311537",
+      "identityRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/34068311593",
+      "deploymentRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/34068460193",
+      "startRouteDeployed": true,
+      "confirmRouteDeployed": true,
+      "revokeRouteDeployed": true,
+      "unauthenticatedRouteStatuses": [401, 401, 401],
+      "providerConfigured": false,
+      "providerDeliveryVerified": false,
+      "candidateStorageEncrypted": true,
+      "promotionTransactional": true,
+      "arabicProviderTemplateAvailable": false,
+      "agentCoreRuntimePreserved": true
+    }
+  },
+  "urls": {
+    "marketing": null,
+    "webApp": null,
+    "demo": null,
+    "directApi": "https://84t16g8eoe.execute-api.us-east-1.amazonaws.com",
+    "canonicalApi": "https://api.incaof.com",
+    "apk": null
+  },
+  "android": {
+    "applicationId": "com.incaof.app",
+    "releaseBuilt": true,
+    "versionCode": 2,
+    "versionName": "0.2.0",
+    "minSdk": 26,
+    "targetSdk": 37,
+    "sha256": "db118074e6df54477212f2155674360a04a7b3eb69e2aacd168f6785d6cc60b3",
+    "signingCertificateSha256": "f12d1890545e420f5a2e10fa1475f21c2fa5463028f57fc3643daa1bc42bbd62",
+    "signatureSchemes": ["v2", "v3"],
+    "localFallbackMarkersPresent": false,
+    "api26": "PASSED_SIGNED_INSTALL_LAUNCH_AND_3_OF_3_CONNECTED_TESTS",
+    "api37": "PASSED_SIGNED_INSTALL_LAUNCH_3_OF_3_CONNECTED_TESTS_AND_LIVE_FCM",
+    "physicalDevice": "NOT_RUN"
+  },
+  "canary": {
+    "lastCheckedAt": "2026-09-05T12:08:54Z",
+    "sourceModelId": "us.amazon.nova-2-lite-v1:0",
+    "deployedModelId": "us.anthropic.claude-sonnet-4-6",
+    "sourceMatchesDeployedModel": false,
+    "runtimeInitializationReached": true,
+    "runtimeReadyForRequest": false,
+    "runtimeInvocationId": null,
+    "traceId": null,
+    "workflowExecutionArn": null,
+    "safeSinkReference": null,
+    "resolvedAlertId": null,
+    "blockers": [
+      "Existing runtime v1 fails isolated startup because its artifact imports services.handlers; corrected source is not deployed until the version quota case is approved.",
+      "Direct Nova 2 Lite inference returns Operation not allowed pending AWS account verification.",
+      "Claude Sonnet 4.6 is not a viable fallback for this account: Bedrock returns an unsupported-country restriction."
+    ]
+  },
+  "liveDeterministicDrill": {
+    "verifiedAt": "2026-09-05T21:03:56Z",
+    "directApi": true,
+    "canonicalApi": false,
+    "canonicalApiMappingVerified": true,
+    "syntheticTenant": true,
+    "timeScale": 0.02,
+    "planId": "8870c8dc-3c80-40ec-a189-c64afa5ab84a",
+    "momentId": "36c1810a-380f-5d27-8273-8a62c64f367e",
+    "alertId": "84d3d2cd-1c6a-4abc-ac7e-a517f6f6cc37",
+    "workflowExecutionArnRedacted": "arn:aws:states:us-east-1:<account-id-redacted>:execution:WorkflowEscalation797C0498-vkUJVS19c0Dm:alert-84d3d2cd-1c6a-4abc-ac7e-a517f6f6cc37",
+    "workflowExecutionStatus": "SUCCEEDED",
+    "workflowStoppedAt": "2026-09-05T21:13:54.357Z",
+    "safeSinkReferences": [
+      "safe-sink:84d3d2cd-1c6a-4abc-ac7e-a517f6f6cc37:PUSH",
+      "safe-sink:84d3d2cd-1c6a-4abc-ac7e-a517f6f6cc37:SMS"
+    ],
+    "terminalState": "RESOLVED",
+    "auditEventCount": 13,
+    "auditEvents": [
+      "MOMENT_DUE",
+      "STATE_SELF_CONTACT",
+      "ACTION_QUEUED",
+      "ACTION_ACCEPTED",
+      "ACTION_QUEUED",
+      "ACTION_ACCEPTED",
+      "ACTION_QUEUED",
+      "ACTION_ACCEPTED",
+      "STATE_CIRCLE_ESCALATION",
+      "ACTION_QUEUED",
+      "ACTION_ACCEPTED",
+      "ALERT_CLAIMED",
+      "RESPONDER_VERIFIED"
+    ],
+    "durableOutboxRows": 4,
+    "durableOutboxUniqueKeys": 4,
+    "durableOutboxTerminalStatuses": ["ACCEPTED", "ACCEPTED", "ACCEPTED", "ACCEPTED"],
+    "modelCompileIncluded": false,
+    "note": "scripts/verify-live-demo-drill.sh passed against the deployed direct API after scoped-role OIDC run 33991694814. The deployed Scheduler, Step Functions, SQS worker, durable outbox, signed responder authorization, checking lease and explicit-resolution path completed, and the Standard workflow later observed the terminal Alert and finished SUCCEEDED. Plan compilation remains on the separately recorded 503 fallback."
+  },
+  "gates": [
+    {
+      "name": "unified-preflight",
+      "status": "PASSED",
+      "verifiedAt": "2026-09-07T00:00:02Z",
+      "details": "All local gates on delivery, account and phone-verification foundations; exact Lambda and AgentCore artifacts; 433 Python tests; 49 CDK assertions; 59 API routes in parity; 14 Playwright browser/accessibility cases"
+    },
+    {
+      "name": "github-actions",
+      "status": "PASSED",
+      "verifiedAt": "2026-09-07T00:00:00Z",
+      "details": "Run 34068311537; Python, Web, Android, Guardrails and Infrastructure all passed on commit 157db81a89b595f031291747a6bca5181a865652, including exact Lambda and AgentCore artifact builds"
+    },
+    {
+      "name": "github-oidc-deployment-identity",
+      "status": "PASSED_FULL_QUOTA_SAFE_DEPLOYMENT",
+      "verifiedAt": "2026-09-07T00:04:30Z",
+      "details": "Runs 34068311593 and 34068460193 passed required demo-environment review on commit 157db81a89b595f031291747a6bca5181a865652, obtained short-lived credentials as ico-github-demo-deploy using the immutable repository OIDC subject, published exact assets, updated IcoStack-demo through ico-demo-cfn-exec while preserving the quota-blocked AgentCore version, proved the recorded stack RoleARN, and verified the canonical API mapping."
+    },
+    {
+      "name": "android-in-app-demo",
+      "status": "BACKEND_LIVE_DEVICE_PENDING",
+      "verifiedAt": "2026-09-05T08:51:06Z",
+      "details": "Short-lived synthetic sessions and all 19 demo backend routes are live on the canonical API; separate Android demo identities and device-registration refusal pass tests, while a new installed-device exercise remains pending"
+    }
+  ],
+  "sourceControl": {
+    "branch": "codex/hackathon-final",
+    "headCommitAtLastGreenRun": "157db81a89b595f031291747a6bca5181a865652",
+    "publicBranchPushed": true,
+    "pullRequest": "https://github.com/AmirmLotfy/incaseof/pull/15",
+    "pullRequestState": "DRAFT",
+    "githubActionsRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/34068311537"
+  },
+  "artifacts": {
+    "architecturePngSha256": "176687736f479c1efa93a24fa7d95c6761bb1a4c31e6497bf66e75cf6729d43d",
+    "architecturePdfSha256": "62c9e46ed0f81a79127754df65ba21fa02f3b2c82cd6ebdaa47680cdb443e72b",
+    "projectImage": null,
+    "screenshots": [
+      "android/captures/api26-release-home.png",
+      "android/captures/api37-release-home.png",
+      "android/captures/api37-release-authenticated-home.png",
+      "android/captures/api37-fcm-notification.png"
+    ]
+  },
+  "videoUrl": null,
+  "blogUrls": [],
+  "builderIdSupplied": false,
+  "notes": [
+    "This is a truthful partial evidence manifest, not an acceptance record.",
+    "Do not publish canonical demo or production-ready claims until every null and blocker required by the submission gate is resolved."
+  ]
+}

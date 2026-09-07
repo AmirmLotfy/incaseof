@@ -209,7 +209,7 @@ def test_a_version_round_trips_completely(table: Any) -> None:
     assert loaded == version, "a version must survive persistence byte for byte"
 
 
-def test_activation_records_when_without_touching_the_ladder(table: Any) -> None:
+def test_activation_records_time_and_bindings_in_both_version_copies(table: Any) -> None:
     repo = DynamoPlanRepository(table)
     version = make_version()
     repo.save_version(version)
@@ -217,18 +217,20 @@ def test_activation_records_when_without_touching_the_ladder(table: Any) -> None
         Plan(
             plan_id=PLAN,
             subject_person_id=MONA,
-            circle_id="circle-1",
+            circle_id=CircleId("circle-1"),
             plan_type=version.plan_type,
         )
     )
 
-    activated = repo.activate(PLAN, version.version_id, DUE_AT)
+    activated = repo.activate(PLAN, version.version_id, DUE_AT, {"PRIMARY": str(MAYA)})
     assert activated.active_version_id == version.version_id
 
     stored = repo.get_version(version.version_id)
     assert stored is not None
     assert stored.activated_at == DUE_AT
+    assert stored.responder_bindings == {"PRIMARY": str(MAYA)}
     assert stored.steps == version.steps
+    assert repo.latest_version(PLAN) == stored
 
 
 # -- moments and the sparse index --------------------------------------------

@@ -58,7 +58,9 @@ export function IncidentRoom({ incident, token }: { incident: Incident; token: s
     >
       <p className="wordmark">In Case of</p>
 
-      {claimed ? (
+      {current.state === "RESOLVED" || current.state === "CANCELLED" ? (
+        <Closed incident={current} />
+      ) : claimed ? (
         <Checking incident={current} busy={busy} onAct={run} />
       ) : (
         <Unclaimed incident={current} busy={busy} onAct={run} />
@@ -81,6 +83,26 @@ type Runner = (
   action: "claim" | "unable" | "resolve",
   next: (previous: Incident) => Incident,
 ) => void;
+
+function Closed({ incident }: { incident: Incident }) {
+  return (
+    <>
+      <p className="section-label" style={{ marginTop: "2rem" }}>Resolved</p>
+      <h1 className="headline" style={{ marginTop: "0.75rem" }}>
+        This check is closed
+      </h1>
+      <p style={{ color: "var(--ico-graphite)", marginTop: "1rem" }}>
+        {incident.subjectName}&rsquo;s expected moment was explicitly resolved. The contact
+        ladder has stopped and there&rsquo;s nothing else you need to do.
+      </p>
+      <hr className="rule" />
+      <section aria-labelledby="resolved-timeline">
+        <h2 id="resolved-timeline" className="section-label">What happened</h2>
+        <Timeline entries={incident.tried} />
+      </section>
+    </>
+  );
+}
 
 function Unclaimed({
   incident,

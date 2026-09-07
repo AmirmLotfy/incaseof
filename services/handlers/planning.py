@@ -20,14 +20,16 @@ from typing import Any
 from services.domain.clock import REAL_TIME, TimeScale
 from services.domain.compiler import CompilationResult, compile_plan
 from services.domain.ids import (
+    CircleId,
     IdFactory,
     MomentId,
+    PersonId,
     PlanId,
     PlanVersionId,
     uuid_factory,
 )
 from services.domain.moment import ExpectedMoment, moment_for, next_due_at
-from services.domain.plan import Plan, PlanVersion
+from services.domain.plan import Plan, PlanVersion, TriggerKind
 from services.handlers import bootstrap
 
 
@@ -56,8 +58,8 @@ def create_plan(
     ctx: bootstrap.Context,
     document: dict[str, Any],
     *,
-    subject_person_id: str,
-    circle_id: str,
+    subject_person_id: PersonId,
+    circle_id: CircleId,
     new_id: IdFactory = uuid_factory,
 ) -> tuple[Plan, CompilationResult]:
     """Compile a document into a stored, inactive Plan.
@@ -99,9 +101,19 @@ def activate_plan(
     if version is None:
         raise ValueError(f"no such version {version_id}")
 
-    plan = ctx.plans.activate(plan_id, version_id, now)
+    owner_plan = ctx.plans.get_plan(plan_id)
+    if owner_plan is None or version.plan_id != plan_id:
+        raise ValueError("version does not belong to the requested plan")
+    circle = ctx.circles.get(owner_plan.circle_id)
+    bindings = {
+        role.value: str(member.person_id)
+        for role in version.responder_roles
+        if circle is not None and (member := circle.member_for_role(role)) is not None
+    }
+    plan = ctx.plans.activate(plan_id, version_id, now, bindings)
+    version = ctx.plans.get_version(version_id) or version
     moment = _next_moment(version, now=now, new_id=new_id, scale=ctx.scale)
-    ctx.moments.save(moment)
+    ctx.moments.save(moment, subject_person_id=plan.subject_person_id)
 
     schedule_name = None
     if ctx.scheduler is not None:
@@ -127,10 +139,15 @@ def schedule_following_moment(
     Called once a Moment resolves. A one-time Plan simply has no next Moment, which is not
     an error -- it is the plan finishing.
     """
-    moment = _next_moment(version, now=after, new_id=new_id, scale=ctx.scale)
-    if moment is None:
+    if version.trigger.kind is not TriggerKind.RECURRING:
         return None
-    ctx.moments.save(moment)
+    plan = ctx.plans.get_plan(version.plan_id)
+    if plan is None or not plan.is_active or plan.active_version_id != version.version_id:
+        return None
+    if next_due_at(version.trigger, version.timezone, after) is None:
+        return None
+    moment = _next_moment(version, now=after, new_id=new_id, scale=ctx.scale)
+    ctx.moments.save(moment, subject_person_id=plan.subject_person_id)
     if ctx.scheduler is not None:
         ctx.scheduler.schedule(moment)
     return moment
@@ -163,4 +180,5 @@ def _next_moment(
         version_id=version.version_id,
         due_at=due_at,
         grace_seconds=int(scale.apply(version.grace_seconds)),
+        time_scale=scale.factor,
     )

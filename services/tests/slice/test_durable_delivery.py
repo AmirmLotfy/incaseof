@@ -10,8 +10,9 @@ import pytest
 from services.adapters import keys
 from services.adapters.contact import DeliveryStatus, ProviderNotInvoked, PushSender, SmsSender
 from services.adapters.queue import ActionIntent
+from services.domain.ids import PersonId
 from services.domain.plan import ResponderRole
-from services.handlers import action_worker, escalation, outbox_relay
+from services.handlers import action_worker, escalation, moment_due, outbox_relay
 
 from .conftest import CIRCLE, MAYA, MONA, Slice
 
@@ -63,6 +64,37 @@ def test_withdrawal_between_enqueue_and_delivery_blocks_contact(a_slice: Slice) 
     assert result.error_code == "NOT_AUTHORIZED"
     assert not a_slice.sender.to("Maya")
     assert "CONTACT_DENIED" in a_slice.timeline()
+
+
+def test_account_deletion_between_enqueue_and_delivery_blocks_contact(a_slice: Slice) -> None:
+    intent = pending(a_slice)
+
+    class PendingDeletion:
+        def is_pending(self, person_id: PersonId) -> bool:
+            return person_id == MONA
+
+    ctx = replace(a_slice.ctx, account_deletions=cast(Any, PendingDeletion()))
+    result = action_worker.deliver(ctx, intent)
+
+    assert result.error_code == "NOT_AUTHORIZED"
+    assert not a_slice.sender.to("Maya")
+    assert "CONTACT_DENIED" in a_slice.timeline()
+
+
+def test_a_due_timer_cannot_open_an_alert_after_account_deletion_starts(
+    a_slice: Slice,
+) -> None:
+    activation = a_slice.create_plan()
+
+    class PendingDeletion:
+        def is_pending(self, person_id: PersonId) -> bool:
+            return person_id == MONA
+
+    ctx = replace(a_slice.ctx, account_deletions=cast(Any, PendingDeletion()))
+    alert, opened = moment_due.open_alert(ctx, activation.moment.moment_id)
+
+    assert alert is None
+    assert opened is False
 
 
 def test_failed_queue_write_leaves_recoverable_intent(a_slice: Slice) -> None:

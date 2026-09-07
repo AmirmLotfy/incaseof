@@ -441,7 +441,8 @@ function Footer() {
         className="mono"
         style={{ marginTop: "2rem", fontSize: "0.75rem", color: "var(--ico-graphite)" }}
       >
-        © 2026 In Case of
+        <a href="/delete-account" style={{ color: "inherit" }}>Delete account</a>
+        {" · "}© 2026 In Case of
       </p>
     </footer>
   );

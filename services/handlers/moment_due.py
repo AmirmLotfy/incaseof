@@ -56,6 +56,10 @@ def open_alert(
     plan = ctx.plans.get_plan(version.plan_id)
     if plan is None:
         raise RuntimeError(f"version {version.version_id} points at missing plan {version.plan_id}")
+    if ctx.account_deletions is not None and ctx.account_deletions.is_pending(
+        plan.subject_person_id
+    ):
+        return None, False
 
     if not moment.is_drill and (not plan.is_active or plan.active_version_id != version.version_id):
         return None, False

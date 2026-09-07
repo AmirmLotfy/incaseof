@@ -17,6 +17,23 @@
     <string name="nav_circle">Circle</string>
     <string name="nav_history">History</string>
 
+    <!-- Account -->
+    <string name="account_settings">Account settings</string>
+    <string name="account_back">Back</string>
+    <string name="account_title">Delete account</string>
+    <string name="account_deletion_intro">Deleting your account is permanent. Review what happens before you continue.</string>
+    <string name="account_deletion_consequences_title">What happens immediately</string>
+    <string name="account_deletion_consequences">In Case Of stops monitoring, cancels future checks and escalations, revokes access, and starts removing your plans, Circle, alerts, and account data.</string>
+    <string name="account_deletion_confirmation_label">Type DELETE</string>
+    <string name="account_deletion_confirmation_help">Enter DELETE exactly to enable the request.</string>
+    <string name="account_deletion_action">Delete my account</string>
+    <string name="account_deletion_action_description">Permanently delete this account and stop all monitoring.</string>
+    <string name="account_deletion_requesting">Requesting deletion…</string>
+    <string name="account_deletion_pending">DELETION IN PROGRESS</string>
+    <string name="account_deletion_received">Your deletion request was received</string>
+    <string name="account_deletion_stopped">Monitoring and future work have stopped. Cleanup continues safely if a provider is temporarily unavailable.</string>
+    <string name="account_deletion_close_app">You can close the app. Sign-in will be removed when cleanup finishes.</string>
+
     <!-- Home -->
     <string name="status_all_clear">ALL CLEAR</string>
     <string name="status_action_needed">ACTION NEEDED</string>

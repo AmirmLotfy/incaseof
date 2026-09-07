@@ -12,6 +12,14 @@ data class CompiledPlanDraft(
     val warnings: List<String>,
 )
 
+data class AccountDeletion(
+    val requestId: String,
+    val status: String,
+    val requestedAt: String,
+    val monitoringStopped: Boolean,
+    val nextSteps: List<String>,
+)
+
 /**
  * Everything the app reads and does.
  *
@@ -21,6 +29,10 @@ data class CompiledPlanDraft(
  * that disagreement means somebody is or is not being contacted.
  */
 interface IcoRepository {
+    suspend fun deleteAccount(confirmation: String): Result<AccountDeletion>
+
+    suspend fun accountDeletion(): Result<AccountDeletion>
+
     suspend fun compilePlan(description: String, timezone: String): Result<CompiledPlanDraft>
 
     suspend fun createPlan(draft: CompiledPlanDraft): Result<Plan>

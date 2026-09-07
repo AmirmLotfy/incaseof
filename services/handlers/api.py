@@ -123,6 +123,14 @@ def _caller(event: dict[str, Any]) -> PersonId:
     return PersonId(subject)
 
 
+def _cognito_username(event: dict[str, Any]) -> str:
+    claims = event.get("requestContext", {}).get("authorizer", {}).get("jwt", {}).get("claims", {})
+    username = claims.get("cognito:username") or claims.get("username") or claims.get("sub")
+    if not username:
+        raise NotAuthorized("no Cognito username on this request")
+    return str(username)
+
+
 def handler(event: dict[str, Any], _context: Any = None) -> dict[str, Any]:
     try:
         return _dispatch(event)
@@ -176,67 +184,76 @@ def _dispatch(event: dict[str, Any]) -> dict[str, Any]:
         return _responder_route(ctx, route, token)
 
     # -- subject, by Cognito principal ------------------------------------
-    if route == "GET /v1/profile":
-        return _profile(ctx, _caller(event))
-    if route == "PATCH /v1/profile":
-        return _update_profile(ctx, event, _caller(event))
-    if route == "GET /v1/readiness":
-        return _readiness_response(ctx, _caller(event))
-    if route == "POST /v1/phone-verifications":
-        return _start_phone_verification(ctx, event, _caller(event))
-    if route == "POST /v1/phone-verifications/{verificationId}/confirm":
-        return _confirm_phone_verification(
-            ctx, event, str(params["verificationId"]), _caller(event)
+    person = _caller(event)
+    if route == "DELETE /v1/account":
+        return _request_account_deletion(ctx, event, person)
+    if route == "GET /v1/account/deletion":
+        return _account_deletion_status(ctx, person)
+    if ctx.account_deletions is not None and ctx.account_deletions.is_pending(person):
+        return _problem(
+            410,
+            "Account deletion is in progress; monitoring has stopped",
+            "ACCOUNT_DELETION_PENDING",
         )
+    if route == "GET /v1/profile":
+        return _profile(ctx, person)
+    if route == "PATCH /v1/profile":
+        return _update_profile(ctx, event, person)
+    if route == "GET /v1/readiness":
+        return _readiness_response(ctx, person)
+    if route == "POST /v1/phone-verifications":
+        return _start_phone_verification(ctx, event, person)
+    if route == "POST /v1/phone-verifications/{verificationId}/confirm":
+        return _confirm_phone_verification(ctx, event, str(params["verificationId"]), person)
     if route == "DELETE /v1/phone":
-        return _revoke_phone(ctx, _caller(event))
+        return _revoke_phone(ctx, person)
     if route == "POST /v1/plans/compile":
         return _compile(ctx, event)
     if route == "POST /v1/plans":
-        return _create_plan(ctx, event, _caller(event))
+        return _create_plan(ctx, event, person)
     if route == "GET /v1/moments/next":
-        return _next_moment(ctx, _caller(event))
+        return _next_moment(ctx, person)
     if route == "POST /v1/moments/{momentId}/confirm":
         return _confirm(ctx, event, MomentId(params["momentId"]))
     if route == "POST /v1/moments/{momentId}/extend":
         return _extend(ctx, event, MomentId(params["momentId"]))
     if route == "GET /v1/moments/{momentId}":
-        return _moment(ctx, MomentId(params["momentId"]), _caller(event))
+        return _moment(ctx, MomentId(params["momentId"]), person)
     if route == "POST /v1/moments/{momentId}/cancel":
-        return _cancel_moment(ctx, event, MomentId(params["momentId"]), _caller(event))
+        return _cancel_moment(ctx, event, MomentId(params["momentId"]), person)
     if route == "GET /v1/plans":
-        return _plans(ctx, _caller(event))
+        return _plans(ctx, person)
     if route == "GET /v1/history":
-        return _history(ctx, _caller(event))
+        return _history(ctx, person)
     if route == "GET /v1/plans/{planId}":
-        return _plan(ctx, PlanId(params["planId"]), _caller(event))
+        return _plan(ctx, PlanId(params["planId"]), person)
     if route == "POST /v1/plans/{planId}/activate":
-        return _activate_plan(ctx, event, PlanId(params["planId"]), _caller(event))
+        return _activate_plan(ctx, event, PlanId(params["planId"]), person)
     if route == "POST /v1/plans/{planId}/pause":
-        return _pause_plan(ctx, event, PlanId(params["planId"]), _caller(event))
+        return _pause_plan(ctx, event, PlanId(params["planId"]), person)
     if route == "POST /v1/plans/{planId}/resume":
-        return _resume_plan(ctx, event, PlanId(params["planId"]), _caller(event))
+        return _resume_plan(ctx, event, PlanId(params["planId"]), person)
     if route == "POST /v1/plans/{planId}/test":
         return _test_plan(ctx, event, PlanId(params["planId"]))
     if route == "GET /v1/circle":
-        return _circle(ctx, _caller(event))
+        return _circle(ctx, person)
     if route == "POST /v1/circle/invitations":
-        return _invite(ctx, event, _caller(event))
+        return _invite(ctx, event, person)
     if route == "POST /v1/circle/invitations/{invitationId}/resend":
         return _resend_invitation(
             ctx,
             event,
             InvitationId(params["invitationId"]),
-            _caller(event),
+            person,
         )
     if route == "DELETE /v1/circle/members/{memberId}":
-        return _remove_member(ctx, event, MembershipId(params["memberId"]), _caller(event))
+        return _remove_member(ctx, event, MembershipId(params["memberId"]), person)
     if route == "POST /v1/devices":
-        return _register_device(ctx, event, _caller(event))
+        return _register_device(ctx, event, person)
     if route == "DELETE /v1/devices/{deviceId}":
-        return _remove_device(ctx, DeviceId(params["deviceId"]), _caller(event))
+        return _remove_device(ctx, DeviceId(params["deviceId"]), person)
     if route == "GET /v1/alerts/{alertId}":
-        return _alert(ctx, AlertId(params["alertId"]), _caller(event))
+        return _alert(ctx, AlertId(params["alertId"]), person)
     if route == "POST /v1/alerts/{alertId}/claim":
         return _claim(ctx, event, AlertId(params["alertId"]))
     if route == "POST /v1/alerts/{alertId}/resolve":
@@ -244,7 +261,7 @@ def _dispatch(event: dict[str, Any]) -> dict[str, Any]:
     if route == "POST /v1/alerts/{alertId}/release":
         return _release(ctx, event, AlertId(params["alertId"]))
     if route == "GET /v1/alerts/{alertId}/timeline":
-        return _timeline(ctx, AlertId(params["alertId"]), _caller(event))
+        return _timeline(ctx, AlertId(params["alertId"]), person)
 
     return _problem(404, "No such route", "NOT_FOUND")
 
@@ -709,6 +726,52 @@ def _responder_route(ctx: bootstrap.Context, route: str, token: str) -> dict[str
 
 
 # -- subject ------------------------------------------------------------------
+
+
+def _account_deletion_repository(ctx: bootstrap.Context) -> Any:
+    if ctx.account_deletions is None:
+        raise RuntimeError("account deletion repository is not configured")
+    return ctx.account_deletions
+
+
+def _deletion_view(request: Any) -> dict[str, Any]:
+    return {
+        "requestId": request.request_id,
+        "status": request.status.value,
+        "requestedAt": request.requested_at.isoformat(),
+        "monitoringStopped": True,
+        "nextSteps": [
+            "Future check-ins and escalation are cancelled.",
+            "Contact and account data are removed through a retryable process.",
+            "Sign-in is deleted after cleanup succeeds.",
+        ],
+    }
+
+
+def _request_account_deletion(
+    ctx: bootstrap.Context, event: dict[str, Any], person: PersonId
+) -> dict[str, Any]:
+    payload = _body(event)
+    if payload != {"confirmation": "DELETE"}:
+        return _problem(
+            422,
+            "Type DELETE to confirm that monitoring will stop and account data will be removed",
+            "DELETION_CONFIRMATION_REQUIRED",
+        )
+    request = _account_deletion_repository(ctx).request(
+        person_id=person,
+        cognito_username=_cognito_username(event),
+        request_id=uuid_factory(),
+        at=ctx.now(),
+    )
+    return _response(202, _deletion_view(request))
+
+
+def _account_deletion_status(ctx: bootstrap.Context, person: PersonId) -> dict[str, Any]:
+    request = _account_deletion_repository(ctx).for_person(person)
+    if request is None:
+        return _problem(404, "No account deletion is in progress", "DELETION_NOT_FOUND")
+    return _response(200, _deletion_view(request))
 
 
 def _profile_repository(ctx: bootstrap.Context) -> Any:

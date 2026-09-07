@@ -55,6 +55,7 @@ fun HomeScreen(
     onConfirm: () -> Unit,
     onExtend: (Int) -> Unit,
     onNeedSomeone: () -> Unit,
+    onAccount: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
     now: Instant = Instant.now(),
@@ -72,11 +73,12 @@ fun HomeScreen(
             Column(modifier = modifier.fillMaxSize().padding(24.dp)) {
                 Notice(state.message)
                 SecondaryAction(stringResource(R.string.retry), onRetry)
+                SecondaryAction(stringResource(R.string.account_settings), onAccount)
             }
         }
 
         is HomeUiState.Content -> {
-            HomeContent(state, onConfirm, onExtend, onNeedSomeone, modifier, now)
+            HomeContent(state, onConfirm, onExtend, onNeedSomeone, onAccount, modifier, now)
         }
     }
 }
@@ -87,6 +89,7 @@ private fun HomeContent(
     onConfirm: () -> Unit,
     onExtend: (Int) -> Unit,
     onNeedSomeone: () -> Unit,
+    onAccount: () -> Unit,
     modifier: Modifier = Modifier,
     now: Instant = Instant.now(),
 ) {
@@ -129,6 +132,11 @@ private fun HomeContent(
             WaitingOnYou(state.moment, state, onConfirm, onExtend, onNeedSomeone, now)
         } else {
             NextMoment(state.moment, state.activePlan)
+        }
+
+        if (!needsAction) {
+            Spacer(Modifier.height(24.dp))
+            SecondaryAction(stringResource(R.string.account_settings), onAccount)
         }
 
         state.error?.let {
@@ -268,6 +276,7 @@ private fun HomeAllClearPreview() {
             onConfirm = {},
             onExtend = {},
             onNeedSomeone = {},
+            onAccount = {},
             onRetry = {},
         )
     }
@@ -293,6 +302,7 @@ private fun HomeActionNeededPreview() {
             onConfirm = {},
             onExtend = {},
             onNeedSomeone = {},
+            onAccount = {},
             onRetry = {},
         )
     }

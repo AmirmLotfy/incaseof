@@ -118,12 +118,12 @@ describe("workflow", () => {
     });
   });
 
-  it("creates a schedule group and only the outbox recovery schedule", () => {
+  it("creates a schedule group and only the two recovery schedules", () => {
     const template = synth();
     template.resourceCountIs("AWS::Scheduler::ScheduleGroup", 1);
-    // Pending Moments are application state. A schedule in the template would make every
-    // check-in a deployment. The single static schedule only relays durable outbox work.
-    template.resourceCountIs("AWS::Scheduler::Schedule", 1);
+    // Pending Moments are application state. Static schedules only recover the durable
+    // action outbox and retry account deletion.
+    template.resourceCountIs("AWS::Scheduler::Schedule", 2);
   });
 
   it("lets only EventBridge Scheduler assume the scheduler role", () => {
@@ -149,6 +149,31 @@ describe("workflow", () => {
       State: "ENABLED",
       FlexibleTimeWindow: { Mode: "OFF" },
     });
+  });
+
+  it("retries account deletion with a bounded worker and narrow destructive grants", () => {
+    const template = synth();
+    template.hasResourceProperties("AWS::Lambda::Function", {
+      Handler: "services.handlers.account_deletion.handler",
+      Timeout: 240,
+      Environment: {
+        Variables: Match.objectLike({
+          ICO_USER_POOL_ID: Match.anyValue(),
+          ICO_STATE_MACHINE_ARN: Match.anyValue(),
+          ICO_SCHEDULE_GROUP: Match.anyValue(),
+        }),
+      },
+    });
+    template.hasResourceProperties("AWS::Scheduler::Schedule", {
+      ScheduleExpression: "rate(5 minutes)",
+      State: "ENABLED",
+      FlexibleTimeWindow: { Mode: "OFF" },
+    });
+    const policies = JSON.stringify(template.findResources("AWS::IAM::Policy"));
+    assert.match(policies, /cognito-idp:AdminDisableUser/);
+    assert.match(policies, /cognito-idp:AdminDeleteUser/);
+    assert.match(policies, /states:StopExecution/);
+    assert.match(policies, /scheduler:DeleteSchedule/);
   });
 });
 
@@ -385,9 +410,11 @@ describe("api", () => {
       ),
       "utf8",
     );
-    const called = [...client.matchAll(/@(GET|POST|PUT|DELETE)\("([^"]+)"\)/g)].map(
-      (m) => `${m[1]} /${m[2]}`.replace(/\{(\w+)\}/g, "{}"),
-    );
+    const called = [
+      ...client.matchAll(
+        /@(GET|POST|PUT|DELETE)\("([^"]+)"\)|@HTTP\(method = "(GET|POST|PUT|DELETE)", path = "([^"]+)"/g,
+      ),
+    ].map((m) => `${m[1] ?? m[3]} /${m[2] ?? m[4]}`.replace(/\{(\w+)\}/g, "{}"));
     assert.ok(called.length >= 6, `parsed ${called.length} client calls, expected more`);
 
     const deployed = new Set(

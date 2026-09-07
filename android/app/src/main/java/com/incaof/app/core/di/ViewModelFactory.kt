@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.incaof.app.core.auth.AuthRepository
 import com.incaof.app.data.IcoRepository
+import com.incaof.app.feature.account.AccountViewModel
 import com.incaof.app.feature.circle.CircleViewModel
 import com.incaof.app.feature.history.HistoryViewModel
 import com.incaof.app.feature.home.HomeViewModel
@@ -26,6 +27,10 @@ class ViewModelFactory(
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T =
         when {
+            modelClass.isAssignableFrom(AccountViewModel::class.java) -> {
+                AccountViewModel(repository)
+            }
+
             modelClass.isAssignableFrom(HomeViewModel::class.java) -> {
                 HomeViewModel(repository)
             }

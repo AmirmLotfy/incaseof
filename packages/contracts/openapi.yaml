@@ -97,6 +97,45 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Readiness" }
 
+  /v1/account:
+    delete:
+      tags: [account]
+      summary: Stop monitoring and request retryable deletion of the authenticated account
+      description: |
+        Immediately closes the account to new work. Timers, workflows, endpoints, and
+        application data are removed before the Cognito identity is deleted.
+      security: [{ cognito: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [confirmation]
+              properties:
+                confirmation: { type: string, const: DELETE }
+      responses:
+        "202":
+          description: Deletion is durable and monitoring has stopped
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AccountDeletion" }
+        "422": { $ref: "#/components/responses/Problem" }
+
+  /v1/account/deletion:
+    get:
+      tags: [account]
+      summary: Read the authenticated account's deletion progress
+      security: [{ cognito: [] }]
+      responses:
+        "200":
+          description: Deletion progress
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AccountDeletion" }
+        "404": { $ref: "#/components/responses/Problem" }
+
   /v1/phone-verifications:
     post:
       tags: [account]
@@ -685,6 +724,16 @@ components:
                 type: string
                 description: Stable machine code. Never leaks another user's data.
   schemas:
+    AccountDeletion:
+      type: object
+      additionalProperties: false
+      required: [requestId, status, requestedAt, monitoringStopped, nextSteps]
+      properties:
+        requestId: { type: string, format: uuid }
+        status: { type: string, enum: [PENDING, PROCESSING] }
+        requestedAt: { type: string, format: date-time }
+        monitoringStopped: { type: boolean, const: true }
+        nextSteps: { type: array, minItems: 3, items: { type: string } }
     PhoneVerification:
       type: object
       additionalProperties: false

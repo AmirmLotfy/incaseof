@@ -21,6 +21,8 @@ GET    /      service descriptor; no tenant data
 ```text
 GET    /v1/profile       profile and locale settings; never contact endpoints
 PATCH  /v1/profile       create or update display name, locale, timezone, and country
+DELETE /v1/account       confirm monitoring cessation and request account deletion
+GET    /v1/account/deletion  read deletion progress while the Cognito session remains valid
 GET    /v1/readiness     account, channel, responder, and plan-capacity status
 POST   /v1/phone-verifications                          send a phone ownership code
 POST   /v1/phone-verifications/{verificationId}/confirm confirm a six-digit code
@@ -37,6 +39,13 @@ country. The response contains an opaque verification id and expiry, never the p
 limited to one per minute and five per UTC day per account. The provider and DynamoDB both enforce
 five attempts and a ten-minute lifetime. Revocation changes the endpoint to `REVOKED`; it cannot
 satisfy readiness or delivery authorization.
+
+Account deletion requires the exact confirmation value `DELETE`. The durable deletion lock is
+written before the API returns: normal account routes, due-Moment handling, and queued delivery
+then fail closed. A retry worker disables sign-in, removes push endpoints, timers and workflow
+executions, purges owner-linked data, and deletes the Cognito principal last. Replaying the request
+returns the original request id. Once identity deletion completes, the status route is no longer
+reachable because the account can no longer authenticate.
 
 ## Plans
 

@@ -76,6 +76,23 @@ export class IcoStack extends Stack {
     compute.momentDue.addEnvironment("ICO_STATE_MACHINE_ARN", workflow.stateMachine.stateMachineArn);
     workflow.stateMachine.grantStartExecution(compute.momentDue);
 
+    compute.accountDeletion.addEnvironment("ICO_USER_POOL_ID", identity.userPool.userPoolId);
+    compute.accountDeletion.addEnvironment(
+      "ICO_STATE_MACHINE_ARN",
+      workflow.stateMachine.stateMachineArn,
+    );
+    compute.accountDeletion.addEnvironment(
+      "ICO_SCHEDULE_GROUP",
+      workflow.scheduleGroup.name ?? "",
+    );
+    identity.userPool.grant(
+      compute.accountDeletion,
+      "cognito-idp:AdminDisableUser",
+      "cognito-idp:AdminDeleteUser",
+    );
+    workflow.stateMachine.grantExecution(compute.accountDeletion, "states:StopExecution");
+    workflow.grantCancelSchedules(compute.accountDeletion);
+
 
     const api = new Api(this, "Api", {
       environment: props.environment,
@@ -129,6 +146,7 @@ export class IcoStack extends Stack {
         compute.dispatch,
         compute.actionWorker,
         compute.outboxRelay,
+        compute.accountDeletion,
         agentCore.toolTarget,
       ],
       stateMachine: workflow.stateMachine,

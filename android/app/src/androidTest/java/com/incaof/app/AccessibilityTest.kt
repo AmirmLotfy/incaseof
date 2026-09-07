@@ -66,6 +66,7 @@ class AccessibilityTest {
                     onConfirm = {},
                     onExtend = {},
                     onNeedSomeone = {},
+                    onAccount = {},
                     onRetry = {},
                 )
             }

@@ -176,7 +176,7 @@ async function mockConfiguredApp(page: Page, calls: string[]): Promise<void> {
       request.headers().authorization,
       "Bearer synthetic-test-token",
     );
-    if (request.method() !== "GET") {
+    if (request.method() !== "GET" && url.pathname !== "/v1/account") {
       assert.ok(
         request.headers()["idempotency-key"],
         `${url.pathname} omitted Idempotency-Key`,
@@ -232,6 +232,23 @@ async function mockConfiguredApp(page: Page, calls: string[]): Promise<void> {
     }
     if (request.method() === "GET" && url.pathname === "/v1/history") {
       return json({ history: [] });
+    }
+    if (request.method() === "DELETE" && url.pathname === "/v1/account") {
+      assert.deepEqual(request.postDataJSON(), { confirmation: "DELETE" });
+      return json(
+        {
+          requestId: "123e4567-e89b-12d3-a456-426614174000",
+          status: "PENDING",
+          requestedAt: new Date().toISOString(),
+          monitoringStopped: true,
+          nextSteps: [
+            "Future check-ins and escalation are cancelled.",
+            "Contact and account data are removed through a retryable process.",
+            "Sign-in is deleted after cleanup succeeds.",
+          ],
+        },
+        202,
+      );
     }
     if (request.method() === "POST" && url.pathname.endsWith("/confirm")) {
       return json({ alertId: "alert-1", state: "RESOLVED" });
@@ -462,6 +479,7 @@ describe("marketing site accessibility", () => {
   for (const [name, path] of [
     ["the home page", "/"],
     ["the demo page", "/demo"],
+    ["the public account deletion page", "/delete-account"],
   ] as const) {
     it(`${name} has no WCAG AA violations`, async () => {
       const page = await newPage();
@@ -517,6 +535,31 @@ describe("marketing site accessibility", () => {
     ]);
     assert.ok(calls.includes("POST /v1/circle/invitations"));
     assert.ok(calls.includes("POST /v1/circle/invitations/invite-1/resend"));
+    await page.close();
+  });
+
+  it("requires typed confirmation and shows deletion progress", async () => {
+    const page = await newPage();
+    const calls: string[] = [];
+    await mockConfiguredApp(page, calls);
+    await page.goto(`${MARKETING}/app#delete-account`);
+    await page.getByRole("heading", { name: "Delete account" }).waitFor();
+
+    const action = page.getByRole("button", {
+      name: /stop monitoring and delete my account/i,
+    });
+    assert.equal(await action.isDisabled(), true);
+    await page.getByLabel("Type DELETE to confirm").fill("delete");
+    assert.equal(await action.isDisabled(), true);
+    await page.getByLabel("Type DELETE to confirm").fill("DELETE");
+    await action.click();
+
+    await page
+      .getByRole("heading", { name: "Account deletion is in progress" })
+      .waitFor();
+    assert.ok(calls.includes("DELETE /v1/account"));
+    const found = await violations(page);
+    assert.deepEqual(found, [], `\n    ${found.join("\n    ")}\n`);
     await page.close();
   });
 

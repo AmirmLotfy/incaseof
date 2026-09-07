@@ -3,6 +3,7 @@ package com.incaof.app.data
 import com.incaof.app.core.network.CircleMemberDto
 import com.incaof.app.core.network.CompilePlanRequest
 import com.incaof.app.core.network.CreatePlanRequest
+import com.incaof.app.core.network.DeleteAccountRequest
 import com.incaof.app.core.network.IcoApi
 import com.incaof.app.core.network.InviteCircleRequest
 import com.incaof.app.core.network.MomentDto
@@ -32,6 +33,12 @@ class ApiIcoRepository(
     private val api: IcoApi,
     private val allowDeviceRegistration: Boolean = true,
 ) : IcoRepository {
+    override suspend fun deleteAccount(confirmation: String): Result<AccountDeletion> =
+        runCatching { api.deleteAccount(DeleteAccountRequest(confirmation)).requireBody().toDomain() }
+
+    override suspend fun accountDeletion(): Result<AccountDeletion> =
+        runCatching { api.accountDeletion().requireBody().toDomain() }
+
     override suspend fun compilePlan(description: String, timezone: String): Result<CompiledPlanDraft> =
         runCatching {
             val response = api.compilePlan(CompilePlanRequest(description, timezone)).requireBody()
@@ -211,6 +218,15 @@ class ApiIcoRepository(
             ).requireBody().toDomain()
         }
 }
+
+private fun com.incaof.app.core.network.AccountDeletionDto.toDomain() =
+    AccountDeletion(
+        requestId = requestId,
+        status = status,
+        requestedAt = requestedAt,
+        monitoringStopped = monitoringStopped,
+        nextSteps = nextSteps,
+    )
 
 private fun <T> Response<T>.requireBody(): T {
     if (!isSuccessful) {

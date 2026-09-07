@@ -45,6 +45,7 @@ export class Compute extends Construct {
   readonly dispatch: lambda.Function;
   readonly actionWorker: lambda.Function;
   readonly outboxRelay: lambda.Function;
+  readonly accountDeletion: lambda.Function;
 
   constructor(scope: Construct, id: string, props: ComputeProps) {
     super(scope, id);
@@ -140,6 +141,38 @@ export class Compute extends Construct {
     props.table.grantReadWriteData(this.outboxRelay);
     props.actionQueue.grantSendMessages(this.outboxRelay);
     props.key.grantEncryptDecrypt(this.outboxRelay);
+
+    this.accountDeletion = new lambda.Function(this, "AccountDeletion", {
+      ...shared,
+      logGroup: logGroup("AccountDeletion"),
+      handler: "services.handlers.account_deletion.handler",
+      description: "Retries account cleanup and deletes Cognito identity only after data removal.",
+      timeout: Duration.minutes(4),
+    });
+    const deletionSchedulerRole = new iam.Role(this, "AccountDeletionSchedulerRole", {
+      assumedBy: new iam.ServicePrincipal("scheduler.amazonaws.com"),
+      description: "Invokes only the retryable account-deletion worker",
+    });
+    this.accountDeletion.grantInvoke(deletionSchedulerRole);
+    new scheduler.CfnSchedule(this, "AccountDeletionRecovery", {
+      scheduleExpression: "rate(5 minutes)",
+      flexibleTimeWindow: { mode: "OFF" },
+      state: "ENABLED",
+      target: {
+        arn: this.accountDeletion.functionArn,
+        roleArn: deletionSchedulerRole.roleArn,
+      },
+    });
+    props.table.grantReadWriteData(this.accountDeletion);
+    props.key.grantEncryptDecrypt(this.accountDeletion);
+    if (props.pushPlatformArn) {
+      this.accountDeletion.addToRolePolicy(
+        new iam.PolicyStatement({
+          actions: ["sns:DeleteEndpoint"],
+          resources: [props.pushPlatformArn.replace(":app/", ":endpoint/") + "/*"],
+        }),
+      );
+    }
 
     this.actionWorker.addEventSource(
       new SqsEventSource(props.actionQueue, {

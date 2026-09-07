@@ -17,6 +17,14 @@ import { runtimeConfig, type RuntimeConfig } from "@/lib/runtime";
 
 type Status = "loading" | "unconfigured" | "signed-out" | "ready";
 
+type AccountDeletion = {
+  requestId: string;
+  status: "PENDING" | "PROCESSING";
+  requestedAt: string;
+  monitoringStopped: true;
+  nextSteps: string[];
+};
+
 export function WebApp() {
   const [status, setStatus] = useState<Status>("loading");
   const [config, setConfig] = useState<RuntimeConfig | null>(null);
@@ -32,6 +40,8 @@ export function WebApp() {
   const [preview, setPreview] = useState<CompileResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [deletion, setDeletion] = useState<AccountDeletion | null>(null);
 
   const refresh = useCallback(async (nextConfig: RuntimeConfig, accessToken: string) => {
     const [planResult, momentResult, circleResult, historyResult] = await Promise.all([
@@ -57,7 +67,18 @@ export function WebApp() {
       try {
         const authenticated = await completeSignIn(nextConfig);
         if (!authenticated || !token()) return setStatus("signed-out");
-        await refresh(nextConfig, token() as string);
+        try {
+          await refresh(nextConfig, token() as string);
+        } catch (error) {
+          if (!(error instanceof ApiError) || error.status !== 410) throw error;
+          setDeletion(
+            await api<AccountDeletion>(
+              nextConfig,
+              token() as string,
+              "/v1/account/deletion",
+            ),
+          );
+        }
         setStatus("ready");
       } catch (error) {
         setNotice(error instanceof Error ? error.message : "Sign-in failed.");
@@ -94,6 +115,22 @@ export function WebApp() {
   }
 
   const accessToken = token() as string;
+  if (deletion) {
+    return (
+      <State
+        title="Account deletion is in progress"
+        body="Monitoring has stopped. Future check-ins and escalation will not run while your data and sign-in are removed."
+      >
+        <p className="mono app-deletion-status" role="status">
+          {deletion.status} · requested {new Date(deletion.requestedAt).toLocaleString()}
+        </p>
+        <ol className="app-steps">
+          {deletion.nextSteps.map((step) => <li key={step}>{step}</li>)}
+        </ol>
+        <button className="app-link" onClick={() => config && signOut(config)}>Sign out</button>
+      </State>
+    );
+  }
   return (
     <div className="app-grid">
       <section className="app-pane" aria-labelledby="create-plan">
@@ -310,6 +347,42 @@ export function WebApp() {
               ))}
             </ul>
           )}
+        </div>
+        <div className="app-section" id="delete-account">
+          <p className="eyebrow">Account</p>
+          <h2>Delete account</h2>
+          <p className="app-muted">
+            This immediately stops future check-ins and escalation, then removes your
+            plans, Circle, contact methods, history, and sign-in.
+          </p>
+          <label className="app-label" htmlFor="delete-confirmation">
+            Type DELETE to confirm
+          </label>
+          <input
+            id="delete-confirmation"
+            className="app-input app-input--compact"
+            value={deleteConfirmation}
+            autoComplete="off"
+            onChange={(event) => setDeleteConfirmation(event.target.value)}
+          />
+          <button
+            className="app-link app-delete"
+            disabled={busy || deleteConfirmation !== "DELETE"}
+            onClick={() => run(async () => {
+              const request = await api<AccountDeletion>(
+                config as RuntimeConfig,
+                accessToken,
+                "/v1/account",
+                {
+                  method: "DELETE",
+                  body: JSON.stringify({ confirmation: deleteConfirmation }),
+                },
+              );
+              setDeletion(request);
+            })}
+          >
+            Stop monitoring and delete my account
+          </button>
         </div>
         {notice && <p role="status" className="app-notice">{notice}</p>}
       </aside>

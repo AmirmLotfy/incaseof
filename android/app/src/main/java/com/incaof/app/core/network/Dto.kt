@@ -4,6 +4,15 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
+@Serializable
+data class AccountDeletionDto(
+    val requestId: String,
+    val status: String,
+    val requestedAt: String,
+    val monitoringStopped: Boolean,
+    val nextSteps: List<String>,
+)
+
 /**
  * Wire types.
  *

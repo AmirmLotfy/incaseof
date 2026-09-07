@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 from services.adapters import keys
 from services.domain.account import AccountStatus, Profile, SupportedCountry, SupportedLocale
+from services.domain.errors import DomainError
 from services.domain.ids import PersonId
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -39,17 +40,37 @@ class DynamoProfileRepository:
         )
 
     def save(self, profile: Profile) -> None:
-        self.table.put_item(
-            Item={
-                "pk": keys.person(profile.person_id),
-                "sk": "PROFILE",
-                "entityType": "Profile",
-                "displayName": profile.display_name,
-                "locale": profile.locale.value,
-                "timezone": profile.timezone,
-                "country": profile.country.value,
-                "status": profile.status.value,
-                "createdAt": profile.created_at.isoformat(),
-                "updatedAt": profile.updated_at.isoformat(),
-            }
-        )
+        try:
+            self.table.meta.client.transact_write_items(
+                TransactItems=[
+                    {
+                        "ConditionCheck": {
+                            "TableName": self.table.name,
+                            "Key": {
+                                "pk": keys.person(profile.person_id),
+                                "sk": "ACCOUNT_DELETION",
+                            },
+                            "ConditionExpression": "attribute_not_exists(pk)",
+                        }
+                    },
+                    {
+                        "Put": {
+                            "TableName": self.table.name,
+                            "Item": {
+                                "pk": keys.person(profile.person_id),
+                                "sk": "PROFILE",
+                                "entityType": "Profile",
+                                "displayName": profile.display_name,
+                                "locale": profile.locale.value,
+                                "timezone": profile.timezone,
+                                "country": profile.country.value,
+                                "status": profile.status.value,
+                                "createdAt": profile.created_at.isoformat(),
+                                "updatedAt": profile.updated_at.isoformat(),
+                            },
+                        }
+                    },
+                ]
+            )
+        except self.table.meta.client.exceptions.TransactionCanceledException as error:
+            raise DomainError("account deletion is in progress") from error

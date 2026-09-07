@@ -24,7 +24,28 @@ class RecordingRepository(
     private val failOnWrite: Throwable? = null,
 ) : IcoRepository {
     val confirmCalls = mutableListOf<Triple<String, String, ConfirmSource>>()
+    val deleteAccountCalls = mutableListOf<String>()
     var extendCalls = mutableListOf<Pair<String, Int>>()
+
+    private var deletion: AccountDeletion? = null
+
+    override suspend fun deleteAccount(confirmation: String): Result<AccountDeletion> {
+        deleteAccountCalls += confirmation
+        (failOnWrite ?: failWith)?.let { return Result.failure(it) }
+        return Result.success(
+            AccountDeletion(
+                requestId = "deletion-test",
+                status = "PENDING",
+                requestedAt = "2026-09-08T12:00:00Z",
+                monitoringStopped = true,
+                nextSteps = listOf("Future checks are cancelled.", "Your data will be removed."),
+            ).also { deletion = it },
+        )
+    }
+
+    override suspend fun accountDeletion(): Result<AccountDeletion> =
+        deletion?.let(Result.Companion::success)
+            ?: Result.failure(NoSuchElementException("No account deletion request"))
 
     override suspend fun compilePlan(description: String, timezone: String): Result<CompiledPlanDraft> =
         Result.failure(UnsupportedOperationException("not used by this test"))

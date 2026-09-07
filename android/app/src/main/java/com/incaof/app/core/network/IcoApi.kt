@@ -3,6 +3,7 @@ package com.incaof.app.core.network
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.HTTP
 import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
@@ -17,6 +18,14 @@ import retrofit2.http.Path
 interface IcoApi {
     @POST("v1/demo/session")
     suspend fun startDemoSession(): Response<DemoSessionDto>
+
+    @HTTP(method = "DELETE", path = "v1/account", hasBody = true)
+    suspend fun deleteAccount(
+        @Body request: DeleteAccountRequest,
+    ): Response<AccountDeletionDto>
+
+    @GET("v1/account/deletion")
+    suspend fun accountDeletion(): Response<AccountDeletionDto>
 
     @POST("v1/plans/compile")
     suspend fun compilePlan(
@@ -120,4 +129,9 @@ interface IcoApi {
 @kotlinx.serialization.Serializable
 data class ExtendRequest(
     val seconds: Int,
+)
+
+@kotlinx.serialization.Serializable
+data class DeleteAccountRequest(
+    val confirmation: String,
 )

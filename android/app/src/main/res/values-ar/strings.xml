@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">In Case Of</string>
+    <string name="tagline">هناك من ينتبه.</string>
+
+    <!-- Notifications -->
+    <string name="channel_moments">فحوصات الاطمئنان</string>
+    <string name="channel_moments_description">يسألك إن كنت بخير في الأوقات التي اخترتها.</string>
+    <string name="notification_moment_body">هل كل شيء بخير؟</string>
+    <string name="check_in">فحص الاطمئنان</string>
+    <string name="action_im_okay">أنا بخير</string>
+    <string name="confirm_failed">تعذر إرسال ردك. افتح In Case Of وحاول مرة أخرى.</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">الرئيسية</string>
+    <string name="nav_plans">الخطط</string>
+    <string name="nav_circle">دائرة الدعم</string>
+    <string name="nav_history">السجل</string>
+
+    <!-- Account -->
+    <string name="account_settings">إعدادات الحساب</string>
+    <string name="account_back">رجوع</string>
+    <string name="account_title">حذف الحساب</string>
+    <string name="account_deletion_intro">حذف حسابك نهائي. راجع ما سيحدث قبل المتابعة.</string>
+    <string name="account_deletion_consequences_title">ما يحدث فورًا</string>
+    <string name="account_deletion_consequences">يتوقف In Case Of عن المتابعة، ويلغي الفحوصات والتصعيدات المقبلة، ويلغي الوصول، ويبدأ حذف خططك ودائرة الدعم والتنبيهات وبيانات الحساب.</string>
+    <string name="account_deletion_confirmation_label">اكتب DELETE</string>
+    <string name="account_deletion_confirmation_help">أدخل DELETE كما هي لتفعيل الطلب.</string>
+    <string name="account_deletion_action">حذف حسابي</string>
+    <string name="account_deletion_action_description">حذف هذا الحساب نهائيًا وإيقاف كل المتابعة.</string>
+    <string name="account_deletion_requesting">جارٍ طلب الحذف…</string>
+    <string name="account_deletion_pending">الحذف قيد التنفيذ</string>
+    <string name="account_deletion_received">تم استلام طلب الحذف</string>
+    <string name="account_deletion_stopped">توقفت المتابعة والأعمال المقبلة. تستمر عملية التنظيف بأمان إذا تعذر الوصول إلى أحد مزودي الخدمة مؤقتًا.</string>
+    <string name="account_deletion_close_app">يمكنك إغلاق التطبيق. ستتم إزالة تسجيل الدخول بعد اكتمال التنظيف.</string>
+
+    <!-- Home -->
+    <string name="status_all_clear">كل شيء بخير</string>
+    <string name="status_action_needed">يلزم اتخاذ إجراء</string>
+    <string name="next_label">التالي</string>
+    <string name="if_unresolved">إذا لم يتم الاطمئنان</string>
+    <string name="expected">الوقت المتوقع</string>
+    <string name="need_someone">أحتاج إلى شخص</string>
+    <string name="give_me_more_time">أعطني وقتًا إضافيًا</string>
+    <string name="next_action">الإجراء التالي</string>
+
+    <!-- Plans -->
+    <string name="what_happens">ما الذي سيحدث</string>
+    <string name="shared_if_needed">يتم مشاركته عند الحاجة</string>
+    <string name="your_circle">دائرة الدعم</string>
+    <string name="test_plan">اختبار الخطة</string>
+    <string name="plan_active">نشطة</string>
+    <string name="plan_paused">متوقفة مؤقتًا</string>
+
+    <!-- Circle -->
+    <string name="verified">تم التحقق</string>
+    <string name="not_verified">لم يتم التحقق</string>
+    <string name="accepted">تم القبول</string>
+    <string name="invitation_pending">الدعوة قيد الانتظار</string>
+
+    <!-- History -->
+    <string name="resolved">تم الاطمئنان</string>
+    <string name="history_empty">لا يوجد شيء لعرضه بعد. تظهر فحوصات الاطمئنان المكتملة هنا.</string>
+
+    <!-- Auth -->
+    <string name="sign_in">تسجيل الدخول</string>
+    <string name="email">البريد الإلكتروني</string>
+    <string name="password">كلمة المرور</string>
+    <string name="retry">حاول مرة أخرى</string>
+
+    <!-- Accessibility -->
+    <string name="cd_status_all_clear">الحالة: كل شيء بخير. لا يوجد ما يتطلب انتباهك.</string>
+    <string name="cd_status_action_needed">الحالة: يلزم اتخاذ إجراء. ينتظر In Case Of ردك.</string>
+    <string name="cd_confirm_okay">أكد أنك بخير. يؤدي هذا إلى إكمال فحص الليلة.</string>
+
+    <!-- Drill Mode -->
+    <string name="drill_title">اختبار الخطة</string>
+    <string name="drill_timing_banner">يتم التحكم في توقيت العرض التجريبي من خلال البيئة المنشورة</string>
+    <string name="drill_step_scheduled">الجدول الزمني المضغوط نشط</string>
+    <string name="drill_step_notification">تم استلام إشعار الفحص على Android</string>
+    <string name="drill_step_self_contact">لم يتم الرد على التواصل مع صاحب الحساب</string>
+    <string name="drill_step_circle">تم إشعار أحد أفراد دائرة الدعم</string>
+    <string name="drill_step_claimed">تولى أحد أفراد دائرة الدعم التنبيه</string>
+    <string name="drill_step_paused">تم إيقاف التصعيد الاحتياطي مؤقتًا لمدة 10 دقائق</string>
+    <string name="drill_step_resolved">تم الاطمئنان: تم التحقق من التواصل</string>
+    <string name="drill_ready">تم التحقق من الخطة وهي جاهزة</string>
+    <string name="drill_trace_title">سجل التتبع</string>
+    <string name="drill_action_done">تم</string>
+</resources>

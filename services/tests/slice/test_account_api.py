@@ -6,8 +6,10 @@ from typing import Any, cast
 
 import pytest
 
+from services.adapters.account_deletion import DynamoAccountDeletionRepository
 from services.adapters.memory import InMemoryProfileRepository
 from services.adapters.otp import PhoneVerificationRepository
+from services.adapters.profile import DynamoProfileRepository
 from services.domain.account import (
     AccountStatus,
     Profile,
@@ -192,6 +194,38 @@ def _profile(person: PersonId, a_slice: Slice) -> Profile:
         created_at=a_slice.ctx.now(),
         updated_at=a_slice.ctx.now(),
     )
+
+
+def test_account_deletion_is_confirmed_idempotent_and_closes_every_normal_route(
+    a_slice: Slice, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    person = PersonId("person-mona")
+    table = cast(Any, a_slice.ctx.plans).table
+    profiles = DynamoProfileRepository(table)
+    profiles.save(_profile(person, a_slice))
+    deletions = DynamoAccountDeletionRepository(table)
+    a_slice.ctx = replace(a_slice.ctx, profiles=profiles, account_deletions=deletions)
+    monkeypatch.setattr(bootstrap, "build", lambda: a_slice.ctx)
+
+    refused = api.handler(_event("DELETE /v1/account", str(person), {"confirmation": "delete"}))
+    assert refused["statusCode"] == 422
+    assert _body(refused)["reason_code"] == "DELETION_CONFIRMATION_REQUIRED"
+
+    accepted = api.handler(_event("DELETE /v1/account", str(person), {"confirmation": "DELETE"}))
+    replay = api.handler(_event("DELETE /v1/account", str(person), {"confirmation": "DELETE"}))
+    assert accepted["statusCode"] == replay["statusCode"] == 202
+    assert _body(accepted)["requestId"] == _body(replay)["requestId"]
+    assert _body(accepted)["monitoringStopped"] is True
+    profile = profiles.get(person)
+    assert profile is not None
+    assert profile.status is AccountStatus.DELETION_PENDING
+
+    status = api.handler(_event("GET /v1/account/deletion", str(person)))
+    assert status["statusCode"] == 200
+    assert _body(status)["status"] == "PENDING"
+    closed = api.handler(_event("GET /v1/profile", str(person)))
+    assert closed["statusCode"] == 410
+    assert _body(closed)["reason_code"] == "ACCOUNT_DELETION_PENDING"
 
 
 def test_profile_is_authenticated_and_cannot_be_read_cross_account(

@@ -89,6 +89,11 @@ def deliver(ctx: bootstrap.Context, intent: ActionIntent) -> Delivery:
                     elif latest.is_paused:
                         ctx.outbox.defer(intent)
                         return Delivery(DeliveryStatus.FAILED, error_code="CHECKING_RACE")
+                    elif _account_deletion_pending(ctx, intent):
+                        result = Delivery(
+                            DeliveryStatus.FAILED, error_code="ACCOUNT_DELETION_PENDING"
+                        )
+                        event = "CONTACT_DENIED"
                     else:
                         provider_started = True
                         result = ctx.sender.send(
@@ -164,6 +169,10 @@ def _recipient(
     plan = ctx.plans.get_plan(PlanId(alert.version.plan_id))
     if plan is None:
         return None
+    if ctx.account_deletions is not None and ctx.account_deletions.is_pending(
+        plan.subject_person_id
+    ):
+        return None
     if step.action.is_subject_directed:
         if intent.recipient_id != plan.subject_person_id:
             return None
@@ -188,6 +197,16 @@ def _recipient(
     ):
         return None
     return member
+
+
+def _account_deletion_pending(ctx: bootstrap.Context, intent: ActionIntent) -> bool:
+    if ctx.account_deletions is None:
+        return False
+    alert = ctx.alerts.get(intent.alert_id)
+    if alert is None:
+        return True
+    plan = ctx.plans.get_plan(PlanId(alert.version.plan_id))
+    return plan is None or ctx.account_deletions.is_pending(plan.subject_person_id)
 
 
 def _subject_name(ctx: bootstrap.Context, intent: ActionIntent) -> str:

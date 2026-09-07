@@ -193,6 +193,8 @@ export class Api extends Construct {
     const authenticated: Array<[string, apigw.HttpMethod]> = [
       ["/v1/profile", apigw.HttpMethod.GET],
       ["/v1/profile", apigw.HttpMethod.PATCH],
+      ["/v1/account", apigw.HttpMethod.DELETE],
+      ["/v1/account/deletion", apigw.HttpMethod.GET],
       ["/v1/readiness", apigw.HttpMethod.GET],
       ["/v1/phone-verifications", apigw.HttpMethod.POST],
       ["/v1/phone-verifications/{verificationId}/confirm", apigw.HttpMethod.POST],

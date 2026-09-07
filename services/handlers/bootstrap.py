@@ -19,6 +19,10 @@ from typing import Any
 import boto3
 from botocore.config import Config
 
+from services.adapters.account_deletion import (
+    AccountDeletionRepository,
+    DynamoAccountDeletionRepository,
+)
 from services.adapters.contact import (
     ChannelRouter,
     ContactSender,
@@ -111,6 +115,7 @@ class Context:
     endpoints: EndpointRepository | None = None
     phone_verifications: PhoneVerificationRepository | None = None
     otp_provider: OtpProvider | None = None
+    account_deletions: AccountDeletionRepository | None = None
 
     def now(self) -> datetime:
         return self.clock.now()
@@ -155,6 +160,7 @@ def build(*, schedule_target_arn: str | None = None) -> Context:
         endpoints=endpoints,
         phone_verifications=DynamoPhoneVerificationRepository(table),
         otp_provider=_otp_provider(),
+        account_deletions=DynamoAccountDeletionRepository(table),
     )
 
 

@@ -33,6 +33,12 @@ class LocalIcoRepository(
     private val clock: Clock = Clock.systemUTC(),
     initialState: AlertState? = null,
 ) : IcoRepository {
+    override suspend fun deleteAccount(confirmation: String): Result<AccountDeletion> =
+        Result.failure(IllegalStateException("Account deletion is unavailable in the local demo"))
+
+    override suspend fun accountDeletion(): Result<AccountDeletion> =
+        Result.failure(NoSuchElementException("No account deletion request"))
+
     private val alertState = MutableStateFlow(initialState)
     private val confirmed = MutableStateFlow(false)
     private var dueAt: Instant = clock.instant().plus(Duration.ofHours(3))

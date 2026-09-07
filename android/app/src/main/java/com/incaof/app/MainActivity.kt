@@ -42,6 +42,8 @@ import com.incaof.app.core.design.LocalIcoColors
 import com.incaof.app.core.di.ViewModelFactory
 import com.incaof.app.core.notifications.IcoNotifications
 import com.incaof.app.core.notifications.PushRegistration
+import com.incaof.app.feature.account.AccountScreen
+import com.incaof.app.feature.account.AccountViewModel
 import com.incaof.app.feature.circle.CircleScreen
 import com.incaof.app.feature.circle.CircleViewModel
 import com.incaof.app.feature.history.HistoryScreen
@@ -183,8 +185,21 @@ private fun IcoApp(
                     onConfirm = vm::confirm,
                     onExtend = vm::extend,
                     onNeedSomeone = { navController.navigate(Destination.CIRCLE.route) },
+                    onAccount = { navController.navigate(ACCOUNT_ROUTE) },
                     onRetry = vm::refresh,
                 )
+            }
+
+            composable(ACCOUNT_ROUTE) {
+                val vm: AccountViewModel = viewModel(key = viewModelKey(demoMode, "account"), factory = factory)
+                val state by vm.state.collectAsStateWithLifecycle()
+                AccountScreen(
+                    state = state,
+                    onConfirmationChange = vm::changeConfirmation,
+                    onDelete = vm::deleteAccount,
+                    onBack = { navController.popBackStack() },
+                )
+                androidx.activity.compose.BackHandler { navController.popBackStack() }
             }
 
             composable(Destination.PLANS.route) {
@@ -259,6 +274,8 @@ private fun IcoApp(
 
 private fun viewModelKey(demoMode: Boolean, screen: String): String =
     "${if (demoMode) "demo" else "account"}-$screen"
+
+private const val ACCOUNT_ROUTE = "account-settings"
 
 @Composable
 private fun JudgeDemoBanner(onExit: () -> Unit) {

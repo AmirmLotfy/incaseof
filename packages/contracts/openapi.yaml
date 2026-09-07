@@ -765,6 +765,7 @@ components:
         - activePlanCount
         - maxActivePlans
         - remainingPlanCapacity
+        - globalCapacityAvailable
         - subjectChannels
         - acceptedResponderCount
         - accountReady
@@ -776,6 +777,7 @@ components:
         activePlanCount: { type: integer, minimum: 0 }
         maxActivePlans: { type: integer, minimum: 1 }
         remainingPlanCapacity: { type: integer, minimum: 0 }
+        globalCapacityAvailable: { type: boolean }
         subjectChannels:
           type: object
           additionalProperties: false

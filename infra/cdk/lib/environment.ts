@@ -20,6 +20,8 @@ export interface IcoEnvironment {
   readonly admissionsOpen: boolean;
   /** Per-account ceiling while the launch budget and throughput are being validated. */
   readonly maxActivePlansPerAccount: number;
+  /** Global funded slots. Production stays at zero until measured costs justify a value. */
+  readonly maxActivePlans: number;
   /**
    * Concurrency reserved for the action worker, or undefined to leave it unreserved.
    *
@@ -43,6 +45,7 @@ export const ENVIRONMENTS: Record<EnvName, IcoEnvironment> = {
     region: "us-east-1",
     admissionsOpen: true,
     maxActivePlansPerAccount: 3,
+    maxActivePlans: 0,
   },
   demo: {
     name: "demo",
@@ -51,6 +54,7 @@ export const ENVIRONMENTS: Record<EnvName, IcoEnvironment> = {
     region: "us-east-1",
     admissionsOpen: true,
     maxActivePlansPerAccount: 3,
+    maxActivePlans: 0,
   },
   staging: {
     name: "staging",
@@ -59,6 +63,7 @@ export const ENVIRONMENTS: Record<EnvName, IcoEnvironment> = {
     region: "us-east-1",
     admissionsOpen: false,
     maxActivePlansPerAccount: 3,
+    maxActivePlans: 0,
     reservedWorkerConcurrency: 10,
   },
   prod: {
@@ -68,6 +73,7 @@ export const ENVIRONMENTS: Record<EnvName, IcoEnvironment> = {
     region: "us-east-1",
     admissionsOpen: false,
     maxActivePlansPerAccount: 3,
+    maxActivePlans: 0,
     reservedWorkerConcurrency: 20,
   },
 };

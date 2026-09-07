@@ -7,7 +7,7 @@ from typing import Any, cast
 import pytest
 
 from services.adapters.account_deletion import DynamoAccountDeletionRepository
-from services.adapters.memory import InMemoryProfileRepository
+from services.adapters.memory import InMemoryPlanCapacityRepository, InMemoryProfileRepository
 from services.adapters.otp import PhoneVerificationRepository
 from services.adapters.profile import DynamoProfileRepository
 from services.domain.account import (
@@ -17,9 +17,9 @@ from services.domain.account import (
     SupportedLocale,
 )
 from services.domain.contact_endpoint import ContactEndpoint, EndpointStatus, EndpointType
-from services.domain.ids import CircleId, PersonId
+from services.domain.ids import CircleId, PersonId, PlanId
 from services.domain.phone_verification import PhoneVerification, PhoneVerificationStatus
-from services.domain.plan import ActionType, Plan, PlanType
+from services.domain.plan import ActionType, Plan, PlanType, Trigger, TriggerKind
 from services.handlers import api, bootstrap
 from services.tests.domain.conftest import make_version
 from services.tests.slice.conftest import Slice
@@ -276,6 +276,7 @@ def test_readiness_fails_closed_without_exposing_endpoint_values(
     body = _body(response)
     assert response["statusCode"] == 200
     assert body["subjectChannels"] == {"push": True, "sms": False, "call": False}
+    assert body["globalCapacityAvailable"] is False
     assert body["accountReady"] is False
     assert body["reasons"] == ["ADMISSIONS_PAUSED"]
     serialized = json.dumps(body).lower()
@@ -308,7 +309,12 @@ def test_production_activation_requires_admission_and_the_exact_plan_channel(
     person = PersonId("person-mona")
     profiles = InMemoryProfileRepository({person: _profile(person, a_slice)})
     endpoints = EndpointStore()
-    a_slice.ctx = replace(a_slice.ctx, profiles=profiles, endpoints=endpoints)
+    a_slice.ctx = replace(
+        a_slice.ctx,
+        profiles=profiles,
+        endpoints=endpoints,
+        capacity=InMemoryPlanCapacityRepository(),
+    )
     version = make_version(steps=((1, 0, ActionType.PUSH_SUBJECT, None),))
     plan = Plan(
         plan_id=version.plan_id,
@@ -318,6 +324,7 @@ def test_production_activation_requires_admission_and_the_exact_plan_channel(
     )
     monkeypatch.setenv("ICO_ENV", "prod")
     monkeypatch.setenv("ICO_ADMISSIONS_OPEN", "false")
+    monkeypatch.setenv("ICO_MAX_ACTIVE_PLANS_GLOBAL", "10")
 
     paused = api._activation_readiness_problem(a_slice.ctx, person, plan, version)
     assert paused is not None
@@ -330,6 +337,162 @@ def test_production_activation_requires_admission_and_the_exact_plan_channel(
 
     endpoints.verify(person, EndpointType.PUSH_TOKEN)
     assert api._activation_readiness_problem(a_slice.ctx, person, plan, version) is None
+
+
+def test_production_activation_fails_closed_when_capacity_storage_is_unavailable(
+    a_slice: Slice, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    person = PersonId("person-mona")
+    a_slice.ctx = replace(
+        a_slice.ctx,
+        profiles=InMemoryProfileRepository({person: _profile(person, a_slice)}),
+        endpoints=EndpointStore(),
+        capacity=None,
+    )
+    version = make_version(steps=((1, 0, ActionType.PUSH_SUBJECT, None),))
+    plan = Plan(
+        plan_id=version.plan_id,
+        subject_person_id=person,
+        circle_id=CircleId("circle-1"),
+        plan_type=PlanType.ROUTINE,
+    )
+    monkeypatch.setenv("ICO_ENV", "prod")
+    monkeypatch.setenv("ICO_ADMISSIONS_OPEN", "true")
+    monkeypatch.setenv("ICO_MAX_ACTIVE_PLANS_GLOBAL", "10")
+
+    response = api._activation_readiness_problem(a_slice.ctx, person, plan, version)
+
+    assert response is not None and response["statusCode"] == 503
+    assert _body(response)["reason_code"] == "CAPACITY_UNAVAILABLE"
+
+
+def test_production_capacity_is_reserved_once_and_released_across_pause_resume(
+    a_slice: Slice, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    person = PersonId("person-mona")
+    profiles = InMemoryProfileRepository({person: _profile(person, a_slice)})
+    endpoints = EndpointStore()
+    endpoints.verify(person, EndpointType.PUSH_TOKEN)
+    capacity = InMemoryPlanCapacityRepository()
+    a_slice.ctx = replace(
+        a_slice.ctx,
+        profiles=profiles,
+        endpoints=endpoints,
+        capacity=capacity,
+    )
+    a_slice.given_a_circle(consent_for=())
+    version = replace(
+        make_version(steps=((1, 0, ActionType.PUSH_SUBJECT, None),)),
+        trigger=Trigger(kind=TriggerKind.RECURRING, time_of_day="21:00"),
+    )
+    plan = Plan(
+        plan_id=version.plan_id,
+        subject_person_id=person,
+        circle_id=CircleId("circle-1"),
+        plan_type=PlanType.ROUTINE,
+    )
+    a_slice.ctx.plans.save_plan(plan)
+    a_slice.ctx.plans.save_version(version)
+    monkeypatch.setenv("ICO_ENV", "prod")
+    monkeypatch.setenv("ICO_ADMISSIONS_OPEN", "true")
+    monkeypatch.setenv("ICO_MAX_ACTIVE_PLANS_PER_ACCOUNT", "1")
+    monkeypatch.setenv("ICO_MAX_ACTIVE_PLANS_GLOBAL", "1")
+    event = {"headers": {"Idempotency-Key": "capacity-lifecycle"}}
+
+    activated = api._activate_plan(a_slice.ctx, event, plan.plan_id, person)
+    replayed = api._activate_plan(a_slice.ctx, event, plan.plan_id, person)
+
+    assert activated["statusCode"] == replayed["statusCode"] == 200
+    assert _body(replayed)["replayed"] is True
+    assert capacity.usage(person).account_reserved == 1
+    assert capacity.usage(person).global_reserved == 1
+
+    paused = api._pause_plan(a_slice.ctx, event, plan.plan_id, person)
+    assert paused["statusCode"] == 200
+    assert capacity.usage(person).global_reserved == 0
+
+    endpoint = endpoints.for_person(person, EndpointType.PUSH_TOKEN)
+    assert endpoint is not None
+    endpoints.revoke(person, EndpointType.PUSH_TOKEN, endpoint.endpoint_id)
+    refused = api._resume_plan(a_slice.ctx, event, plan.plan_id, person)
+    assert refused["statusCode"] == 409
+    assert _body(refused)["reason_code"] == "CHANNEL_NOT_READY"
+    assert capacity.usage(person).global_reserved == 0
+
+    endpoints.verify(person, EndpointType.PUSH_TOKEN)
+    resumed = api._resume_plan(a_slice.ctx, event, plan.plan_id, person)
+    assert resumed["statusCode"] == 200
+    assert capacity.usage(person).global_reserved == 1
+
+
+def test_production_readiness_reports_global_capacity_exhaustion(
+    a_slice: Slice, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    person = PersonId("person-mona")
+    capacity = InMemoryPlanCapacityRepository()
+    capacity.reserve(
+        person_id=PersonId("person-maya"),
+        plan_id=PlanId("plan-maya"),
+        account_limit=1,
+        global_limit=1,
+        at=a_slice.ctx.now(),
+    )
+    a_slice.ctx = replace(
+        a_slice.ctx,
+        profiles=InMemoryProfileRepository({person: _profile(person, a_slice)}),
+        endpoints=EndpointStore(),
+        capacity=capacity,
+    )
+    monkeypatch.setattr(bootstrap, "build", lambda: a_slice.ctx)
+    monkeypatch.setenv("ICO_ENV", "prod")
+    monkeypatch.setenv("ICO_ADMISSIONS_OPEN", "true")
+    monkeypatch.setenv("ICO_MAX_ACTIVE_PLANS_GLOBAL", "1")
+
+    response = api.handler(_event("GET /v1/readiness", str(person)))
+    body = _body(response)
+
+    assert response["statusCode"] == 200
+    assert body["globalCapacityAvailable"] is False
+    assert "GLOBAL_CAPACITY_EXHAUSTED" in body["reasons"]
+    assert body["accountReady"] is False
+
+
+def test_one_time_completion_releases_capacity_and_deactivates_the_plan(
+    a_slice: Slice, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    person = PersonId("person-mona")
+    endpoints = EndpointStore()
+    endpoints.verify(person, EndpointType.PUSH_TOKEN)
+    capacity = InMemoryPlanCapacityRepository()
+    a_slice.ctx = replace(
+        a_slice.ctx,
+        profiles=InMemoryProfileRepository({person: _profile(person, a_slice)}),
+        endpoints=endpoints,
+        capacity=capacity,
+    )
+    a_slice.given_a_circle(consent_for=())
+    version = make_version(steps=((1, 0, ActionType.PUSH_SUBJECT, None),))
+    plan = Plan(
+        plan_id=version.plan_id,
+        subject_person_id=person,
+        circle_id=CircleId("circle-1"),
+        plan_type=PlanType.ROUTINE,
+    )
+    a_slice.ctx.plans.save_plan(plan)
+    a_slice.ctx.plans.save_version(version)
+    monkeypatch.setenv("ICO_ENV", "prod")
+    monkeypatch.setenv("ICO_ADMISSIONS_OPEN", "true")
+    monkeypatch.setenv("ICO_MAX_ACTIVE_PLANS_GLOBAL", "1")
+    event = {"headers": {"Idempotency-Key": "one-time-completion"}}
+    activated = api._activate_plan(a_slice.ctx, event, plan.plan_id, person)
+    moment_id = _body(activated)["moment"]["momentId"]
+
+    api._finish_moment(a_slice.ctx, type("ResolvedAlert", (), {"moment_id": moment_id})())
+
+    finished = a_slice.ctx.plans.get_plan(plan.plan_id)
+    assert finished is not None and finished.active_version_id is None
+    assert capacity.usage(person).account_reserved == 0
+    assert capacity.usage(person).global_reserved == 0
 
 
 def test_phone_verification_requires_provider_before_storing_any_number(

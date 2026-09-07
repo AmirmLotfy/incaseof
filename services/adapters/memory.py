@@ -9,10 +9,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
 from datetime import datetime
+from threading import Lock
 
 from services.domain.account import Profile
 from services.domain.agent_decision import AgentDecision
 from services.domain.alert import Alert
+from services.domain.capacity import (
+    AccountPlanCapacityExhausted,
+    GlobalPlanCapacityExhausted,
+    PlanCapacityUsage,
+)
 from services.domain.circle import Circle, ConsentGrant
 from services.domain.idempotency import IdempotencyKey
 from services.domain.ids import (
@@ -38,6 +44,56 @@ class InMemoryProfileRepository:
 
     def save(self, profile: Profile) -> None:
         self.profiles[profile.person_id] = profile
+
+
+@dataclass
+class InMemoryPlanCapacityRepository:
+    reservations: dict[PlanId, PersonId] = field(default_factory=dict)
+    _lock: Lock = field(default_factory=Lock)
+
+    def usage(self, person_id: PersonId) -> PlanCapacityUsage:
+        with self._lock:
+            return PlanCapacityUsage(
+                account_reserved=sum(owner == person_id for owner in self.reservations.values()),
+                global_reserved=len(self.reservations),
+            )
+
+    def reserve(
+        self,
+        *,
+        person_id: PersonId,
+        plan_id: PlanId,
+        account_limit: int,
+        global_limit: int,
+        at: datetime,
+    ) -> PlanCapacityUsage:
+        del at
+        with self._lock:
+            existing = self.reservations.get(plan_id)
+            if existing is not None:
+                if existing != person_id:
+                    raise ValueError("capacity reservation belongs to another account")
+            else:
+                account_reserved = sum(owner == person_id for owner in self.reservations.values())
+                if account_reserved >= account_limit:
+                    raise AccountPlanCapacityExhausted("account plan capacity is exhausted")
+                if len(self.reservations) >= global_limit:
+                    raise GlobalPlanCapacityExhausted("global plan capacity is exhausted")
+                self.reservations[plan_id] = person_id
+            return PlanCapacityUsage(
+                account_reserved=sum(owner == person_id for owner in self.reservations.values()),
+                global_reserved=len(self.reservations),
+            )
+
+    def release(self, *, person_id: PersonId, plan_id: PlanId, at: datetime) -> None:
+        del at
+        with self._lock:
+            existing = self.reservations.get(plan_id)
+            if existing is None:
+                return
+            if existing != person_id:
+                raise ValueError("capacity reservation belongs to another account")
+            del self.reservations[plan_id]
 
 
 @dataclass

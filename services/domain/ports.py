@@ -22,6 +22,7 @@ from typing import Protocol
 from .account import Profile
 from .agent_decision import AgentDecision
 from .alert import Alert
+from .capacity import PlanCapacityUsage
 from .circle import Circle, ConsentGrant
 from .idempotency import IdempotencyKey
 from .ids import AlertId, CircleId, InvitationId, MomentId, PersonId, PlanId, PlanVersionId
@@ -34,6 +35,22 @@ class ProfileRepository(Protocol):
     def get(self, person_id: PersonId) -> Profile | None: ...
 
     def save(self, profile: Profile) -> None: ...
+
+
+class PlanCapacityRepository(Protocol):
+    def usage(self, person_id: PersonId) -> PlanCapacityUsage: ...
+
+    def reserve(
+        self,
+        *,
+        person_id: PersonId,
+        plan_id: PlanId,
+        account_limit: int,
+        global_limit: int,
+        at: datetime,
+    ) -> PlanCapacityUsage: ...
+
+    def release(self, *, person_id: PersonId, plan_id: PlanId, at: datetime) -> None: ...
 
 
 class PlanRepository(Protocol):

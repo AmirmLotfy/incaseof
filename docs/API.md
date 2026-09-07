@@ -33,6 +33,10 @@ The first launch markets are Egypt and the United States, with Arabic and Englis
 Production activation fails closed while admissions are paused, while the profile is incomplete,
 or when a plan requires an unverified subject or responder channel. Readiness exposes stable reason
 codes and booleans without returning phone numbers, push tokens, or provider endpoint identifiers.
+Staging and production reserve each active plan against atomic per-account and global DynamoDB
+counters before scheduling work. Pause, one-time completion, and account deletion release the
+reservation. The production global limit starts at zero and admissions stay closed until measured
+infrastructure and messaging costs support a funded capacity under the launch budget.
 
 Phone starts accept only an E.164 mobile number matching the authenticated profile's EG or US
 country. The response contains an opaque verification id and expiry, never the phone. Starts are

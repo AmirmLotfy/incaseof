@@ -694,6 +694,7 @@ describe("environments", () => {
     assert.ok(api, "expected the API handler");
     assert.equal(api.Properties?.Environment?.Variables?.ICO_ADMISSIONS_OPEN, "false");
     assert.equal(api.Properties?.Environment?.Variables?.ICO_MAX_ACTIVE_PLANS_PER_ACCOUNT, "3");
+    assert.equal(api.Properties?.Environment?.Variables?.ICO_MAX_ACTIVE_PLANS_GLOBAL, "0");
     assert.equal(api.Properties?.Environment?.Variables?.ICO_ALLOWED_COUNTRIES, "EG,US");
   });
 

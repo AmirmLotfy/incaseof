@@ -23,6 +23,7 @@ from services.adapters.account_deletion import (
     AccountDeletionRepository,
     DynamoAccountDeletionRepository,
 )
+from services.adapters.capacity import DynamoPlanCapacityRepository
 from services.adapters.contact import (
     ChannelRouter,
     ContactSender,
@@ -63,6 +64,7 @@ from services.domain.ports import (
     DecisionLog,
     InvitationRepository,
     MomentRepository,
+    PlanCapacityRepository,
     PlanRepository,
     ProfileRepository,
 )
@@ -116,6 +118,7 @@ class Context:
     phone_verifications: PhoneVerificationRepository | None = None
     otp_provider: OtpProvider | None = None
     account_deletions: AccountDeletionRepository | None = None
+    capacity: PlanCapacityRepository | None = None
 
     def now(self) -> datetime:
         return self.clock.now()
@@ -161,6 +164,7 @@ def build(*, schedule_target_arn: str | None = None) -> Context:
         phone_verifications=DynamoPhoneVerificationRepository(table),
         otp_provider=_otp_provider(),
         account_deletions=DynamoAccountDeletionRepository(table),
+        capacity=DynamoPlanCapacityRepository(table),
     )
 
 

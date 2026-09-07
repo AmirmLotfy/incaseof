@@ -68,6 +68,7 @@ export class Api extends Construct {
         ICO_ALLOWED_COUNTRIES: "EG,US",
         ICO_ADMISSIONS_OPEN: String(props.environment.admissionsOpen),
         ICO_MAX_ACTIVE_PLANS_PER_ACCOUNT: String(props.environment.maxActivePlansPerAccount),
+        ICO_MAX_ACTIVE_PLANS_GLOBAL: String(props.environment.maxActivePlans),
         ...(props.pushPlatformArn ? { ICO_PUSH_PLATFORM_ARN: props.pushPlatformArn } : {}),
         ...(props.otpApplicationId && props.otpOriginationIdentity && props.otpBrandName
           ? {

@@ -22,10 +22,11 @@ from services.adapters.account_deletion import (
     AccountDeletionLeaseHeld,
     DynamoAccountDeletionRepository,
 )
+from services.adapters.capacity import DynamoPlanCapacityRepository
 from services.adapters.endpoints import DynamoEndpointRepository
 from services.domain.account_deletion import AccountDeletion
 from services.domain.contact_endpoint import EndpointType
-from services.domain.ids import PersonId
+from services.domain.ids import PersonId, PlanId
 
 log = logging.getLogger(__name__)
 
@@ -143,10 +144,19 @@ def _stop_workflow(alert_partition: str) -> None:
             raise
 
 
-def _purge_application_data(table: Any, person_id: PersonId) -> None:
+def _purge_application_data(table: Any, person_id: PersonId, at: datetime) -> None:
     roots, associated = _discover_data(table, person_id)
     roots.add(keys.person(person_id))
     related: set[str] = set()
+
+    capacity = DynamoPlanCapacityRepository(table)
+    for root in sorted(roots):
+        if root.startswith("PLAN#"):
+            capacity.release(
+                person_id=person_id,
+                plan_id=PlanId(root.removeprefix("PLAN#")),
+                at=at,
+            )
 
     # Stop all future and in-progress safety work before deleting its records.
     for root in sorted(roots):
@@ -196,7 +206,8 @@ def _purge_application_data(table: Any, person_id: PersonId) -> None:
 
 def process(table: Any, request: AccountDeletion, *, at: datetime | None = None) -> None:
     repository = DynamoAccountDeletionRepository(table)
-    current = repository.record_attempt(request, at or datetime.now(UTC))
+    attempted_at = at or datetime.now(UTC)
+    current = repository.record_attempt(request, attempted_at)
     cognito = boto3.client("cognito-idp")
     user_pool_id = _required("ICO_USER_POOL_ID")
     try:
@@ -206,7 +217,7 @@ def process(table: Any, request: AccountDeletion, *, at: datetime | None = None)
             raise
 
     _delete_push_endpoint(table, current)
-    _purge_application_data(table, current.person_id)
+    _purge_application_data(table, current.person_id, attempted_at)
 
     try:
         cognito.admin_delete_user(UserPoolId=user_pool_id, Username=current.cognito_username)

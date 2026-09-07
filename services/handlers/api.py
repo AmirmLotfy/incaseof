@@ -23,6 +23,10 @@ from services.domain.account import (
     SupportedCountry,
     SupportedLocale,
 )
+from services.domain.capacity import (
+    AccountPlanCapacityExhausted,
+    GlobalPlanCapacityExhausted,
+)
 from services.domain.circle import (
     Circle,
     CircleMember,
@@ -545,7 +549,10 @@ def _finish_moment(ctx: bootstrap.Context, alert: Any) -> None:
     version = ctx.plans.get_version(moment.version_id)
     plan = ctx.plans.get_plan(version.plan_id) if version else None
     if version and plan and plan.is_active and plan.active_version_id == version.version_id:
-        planning.schedule_following_moment(ctx, version, after=ctx.now())
+        following = planning.schedule_following_moment(ctx, version, after=ctx.now())
+        if following is None:
+            ctx.plans.save_plan(replace(plan, active_version_id=None, paused=False))
+            _release_capacity(ctx, plan)
 
 
 def _invitation_repository(ctx: bootstrap.Context) -> Any:
@@ -872,6 +879,25 @@ def _max_active_plans() -> int:
     return value
 
 
+def _max_global_active_plans() -> int:
+    value = int(os.environ.get("ICO_MAX_ACTIVE_PLANS_GLOBAL", "0"))
+    if value < 0 or value > 100_000:
+        raise RuntimeError("ICO_MAX_ACTIVE_PLANS_GLOBAL must be between 0 and 100000")
+    return value
+
+
+def _uses_durable_capacity() -> bool:
+    return os.environ.get("ICO_ENV") in {"staging", "prod"}
+
+
+def _release_capacity(ctx: bootstrap.Context, plan: Plan) -> None:
+    if not _uses_durable_capacity():
+        return
+    if ctx.capacity is None:
+        raise RuntimeError("production plan capacity repository is not configured")
+    ctx.capacity.release(person_id=plan.subject_person_id, plan_id=plan.plan_id, at=ctx.now())
+
+
 def _has_verified_endpoint(ctx: bootstrap.Context, person: PersonId, kind: EndpointType) -> bool:
     if ctx.endpoints is None:
         return False
@@ -884,9 +910,20 @@ def _account_readiness(ctx: bootstrap.Context, person: PersonId) -> dict[str, An
     plans = ctx.plans.list_for_subject(person)
     active_count = sum(plan.is_active for plan in plans)
     maximum = _max_active_plans()
+    global_maximum = _max_global_active_plans()
     country_supported = profile is not None and profile.country in _allowed_countries()
     profile_ready = profile is not None and profile.status is AccountStatus.ACTIVE
     admissions_open = _admissions_open()
+    global_capacity_available = True
+    if _uses_durable_capacity():
+        if ctx.capacity is None:
+            global_capacity_available = False
+        else:
+            usage = ctx.capacity.usage(person)
+            active_count = usage.account_reserved
+            global_capacity_available = (
+                global_maximum > 0 and usage.global_reserved < global_maximum
+            )
     reasons: list[str] = []
     if not profile_ready:
         reasons.append("PROFILE_REQUIRED")
@@ -894,7 +931,15 @@ def _account_readiness(ctx: bootstrap.Context, person: PersonId) -> dict[str, An
         reasons.append("COUNTRY_UNSUPPORTED")
     if not admissions_open:
         reasons.append("ADMISSIONS_PAUSED")
-    if active_count >= maximum:
+    elif _uses_durable_capacity():
+        if ctx.capacity is None:
+            reasons.append("CAPACITY_UNAVAILABLE")
+        else:
+            if active_count >= maximum:
+                reasons.append("CAPACITY_EXHAUSTED")
+            if not global_capacity_available:
+                reasons.append("GLOBAL_CAPACITY_EXHAUSTED")
+    elif active_count >= maximum:
         reasons.append("CAPACITY_EXHAUSTED")
     circle = ctx.circles.for_owner(person)
     accepted_members = len(circle.accepted_members) if circle else 0
@@ -905,6 +950,7 @@ def _account_readiness(ctx: bootstrap.Context, person: PersonId) -> dict[str, An
         "activePlanCount": active_count,
         "maxActivePlans": maximum,
         "remainingPlanCapacity": max(0, maximum - active_count),
+        "globalCapacityAvailable": global_capacity_available,
         "subjectChannels": {
             "push": _has_verified_endpoint(ctx, person, EndpointType.PUSH_TOKEN),
             "sms": _has_verified_endpoint(ctx, person, EndpointType.PHONE),
@@ -1088,7 +1134,7 @@ def _activation_readiness_problem(
     plan: Plan,
     version: PlanVersion,
 ) -> dict[str, Any] | None:
-    if os.environ.get("ICO_ENV") != "prod":
+    if not _uses_durable_capacity():
         return None
     readiness = _account_readiness(ctx, person)
     for reason in readiness["reasons"]:
@@ -1097,8 +1143,10 @@ def _activation_readiness_problem(
             "COUNTRY_UNSUPPORTED": "This country is not available",
             "ADMISSIONS_PAUSED": "New plan activation is temporarily paused",
             "CAPACITY_EXHAUSTED": "Your active plan limit has been reached",
+            "GLOBAL_CAPACITY_EXHAUSTED": "Launch monitoring capacity is currently full",
+            "CAPACITY_UNAVAILABLE": "Monitoring capacity cannot be reserved right now",
         }[reason]
-        return _problem(409, title, reason)
+        return _problem(503 if reason == "CAPACITY_UNAVAILABLE" else 409, title, reason)
 
     circle = ctx.circles.get(CircleId(plan.circle_id))
     channel_missing = False
@@ -1228,6 +1276,30 @@ def _activate_plan(
     if readiness_problem is not None:
         return readiness_problem
 
+    if _uses_durable_capacity():
+        if ctx.capacity is None:
+            return _problem(
+                503,
+                "Monitoring capacity cannot be reserved right now",
+                "CAPACITY_UNAVAILABLE",
+            )
+        try:
+            ctx.capacity.reserve(
+                person_id=person,
+                plan_id=plan.plan_id,
+                account_limit=_max_active_plans(),
+                global_limit=_max_global_active_plans(),
+                at=ctx.now(),
+            )
+        except AccountPlanCapacityExhausted:
+            return _problem(409, "Your active plan limit has been reached", "CAPACITY_EXHAUSTED")
+        except GlobalPlanCapacityExhausted:
+            return _problem(
+                409,
+                "Launch monitoring capacity is currently full",
+                "GLOBAL_CAPACITY_EXHAUSTED",
+            )
+
     activation = planning.activate_plan(
         ctx,
         plan.plan_id,
@@ -1254,6 +1326,7 @@ def _pause_plan(
     plan = _owned_plan(ctx, plan_id, person)
     paused = replace(plan, paused=True)
     ctx.plans.save_plan(paused)
+    _release_capacity(ctx, plan)
     for moment in ctx.moments.outstanding_for_subject(person):
         version = ctx.plans.get_version(moment.version_id)
         if version and version.plan_id == plan_id:
@@ -1276,6 +1349,32 @@ def _resume_plan(
     version = ctx.plans.get_version(plan.active_version_id)
     if version is None:
         return _problem(409, "This plan's active version is missing", "NO_PLAN_VERSION")
+    readiness_problem = _activation_readiness_problem(ctx, person, plan, version)
+    if readiness_problem is not None:
+        return readiness_problem
+    if _uses_durable_capacity():
+        if ctx.capacity is None:
+            return _problem(
+                503,
+                "Monitoring capacity cannot be reserved right now",
+                "CAPACITY_UNAVAILABLE",
+            )
+        try:
+            ctx.capacity.reserve(
+                person_id=person,
+                plan_id=plan.plan_id,
+                account_limit=_max_active_plans(),
+                global_limit=_max_global_active_plans(),
+                at=ctx.now(),
+            )
+        except AccountPlanCapacityExhausted:
+            return _problem(409, "Your active plan limit has been reached", "CAPACITY_EXHAUSTED")
+        except GlobalPlanCapacityExhausted:
+            return _problem(
+                409,
+                "Launch monitoring capacity is currently full",
+                "GLOBAL_CAPACITY_EXHAUSTED",
+            )
     resumed = replace(plan, paused=False)
     ctx.plans.save_plan(resumed)
     moment = next(

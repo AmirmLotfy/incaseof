@@ -1,10 +1,10 @@
 # In Case Of - capability and release evidence matrix
 
-Updated: 2026-09-06. Branch: `codex/hackathon-final`.
+Updated: 2026-09-07. Branch: `codex/hackathon-final`.
 
 In Case Of closes uncertainty; it does not decide whether someone is in danger.
 
-## Active implementation checkpoint — 2026-09-05
+## Active implementation checkpoint — 2026-09-07
 
 The Egypt/US production plan is authorized: public Google Play, Arabic/English,
 push/SMS, a $100 monthly operating target, and funded admission limits. Hackathon
@@ -18,7 +18,7 @@ pinned responder identities, strong authorization reads, atomic outcomes/audit e
 UNKNOWN provider outcomes. Worker sends with unknown outcomes are never blindly retried.
 Existing legacy action locks require reconciliation, not replay.
 
-The complete preflight now passes with 410 Python tests and 48 CDK assertions. Focused
+The complete preflight now passes with 433 Python tests and 49 CDK assertions. Focused
 regressions cover sequential and concurrent replay, enqueue failure, pre-provider failure,
 ambiguous provider acceptance, worker death, consent withdrawal, recipient reassignment,
 checking and resolution races, terminal-alert reconciliation, pagination, subject adapters,
@@ -34,6 +34,17 @@ contact values. Production starts with admissions closed, and activation refuses
 profiles, unsupported configured markets, exhausted account capacity, unverified subject
 channels, and responders missing consent, permission, membership, or a verified endpoint.
 
+**Phone-verification foundation deployed; provider delivery remains blocked.** Three Cognito
+routes now start, confirm and revoke subject phone verification. Candidate numbers are sealed with
+KMS and kept separate from the active endpoint, so replacing a phone cannot disable the current
+verified number before success. Challenge and exact candidate promotion is transactional;
+cross-account lookup, country changes, endpoint replacement, expiry, five-attempt exhaustion,
+one-minute cooldown and five-start UTC-day limits fail closed. Country changes revoke the active
+phone. The demo deployment intentionally has no OTP application or origination identity, so starts
+return `OTP_UNAVAILABLE` after authentication and cannot contact a carrier. AWS's built-in OTP
+template supports English but not Arabic; an approved Arabic-capable registered route is still
+required before Egypt production acceptance.
+
 The first repair deployment run, `33990483025`, rolled back cleanly because the scoped
 CloudFormation executor did not have `events:DescribeRule`. The recovery timer now uses the
 already-authorized EventBridge Scheduler service; runs `33991066635` and `33991694814`
@@ -44,10 +55,10 @@ inspection only; deployments continue through protected scoped GitHub OIDC. Fres
 inspection confirms `IcoStack-demo=UPDATE_COMPLETE` and `Versions per Agent=0`.
 AWS Support API inspection is unavailable under the current support subscription.
 
-Next resumable actions: implement production interfaces and country readiness; refresh support
+Next resumable actions: implement account deletion and durable global capacity; refresh support
 cases through the console; deploy the corrected AI runtime only after the version quota and
 artifact gates pass; then rerun the public drill with the live model leg.
-Production account lifecycle, Arabic coverage, phone verification, carrier receipts,
+Production account deletion, Arabic SMS coverage, provider registration, carrier receipts,
 capacity admission, Play delivery and physical-country evidence remain outstanding.
 
 Evidence states have precise meanings:
@@ -66,6 +77,7 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 | Model and credentials | Implemented; live blocked | Source is locked to AWS-native `us.amazon.nova-2-lite-v1:0`; IAM/SigV4; no model API key in clients. A direct Nova canary currently returns account-level `Operation not allowed`. Claude was rejected after Bedrock returned an unsupported-country restriction for this account | AWS account verification, invocation ID, model ID, latency, token usage and redacted trace |
 | Agent authorization | Provisioned; locally verified | Runtime, Gateway, role-only Lambda target and Cedar Policy Engine exist in `us-east-1`; Gateway is ENFORCE; CDK assertions pass | Permitted and denied live Gateway calls after account verification |
 | Account profile and readiness | Deployed; auth boundary live verified | Authenticated profile/readiness routes, Dynamo adapter, EG/US and ar/en validation, IANA timezone validation, endpoint-safe responses, production admission and exact-plan channel gates; canonical API returns 401 without Cognito on all three new routes | Authenticated live profile/readiness exercise, durable global capacity reservation, verified phone lifecycle, deletion lifecycle, client flows, then staging/production deployment |
+| Phone ownership | Deployed foundation; provider blocked | Cognito start/confirm/revoke routes; strict EG/US E.164 validation; KMS candidate storage; atomic exact-endpoint promotion; cooldown, daily and attempt limits; country-change revocation; all three deployed routes return 401 without Cognito | Registered EG and US origins, Arabic-capable Egypt verification SMS, authenticated live start/confirm/revoke, carrier receipt and physical-handset evidence |
 | Plans | Partially live verified | Create/list/get/activate/pause/resume/test routes and Android/web clients; the Android judge entry now mints an isolated session and routes its existing repository through the demo API; direct demo API created a real draft and started an accelerated Drill | Deploy the expanded demo routes, then verify Agent-backed compile and Android drill in demo AWS |
 | Circle consent | Locally verified | Invite/resend/remove and signed accept/decline routes; Android invite UI; responder consent UI | Expiry, replay and cross-tenant tests on deployed URLs |
 | Moment lifecycle | Partially live verified | The deployed Scheduler materialized a due Alert in the synthetic judge tenant; get/next/confirm/extend/cancel and recurring creation remain covered locally | Live confirm, extend, cancel and recurring-next-Moment evidence |
@@ -88,19 +100,19 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 
 ## Current automated evidence
 
-- Unified preflight: all 19 gates pass on 2026-09-05 after the delivery repair.
-- Python: Ruff format/lint, mypy and all 410 tests pass.
-- Contract parity: 56 method/path routes agree across OpenAPI, CDK and handler; authenticated and demo Android client routes are deployed in the correct environment templates.
-- Infrastructure: 48 CDK assertions and synthesis pass, including production-closed admissions and bounded account capacity, exact Nova resources, runtime session lifecycle, AgentCore user-context invocation permissions, the one-minute outbox recovery schedule, the six-timeout SQS visibility window, the demo-only quota-recovery guard and the single API-scoped Lambda invocation permission.
+- Unified preflight: all 19 gates pass on 2026-09-07 after the phone-verification foundation.
+- Python: Ruff format/lint, mypy and all 433 tests pass.
+- Contract parity: 59 method/path routes agree across OpenAPI, CDK and handler; authenticated and demo Android client routes are deployed in the correct environment templates.
+- Infrastructure: 49 CDK assertions and synthesis pass, including production-closed admissions and bounded account capacity, complete least-privilege OTP configuration, exact Nova resources, runtime session lifecycle, AgentCore user-context invocation permissions, the one-minute outbox recovery schedule, the six-timeout SQS visibility window, the demo-only quota-recovery guard and the single API-scoped Lambda invocation permission.
 - Web: marketing and responder lint, typecheck and production static builds; 14 Playwright browser/accessibility cases.
 - Android: unit tests, release lint, ktlint, R8, package/signature inspection and fail-closed configuration checks pass. All 3 connected accessibility tests pass on both API 26 and API 37.
 - Android release identity: `com.incaof.app` v0.2.0 (`versionCode=2`), SHA-256 `db118074e6df54477212f2155674360a04a7b3eb69e2aacd168f6785d6cc60b3`, signing certificate SHA-256 `f12d1890545e420f5a2e10fa1475f21c2fa5463028f57fc3643daa1bc42bbd62`.
 - Push delivery: API 37 created enabled endpoint `a36c1e9a-6dc4-32ba-b174-cbb37b76b64a`; SNS accepted message `c10723f5-9d2b-578c-91d1-40e145dc9104`; Android posted notification `1001` on channel `moments` with the `I'M OKAY` action. Protected credentials and the FCM token remain outside Git and logs.
-- AWS core: `IcoStack-demo` is stable at `UPDATE_COMPLETE`; the API exposes all 56 explicit routes and uses one source-scoped invocation permission. The existing AgentCore Runtime remains deliberately preserved because the account's applied `Versions per Agent` quota is zero.
+- AWS core: `IcoStack-demo` is stable at `UPDATE_COMPLETE`; the API exposes all 59 explicit routes and uses one source-scoped invocation permission. The existing AgentCore Runtime remains deliberately preserved because the account's applied `Versions per Agent` quota is zero.
 - AWS quota evidence: active AgentCore sessions were restored via approved request `451f1b8fde074b51bcb3aacaa2042ba8vNxnmcUj`; version request `b38dff125c3e4b1493e58c7fca4ed88bEgBdMI37` is `CASE_OPENED`.
 - AWS account-verification evidence: support case `178838741100092` remains `UNASSIGNED`; a factual update is prepared but has not been sent without action-time confirmation.
-- Public source evidence: commit `1f4900c1b800d7503d2b0f7e3c69420fbea652a5` is pushed to `codex/hackathon-final`; draft PR 15 has fully green run `33993924810` across Python, web, Android, guardrails and infrastructure, including exact Lambda and AgentCore artifact builds.
-- Deployment identity: protected-environment runs `33993924808` and `33994094652` passed required review, exchanged GitHub OIDC for short-lived `ico-github-demo-deploy` credentials using the exact immutable repository subject, published exact assets, updated `IcoStack-demo` through the service-family-scoped `ico-demo-cfn-exec` role and verified the canonical API mapping. No long-lived AWS key or shared AdministratorAccess executor was used. The AgentCore Runtime was preserved because the account quota remains zero. The canonical descriptor remains HTTP 200; unauthenticated profile and readiness calls return HTTP 401.
+- Public source evidence: commit `157db81a89b595f031291747a6bca5181a865652` is pushed to `codex/hackathon-final`; draft PR 15 has fully green run `34068311537` across Python, web, Android, guardrails and infrastructure, including exact Lambda and AgentCore artifact builds.
+- Deployment identity: protected-environment runs `34068311593` and `34068460193` passed required review, exchanged GitHub OIDC for short-lived `ico-github-demo-deploy` credentials using the exact immutable repository subject, published exact assets, updated `IcoStack-demo` through the service-family-scoped `ico-demo-cfn-exec` role and verified the canonical API mapping. No long-lived AWS key or shared AdministratorAccess executor was used. The AgentCore Runtime was preserved because the account quota remains zero. The canonical descriptor remains HTTP 200; unauthenticated profile, readiness and all three phone-lifecycle routes return HTTP 401.
 - Live deterministic Drill: after that scoped-role OIDC deployment, the direct API verifier created synthetic plan `8870c8dc-3c80-40ec-a189-c64afa5ab84a`, accelerated Moment `36c1810a-380f-5d27-8273-8a62c64f367e`, and resolved Alert `84d3d2cd-1c6a-4abc-ac7e-a517f6f6cc37`. Thirteen deployed audit events include four distinct ACTION_QUEUED/ACTION_ACCEPTED pairs, Circle escalation, responder claim and `RESPONDER_VERIFIED`; all four outbox rows are terminal ACCEPTED and worker references are restricted to `safe-sink:`. After the in-progress lease wait elapsed, the Standard workflow re-read the terminal Alert and finished `SUCCEEDED`. The AgentCore compile was not part of this proof and still returns the designed 503 fallback.
 - Release negative test: `assembleRelease` refuses to run without explicit backend and signing inputs.
 
@@ -111,9 +123,10 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 3. Add the currently blocked Nova/AgentCore compile leg to the now-proven live workflow, queue, responder lease and resolution path; record runtime, trace and execution identifiers.
 4. Deploy edge hosting, publish both static clients, create apex/`www` records, and verify marketing, app, demo, consent and responder URLs globally. The canonical API descriptor is already live.
 5. Finish one physical-phone FCM/install pass and rebuild the signed release for the canonical API after edge hosting exists.
-6. Capture real deployed screenshots; only then generate the final 1800x1200 project image and demo video.
-7. Publish the sub-five-minute video and builder.aws posts. The user supplies the public video URL and AWS Builder ID.
-8. Merge the green draft PR only after the live acceptance gate passes, then tag that exact accepted commit and finalize `submission/release-evidence.json`.
+6. Obtain registered Egypt and US origination identities, add an Arabic-capable verification message path, and verify OTP plus delivery receipts on permitted physical handsets.
+7. Capture real deployed screenshots; only then generate the final 1800x1200 project image and demo video.
+8. Publish the sub-five-minute video and builder.aws posts. The user supplies the public video URL and AWS Builder ID.
+9. Merge the green draft PR only after the live acceptance gate passes, then tag that exact accepted commit and finalize `submission/release-evidence.json`.
 
 ## Explicitly deferred
 

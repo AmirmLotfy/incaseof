@@ -4,7 +4,7 @@
   "sourceCommitAtStart": "6ef1e7119ffc34cd3f20fb4cd27db4a0e56aa13b",
   "acceptedCommit": null,
   "tag": null,
-  "verifiedAt": "2026-09-05T21:52:24Z",
+  "verifiedAt": "2026-09-07T00:04:30Z",
   "aws": {
     "accountIdRedacted": true,
     "deploymentPrincipal": "protected GitHub OIDC role ico-github-demo-deploy with project-specific CloudFormation executor ico-demo-cfn-exec; no long-lived AWS access key",
@@ -17,9 +17,9 @@
       "protectedEnvironment": "demo",
       "requiredReviewPassed": true,
       "immutableRepositorySubjectPinned": true,
-      "verificationRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/33994094652",
+      "verificationRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/34068460193",
       "verificationAttempt": 1,
-      "verifiedAt": "2026-09-05T21:52:24Z",
+      "verifiedAt": "2026-09-07T00:04:30Z",
       "canonicalApiVerified": true,
       "fullCdkDeploymentVerified": true,
       "cloudFormationExecutionRole": "ico-demo-cfn-exec",
@@ -82,15 +82,15 @@
       "correctiveAction": "Make Lambda staging an explicit CI/preflight and recovery step, rebuild the exact artifact, then redeploy and repeat live verification."
     },
     "lastDeploymentAttempt": {
-      "verifiedAt": "2026-09-05T21:52:24Z",
-      "sourceCommit": "1f4900c1b800d7503d2b0f7e3c69420fbea652a5",
+      "verifiedAt": "2026-09-07T00:04:30Z",
+      "sourceCommit": "157db81a89b595f031291747a6bca5181a865652",
       "result": "PASSED_QUOTA_SAFE_OIDC_SCOPED_ROLES",
       "stackStatus": "UPDATE_COMPLETE",
-      "routeCount": 56,
+      "routeCount": 59,
       "canonicalApiDescriptor": true,
       "demoSessionIssued": true,
       "agentCoreRuntimePreserved": true,
-      "note": "Reviewer-gated GitHub Actions run 33994094652 built exact artifacts, deployed the production account foundation through short-lived OIDC credentials and ico-demo-cfn-exec, preserved the quota-blocked AgentCore Runtime exactly, and passed the canonical API check. A normal runtime rollout remains blocked until the version quota is restored."
+      "note": "Reviewer-gated GitHub Actions run 34068460193 built exact artifacts, deployed the durable phone-verification foundation through short-lived OIDC credentials and ico-demo-cfn-exec, preserved the quota-blocked AgentCore Runtime exactly, and passed the canonical API check. OTP provider configuration remains intentionally absent until registered origins are approved."
     },
     "deliveryRepair": {
       "sourceCommit": "864a16827005d7e4f5e824194a25793ed6c3ad85",
@@ -109,6 +109,22 @@
       "canonicalApiDescriptorStatus": 200,
       "unauthenticatedProfileStatus": 401,
       "unauthenticatedReadinessStatus": 401,
+      "agentCoreRuntimePreserved": true
+    },
+    "phoneVerification": {
+      "sourceCommit": "157db81a89b595f031291747a6bca5181a865652",
+      "ciRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/34068311537",
+      "identityRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/34068311593",
+      "deploymentRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/34068460193",
+      "startRouteDeployed": true,
+      "confirmRouteDeployed": true,
+      "revokeRouteDeployed": true,
+      "unauthenticatedRouteStatuses": [401, 401, 401],
+      "providerConfigured": false,
+      "providerDeliveryVerified": false,
+      "candidateStorageEncrypted": true,
+      "promotionTransactional": true,
+      "arabicProviderTemplateAvailable": false,
       "agentCoreRuntimePreserved": true
     }
   },
@@ -197,20 +213,20 @@
     {
       "name": "unified-preflight",
       "status": "PASSED",
-      "verifiedAt": "2026-09-05T21:30:05Z",
-      "details": "All local gates on the delivery repair and production account foundation; exact Lambda and AgentCore artifacts; 410 Python tests; 48 CDK assertions; 56 API routes in parity; 14 Playwright browser/accessibility cases"
+      "verifiedAt": "2026-09-07T00:00:02Z",
+      "details": "All local gates on delivery, account and phone-verification foundations; exact Lambda and AgentCore artifacts; 433 Python tests; 49 CDK assertions; 59 API routes in parity; 14 Playwright browser/accessibility cases"
     },
     {
       "name": "github-actions",
       "status": "PASSED",
-      "verifiedAt": "2026-09-05T21:47:22Z",
-      "details": "Run 33993924810; Python, Web, Android, Guardrails and Infrastructure all passed on commit 1f4900c1b800d7503d2b0f7e3c69420fbea652a5, including exact Lambda and AgentCore artifact builds"
+      "verifiedAt": "2026-09-07T00:00:00Z",
+      "details": "Run 34068311537; Python, Web, Android, Guardrails and Infrastructure all passed on commit 157db81a89b595f031291747a6bca5181a865652, including exact Lambda and AgentCore artifact builds"
     },
     {
       "name": "github-oidc-deployment-identity",
       "status": "PASSED_FULL_QUOTA_SAFE_DEPLOYMENT",
-      "verifiedAt": "2026-09-05T21:52:24Z",
-      "details": "Runs 33993924808 and 33994094652 passed required demo-environment review on commit 1f4900c1b800d7503d2b0f7e3c69420fbea652a5, obtained short-lived credentials as ico-github-demo-deploy using the immutable repository OIDC subject, published exact assets, updated IcoStack-demo through ico-demo-cfn-exec while preserving the quota-blocked AgentCore version, proved the recorded stack RoleARN, and verified the canonical API mapping."
+      "verifiedAt": "2026-09-07T00:04:30Z",
+      "details": "Runs 34068311593 and 34068460193 passed required demo-environment review on commit 157db81a89b595f031291747a6bca5181a865652, obtained short-lived credentials as ico-github-demo-deploy using the immutable repository OIDC subject, published exact assets, updated IcoStack-demo through ico-demo-cfn-exec while preserving the quota-blocked AgentCore version, proved the recorded stack RoleARN, and verified the canonical API mapping."
     },
     {
       "name": "android-in-app-demo",
@@ -221,11 +237,11 @@
   ],
   "sourceControl": {
     "branch": "codex/hackathon-final",
-    "headCommitAtLastGreenRun": "1f4900c1b800d7503d2b0f7e3c69420fbea652a5",
+    "headCommitAtLastGreenRun": "157db81a89b595f031291747a6bca5181a865652",
     "publicBranchPushed": true,
     "pullRequest": "https://github.com/AmirmLotfy/incaseof/pull/15",
     "pullRequestState": "DRAFT",
-    "githubActionsRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/33993924810"
+    "githubActionsRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/34068311537"
   },
   "artifacts": {
     "architecturePngSha256": "176687736f479c1efa93a24fa7d95c6761bb1a4c31e6497bf66e75cf6729d43d",

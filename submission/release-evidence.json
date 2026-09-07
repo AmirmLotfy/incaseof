@@ -4,7 +4,7 @@
   "sourceCommitAtStart": "6ef1e7119ffc34cd3f20fb4cd27db4a0e56aa13b",
   "acceptedCommit": null,
   "tag": null,
-  "verifiedAt": "2026-09-07T00:04:30Z",
+  "verifiedAt": "2026-09-07T23:27:45Z",
   "aws": {
     "accountIdRedacted": true,
     "deploymentPrincipal": "protected GitHub OIDC role ico-github-demo-deploy with project-specific CloudFormation executor ico-demo-cfn-exec; no long-lived AWS access key",
@@ -17,9 +17,9 @@
       "protectedEnvironment": "demo",
       "requiredReviewPassed": true,
       "immutableRepositorySubjectPinned": true,
-      "verificationRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/34068460193",
+      "verificationRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/34167493476",
       "verificationAttempt": 1,
-      "verifiedAt": "2026-09-07T00:04:30Z",
+      "verifiedAt": "2026-09-07T22:50:21Z",
       "canonicalApiVerified": true,
       "fullCdkDeploymentVerified": true,
       "cloudFormationExecutionRole": "ico-demo-cfn-exec",
@@ -82,15 +82,15 @@
       "correctiveAction": "Make Lambda staging an explicit CI/preflight and recovery step, rebuild the exact artifact, then redeploy and repeat live verification."
     },
     "lastDeploymentAttempt": {
-      "verifiedAt": "2026-09-07T00:04:30Z",
-      "sourceCommit": "157db81a89b595f031291747a6bca5181a865652",
+      "verifiedAt": "2026-09-07T22:50:21Z",
+      "sourceCommit": "e90ec0031e4047b1eae9c87219613d16c3ad3ea4",
       "result": "PASSED_QUOTA_SAFE_OIDC_SCOPED_ROLES",
       "stackStatus": "UPDATE_COMPLETE",
-      "routeCount": 59,
+      "routeCount": 61,
       "canonicalApiDescriptor": true,
       "demoSessionIssued": true,
       "agentCoreRuntimePreserved": true,
-      "note": "Reviewer-gated GitHub Actions run 34068460193 built exact artifacts, deployed the durable phone-verification foundation through short-lived OIDC credentials and ico-demo-cfn-exec, preserved the quota-blocked AgentCore Runtime exactly, and passed the canonical API check. OTP provider configuration remains intentionally absent until registered origins are approved."
+      "note": "Reviewer-gated GitHub Actions run 34167842407 built exact artifacts, deployed the durable account-deletion milestone through short-lived OIDC credentials and ico-demo-cfn-exec, preserved the quota-blocked AgentCore Runtime exactly, and passed the canonical API check."
     },
     "deliveryRepair": {
       "sourceCommit": "864a16827005d7e4f5e824194a25793ed6c3ad85",
@@ -126,6 +126,30 @@
       "promotionTransactional": true,
       "arabicProviderTemplateAvailable": false,
       "agentCoreRuntimePreserved": true
+    },
+    "accountDeletion": {
+      "sourceCommit": "668d9559a184f34d7eec875c99a4267d7ad754c6",
+      "checkpointCommit": "e90ec0031e4047b1eae9c87219613d16c3ad3ea4",
+      "ciRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/34167493503",
+      "identityRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/34167493476",
+      "deploymentRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/34167842407",
+      "requestRouteDeployed": true,
+      "statusRouteDeployed": true,
+      "unauthenticatedRouteStatuses": [401, 401],
+      "canonicalApiDescriptorStatus": 200,
+      "authenticatedDisposableAccountExercise": false,
+      "workerCleanupLiveVerified": false,
+      "agentCoreRuntimePreserved": true
+    },
+    "capacityAdmission": {
+      "sourceCommit": "fc17c7b4699e24dac846cf8922a867206bc7314b",
+      "localPreflightPassed": true,
+      "atomicPlanAccountGlobalReservation": true,
+      "concurrentFinalSlotRegressionPassed": true,
+      "productionAdmissionsOpen": false,
+      "productionFundedGlobalSlots": 0,
+      "deployedToStagingOrProduction": false,
+      "positiveCapacityCostValidated": false
     }
   },
   "urls": {
@@ -213,20 +237,20 @@
     {
       "name": "unified-preflight",
       "status": "PASSED",
-      "verifiedAt": "2026-09-07T00:00:02Z",
-      "details": "All local gates on delivery, account and phone-verification foundations; exact Lambda and AgentCore artifacts; 433 Python tests; 49 CDK assertions; 59 API routes in parity; 14 Playwright browser/accessibility cases"
+      "verifiedAt": "2026-09-07T23:27:45Z",
+      "details": "All 19 local gates on delivery, account, phone-verification, deletion and durable-capacity foundations at fc17c7b4699e24dac846cf8922a867206bc7314b; exact Lambda and AgentCore artifacts; 460 Python tests; 50 CDK assertions; 61 API routes in parity; 16 Playwright browser/accessibility cases"
     },
     {
       "name": "github-actions",
       "status": "PASSED",
-      "verifiedAt": "2026-09-07T00:00:00Z",
-      "details": "Run 34068311537; Python, Web, Android, Guardrails and Infrastructure all passed on commit 157db81a89b595f031291747a6bca5181a865652, including exact Lambda and AgentCore artifact builds"
+      "verifiedAt": "2026-09-07T22:47:00Z",
+      "details": "Run 34167493503; Python, Web, Android, Guardrails and Infrastructure all passed on account-deletion checkpoint e90ec0031e4047b1eae9c87219613d16c3ad3ea4, including exact Lambda and AgentCore artifact builds; capacity commit CI remains separately tracked until terminal"
     },
     {
       "name": "github-oidc-deployment-identity",
       "status": "PASSED_FULL_QUOTA_SAFE_DEPLOYMENT",
-      "verifiedAt": "2026-09-07T00:04:30Z",
-      "details": "Runs 34068311593 and 34068460193 passed required demo-environment review on commit 157db81a89b595f031291747a6bca5181a865652, obtained short-lived credentials as ico-github-demo-deploy using the immutable repository OIDC subject, published exact assets, updated IcoStack-demo through ico-demo-cfn-exec while preserving the quota-blocked AgentCore version, proved the recorded stack RoleARN, and verified the canonical API mapping."
+      "verifiedAt": "2026-09-07T22:50:21Z",
+      "details": "Runs 34167493476 and 34167842407 passed required demo-environment review on checkpoint e90ec0031e4047b1eae9c87219613d16c3ad3ea4, obtained short-lived credentials as ico-github-demo-deploy using the immutable repository OIDC subject, published exact assets, updated IcoStack-demo through ico-demo-cfn-exec while preserving the quota-blocked AgentCore version, proved the recorded stack RoleARN, and verified the canonical API mapping."
     },
     {
       "name": "android-in-app-demo",
@@ -237,11 +261,11 @@
   ],
   "sourceControl": {
     "branch": "codex/hackathon-final",
-    "headCommitAtLastGreenRun": "157db81a89b595f031291747a6bca5181a865652",
+    "headCommitAtLastGreenRun": "e90ec0031e4047b1eae9c87219613d16c3ad3ea4",
     "publicBranchPushed": true,
     "pullRequest": "https://github.com/AmirmLotfy/incaseof/pull/15",
     "pullRequestState": "DRAFT",
-    "githubActionsRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/34068311537"
+    "githubActionsRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/34167493503"
   },
   "artifacts": {
     "architecturePngSha256": "176687736f479c1efa93a24fa7d95c6761bb1a4c31e6497bf66e75cf6729d43d",

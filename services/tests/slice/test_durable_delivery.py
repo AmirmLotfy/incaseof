@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
+from threading import Lock
 from typing import Any, cast
 
 import pytest
@@ -44,8 +45,22 @@ def test_identical_sqs_payload_is_not_sent_twice(a_slice: Slice) -> None:
     assert len(a_slice.sender.to("Maya")) == 1
 
 
-def test_concurrent_workers_obtain_one_provider_attempt(a_slice: Slice) -> None:
+def test_concurrent_workers_obtain_one_provider_attempt(
+    a_slice: Slice, monkeypatch: pytest.MonkeyPatch
+) -> None:
     intent = pending(a_slice)
+    assert a_slice.ctx.outbox is not None
+    real_begin = a_slice.ctx.outbox.begin
+    emulator_lock = Lock()
+
+    def conditionally_begin(*args: Any, **kwargs: Any) -> bool:
+        # DynamoDB serializes conditional updates for one item. moto's in-process backend
+        # does not provide that service guarantee across Python threads, so serialize only
+        # the emulator call while leaving the workers and provider boundary concurrent.
+        with emulator_lock:
+            return real_begin(*args, **kwargs)
+
+    monkeypatch.setattr(a_slice.ctx.outbox, "begin", conditionally_begin)
     with ThreadPoolExecutor(max_workers=2) as pool:
         results = list(pool.map(lambda _: action_worker.deliver(a_slice.ctx, intent), range(2)))
 

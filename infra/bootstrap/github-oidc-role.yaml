@@ -91,7 +91,7 @@ Resources:
                   - s3:PutBucketTagging
                   - s3:PutBucketVersioning
                   - s3:PutEncryptionConfiguration
-                Resource: !Sub arn:${AWS::Partition}:s3:::icostack-demo-hosting-*
+                Resource: !Sub arn:${AWS::Partition}:s3:::icostack-demo-hosting*
               - Sid: ManageOnlyIcoDemoStaticObjects
                 Effect: Allow
                 Action:
@@ -100,7 +100,7 @@ Resources:
                   - s3:GetObject
                   - s3:GetObjectVersion
                   - s3:PutObject
-                Resource: !Sub arn:${AWS::Partition}:s3:::icostack-demo-hosting-*/*
+                Resource: !Sub arn:${AWS::Partition}:s3:::icostack-demo-hosting*/*
               - Sid: ManageIcoDemoEdgeServices
                 Effect: Allow
                 Action:

@@ -354,9 +354,9 @@
     "projectImageStatus": "SUBMISSION_CANONICAL_DETERMINISTIC_FALLBACK",
     "projectImageSha256": "873d817f32f779812e418f74498a5a02532239cee2852babd869636845029999",
     "videoReviewMaster": "submission/video/final/ico-demo-master-1080p.mp4",
-    "videoReviewStatus": "REVIEW_CANONICAL_DETERMINISTIC_FALLBACK",
-    "videoReviewMasterSha256": "055254401454526d02f794b4f7de2006aabcbc01f7dbe4078620601c8d358b9f",
-    "videoThumbnailSha256": "cffc7c1f8e912d3750a6a7559015293fd2e9c4caff5721d091fd192cf5057b6e",
+    "videoReviewStatus": "FINAL_CANONICAL_DETERMINISTIC_FALLBACK",
+    "videoReviewMasterSha256": "f32e2ba8cbe1cfca2fbb4de40b744fda58db0f1dca40028b6a3aca782a843030",
+    "videoThumbnailSha256": "102acae05a7ee6da09ac3d953ace326222d23da68a4457e2c62df48b488b77ed",
     "webCaptureProvenance": "submission/screenshots/web-provenance.json",
     "webCaptureMode": "SUBMISSION_CANONICAL_DETERMINISTIC_FALLBACK",
     "screenshots": [
@@ -372,7 +372,9 @@
       "submission/screenshots/android-create.png",
       "submission/screenshots/android-circle.png",
       "submission/screenshots/android-drill.png"
-    ]
+    ],
+    "videoDurationSeconds": 275.0,
+    "videoResolution": "1920x1080"
   },
   "videoUrl": null,
   "blogUrls": [],

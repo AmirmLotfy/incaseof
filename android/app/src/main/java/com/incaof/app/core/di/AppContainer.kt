@@ -8,6 +8,7 @@ import com.incaof.app.core.auth.DemoAuthRepository
 import com.incaof.app.core.auth.LocalAuthRepository
 import com.incaof.app.core.network.NetworkModule
 import com.incaof.app.data.ApiIcoRepository
+import com.incaof.app.data.DemoFallbackIcoRepository
 import com.incaof.app.data.IcoRepository
 import com.incaof.app.data.LocalIcoRepository
 
@@ -50,7 +51,10 @@ class AppContainer(
             val session = requireNotNull(response.body()) { "Demo session response was empty" }
             check(session.synthetic && session.sessionToken.isNotBlank()) { "Invalid demo session response" }
             val demoAuth = DemoAuthRepository(session.sessionToken, session.subjectDisplayName)
-            val demoRepository = ApiIcoRepository(NetworkModule.demoApi(demoAuth), allowDeviceRegistration = false)
+            val demoRepository =
+                DemoFallbackIcoRepository(
+                    ApiIcoRepository(NetworkModule.demoApi(demoAuth), allowDeviceRegistration = false),
+                )
             ViewModelFactory(demoAuth, demoRepository)
         }
 }

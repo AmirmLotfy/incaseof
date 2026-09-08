@@ -11,10 +11,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -284,28 +285,31 @@ private const val ACCOUNT_ROUTE = "account-settings"
 private fun JudgeDemoBanner(onExit: () -> Unit) {
     val ico = LocalIcoColors.current
     Surface(
-        modifier = Modifier.fillMaxWidth().statusBarsPadding(),
+        modifier = Modifier.fillMaxWidth(),
         color = ico.signal,
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Column(Modifier.weight(1f)) {
-                Text(
-                    stringResource(R.string.judge_demo_label),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = ico.ink,
-                )
-                Text(
-                    stringResource(R.string.judge_demo_description),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = ico.ink,
-                )
-            }
-            TextButton(onClick = onExit) {
-                Text(stringResource(R.string.judge_demo_exit), color = ico.ink)
+        Column {
+            Spacer(Modifier.height(32.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        stringResource(R.string.judge_demo_label),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = ico.ink,
+                    )
+                    Text(
+                        stringResource(R.string.judge_demo_description),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = ico.ink,
+                    )
+                }
+                TextButton(onClick = onExit) {
+                    Text(stringResource(R.string.judge_demo_exit), color = ico.ink)
+                }
             }
         }
     }

@@ -8,6 +8,8 @@ import {
   relativeTime,
   type Incident,
 } from "@/lib/incident";
+import { copy, type Locale } from "@/lib/i18n";
+import { LanguageToggle } from "./LanguageToggle";
 import { Timeline } from "./Timeline";
 
 /**
@@ -24,12 +26,13 @@ import { Timeline } from "./Timeline";
  * know anybody's pronouns and must not guess one from a name, so the phrasing avoids the
  * question rather than answering it wrongly on somebody's lock screen.
  */
-export function IncidentRoom({ incident, token }: { incident: Incident; token: string }) {
+export function IncidentRoom({ incident, token, locale, onLocaleChange }: { incident: Incident; token: string; locale: Locale; onLocaleChange: (locale: Locale) => void }) {
   const [current, setCurrent] = useState(incident);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
 
   const claimed = current.leaseExpiresAt !== null;
+  const words = copy[locale];
 
   async function run(
     action: "claim" | "unable" | "resolve",
@@ -56,12 +59,15 @@ export function IncidentRoom({ incident, token }: { incident: Incident; token: s
         padding: "2rem 1.25rem 4rem",
       }}
     >
+      <LanguageToggle locale={locale} onChange={onLocaleChange} />
       <p className="wordmark">In Case of</p>
 
-      {claimed ? (
-        <Checking incident={current} busy={busy} onAct={run} />
+      {current.state === "RESOLVED" || current.state === "CANCELLED" ? (
+        <Closed incident={current} locale={locale} />
+      ) : claimed ? (
+        <Checking incident={current} busy={busy} onAct={run} locale={locale} />
       ) : (
-        <Unclaimed incident={current} busy={busy} onAct={run} />
+        <Unclaimed incident={current} busy={busy} onAct={run} locale={locale} />
       )}
 
       {failed && (
@@ -69,8 +75,7 @@ export function IncidentRoom({ incident, token }: { incident: Incident; token: s
           role="alert"
           style={{ color: "var(--ico-critical)", marginTop: "1.5rem" }}
         >
-          That didn&rsquo;t send. Check your connection and try again — {current.subjectName}
-          &rsquo;s plan is still running.
+          {words.sendFailed(current.subjectName)}
         </p>
       )}
     </main>
@@ -82,15 +87,38 @@ type Runner = (
   next: (previous: Incident) => Incident,
 ) => void;
 
+function Closed({ incident, locale }: { incident: Incident; locale: Locale }) {
+  const words = copy[locale];
+  return (
+    <>
+      <p className="section-label" style={{ marginTop: "2rem" }}>{words.resolved}</p>
+      <h1 className="headline" style={{ marginTop: "0.75rem" }}>
+        {words.checkClosed}
+      </h1>
+      <p style={{ color: "var(--ico-graphite)", marginTop: "1rem" }}>
+        {words.closedDetail(incident.subjectName)}
+      </p>
+      <hr className="rule" />
+      <section aria-labelledby="resolved-timeline">
+        <h2 id="resolved-timeline" className="section-label">{words.whatHappened}</h2>
+        <Timeline entries={incident.tried} locale={locale} />
+      </section>
+    </>
+  );
+}
+
 function Unclaimed({
   incident,
   busy,
   onAct,
+  locale,
 }: {
   incident: Incident;
   busy: boolean;
   onAct: Runner;
+  locale: Locale;
 }) {
+  const words = copy[locale];
   return (
     <>
       {/*
@@ -98,31 +126,33 @@ function Unclaimed({
         responded, and never that anything is wrong.
       */}
       <h1 className="headline" style={{ marginTop: "1.5rem" }}>
-        {incident.subjectName} hasn&rsquo;t responded
+        {words.hasNotResponded(incident.subjectName)}
       </h1>
 
       <p style={{ color: "var(--ico-graphite)", marginTop: "0.75rem" }}>
-        {incident.planLabel} · Expected{" "}
-        <span className="tabular">{clockTime(incident.expectedAt)}</span>
+        {incident.planLabel} · {words.expected}{" "}
+        <span className="tabular">{clockTime(incident.expectedAt, locale)}</span>
       </p>
 
       <hr className="rule" />
 
       <section aria-labelledby="happened">
         <h2 id="happened" className="section-label">
-          What&rsquo;s happened
+          {words.whatsHappened}
         </h2>
-        <Timeline entries={incident.tried} />
+        <Timeline entries={incident.tried} locale={locale} />
       </section>
 
       {incident.nextContact && (
         <section aria-labelledby="next" style={{ marginTop: "2rem" }}>
           <h2 id="next" className="section-label">
-            What&rsquo;s next
+            {words.whatsNext}
           </h2>
           <p style={{ margin: 0 }}>
-            {incident.nextContact.name} will be contacted{" "}
-            {relativeTime(incident.nextContact.at)}.
+            {words.nextContact(
+              incident.nextContact.name,
+              relativeTime(incident.nextContact.at, new Date(), locale),
+            )}
           </p>
         </section>
       )}
@@ -142,7 +172,7 @@ function Unclaimed({
             }))
           }
         >
-          I&rsquo;m checking
+          {words.checking}
         </button>
 
         {/*
@@ -157,8 +187,7 @@ function Unclaimed({
             margin: "0.25rem 0 0",
           }}
         >
-          Tapping this pauses the next contact for 10 minutes. It doesn&rsquo;t mean{" "}
-          {incident.subjectName} is okay.
+          {words.claimHelp(incident.subjectName)}
         </p>
       </div>
     </>
@@ -169,10 +198,12 @@ function Checking({
   incident,
   busy,
   onAct,
+  locale,
 }: {
   incident: Incident;
   busy: boolean;
   onAct: Runner;
+  locale: Locale;
 }) {
   const [remaining, setRemaining] = useState(() =>
     incident.leaseExpiresAt ? countdown(incident.leaseExpiresAt) : "00:00",
@@ -187,12 +218,14 @@ function Checking({
     return () => clearInterval(id);
   }, [incident.leaseExpiresAt]);
 
-  const who = incident.ownerName ?? "Someone";
+  const words = copy[locale];
+  const who = incident.ownerName ?? words.someone;
+  const isSelf = incident.ownerName === "You";
 
   return (
     <>
       <h1 className="headline" style={{ marginTop: "1.5rem" }}>
-        {who === "You" ? "You’re checking" : `${who} is checking`}
+        {isSelf ? words.youChecking : words.personChecking(who)}
       </h1>
 
       {/*
@@ -205,14 +238,14 @@ function Checking({
         style={{ fontSize: "2rem", marginTop: "0.5rem" }}
       >
         {remaining}
-        <span style={{ fontSize: "1rem", color: "var(--ico-graphite)" }}> remaining</span>
+        <span style={{ fontSize: "1rem", color: "var(--ico-graphite)" }}> {words.remaining}</span>
       </p>
 
       {/* The sentence the whole product turns on. */}
       <p style={{ color: "var(--ico-graphite)", marginTop: "1rem" }}>
-        Backup contact is paused while {who === "You" ? "you check" : `${who} checks`} on{" "}
-        {incident.subjectName}. If nothing happens before the time runs out, contacting
-        resumes automatically.
+        {isSelf
+          ? words.backupPausedSelf(incident.subjectName)
+          : words.backupPausedOther(who, incident.subjectName)}
       </p>
 
       <hr className="rule" />
@@ -232,7 +265,7 @@ function Checking({
             }))
           }
         >
-          I reached {incident.subjectName} — all okay
+          {words.reached(incident.subjectName)}
         </button>
 
         <button
@@ -249,7 +282,7 @@ function Checking({
             }))
           }
         >
-          I couldn&rsquo;t reach them
+          {words.unable}
         </button>
       </div>
 
@@ -260,8 +293,7 @@ function Checking({
           marginTop: "1.25rem",
         }}
       >
-        &ldquo;I couldn&rsquo;t reach them&rdquo; isn&rsquo;t a failure. It starts the next
-        contact straight away instead of waiting.
+        {words.unableHelp}
       </p>
     </>
   );

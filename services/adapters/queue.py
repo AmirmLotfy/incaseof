@@ -11,7 +11,7 @@ import json
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Protocol
 
-from services.domain.ids import AlertId, StepId
+from services.domain.ids import AlertId, PersonId, StepId
 from services.domain.plan import ActionType, Channel, ResponderRole
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
@@ -36,6 +36,8 @@ class ActionIntent:
     channel: Channel
     target_role: ResponderRole | None
     idempotency_key: str
+    recipient_id: PersonId | None = None
+    membership_id: str | None = None
 
     def to_json(self) -> str:
         return json.dumps(
@@ -47,6 +49,8 @@ class ActionIntent:
                 "channel": self.channel.value,
                 "targetRole": self.target_role.value if self.target_role else None,
                 "idempotencyKey": self.idempotency_key,
+                "recipientId": self.recipient_id,
+                "membershipId": self.membership_id,
             }
         )
 
@@ -61,6 +65,8 @@ class ActionIntent:
             channel=Channel(body["channel"]),
             target_role=ResponderRole(role) if role else None,
             idempotency_key=body["idempotencyKey"],
+            recipient_id=PersonId(body["recipientId"]) if body.get("recipientId") else None,
+            membership_id=body.get("membershipId"),
         )
 
 

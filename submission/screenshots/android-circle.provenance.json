@@ -1,0 +1,19 @@
+{
+  "filename": "android-circle.png",
+  "capturedAt": "2026-09-08T04:49:21Z",
+  "sourceCommit": "d147111031669b76ac80f374cc21bd6b0832ffbf",
+  "deviceSerialSha256": "04ab3fc382bfb33ea4fbc120f5172ecfc4aed71652e00977064492ca0f65a017",
+  "device": {
+    "model": "sdk_gphone64_arm64",
+    "sdk": 37,
+    "emulator": true
+  },
+  "app": {
+    "packageName": "com.incaof.app",
+    "versionName": "0.2.0"
+  },
+  "expectedVisibleText": "Invite someone",
+  "dimensions": "1080x2400",
+  "sha256": "b951a409a7f63db56e95fe82b14992c13969f13d6a9b390fed2ab264941f113f",
+  "statement": "Captured from the foreground signed release app after a UI text assertion; no image synthesis or fixture substitution."
+}

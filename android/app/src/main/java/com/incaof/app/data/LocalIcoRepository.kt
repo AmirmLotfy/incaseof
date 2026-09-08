@@ -33,6 +33,12 @@ class LocalIcoRepository(
     private val clock: Clock = Clock.systemUTC(),
     initialState: AlertState? = null,
 ) : IcoRepository {
+    override suspend fun deleteAccount(confirmation: String): Result<AccountDeletion> =
+        Result.failure(IllegalStateException("Account deletion is unavailable in the local demo"))
+
+    override suspend fun accountDeletion(): Result<AccountDeletion> =
+        Result.failure(NoSuchElementException("No account deletion request"))
+
     private val alertState = MutableStateFlow(initialState)
     private val confirmed = MutableStateFlow(false)
     private var dueAt: Instant = clock.instant().plus(Duration.ofHours(3))
@@ -82,6 +88,12 @@ class LocalIcoRepository(
             circle = listOf(maya, omar),
         )
 
+    override suspend fun compilePlan(description: String, timezone: String): Result<CompiledPlanDraft> =
+        Result.success(CompiledPlanDraft("{}", eveningCheck.copy(id = "preview", active = false), emptyList()))
+
+    override suspend fun createPlan(draft: CompiledPlanDraft): Result<Plan> =
+        Result.success(draft.preview.copy(id = "plan-local-created"))
+
     private val journeyHome =
         Plan(
             id = "plan-journey",
@@ -122,7 +134,22 @@ class LocalIcoRepository(
             all.firstOrNull { it.id == planId } ?: error("no such plan")
         }
 
+    override suspend fun activatePlan(planId: String): Result<Plan> =
+        plan(planId).map { it.copy(active = true, paused = false) }
+
+    override suspend fun pausePlan(planId: String): Result<Plan> =
+        plan(planId).map { it.copy(paused = true) }
+
+    override suspend fun resumePlan(planId: String): Result<Plan> =
+        plan(planId).map { it.copy(active = true, paused = false) }
+
     override suspend fun circle(): Result<List<CircleMember>> = Result.success(listOf(maya, omar))
+
+    override suspend fun inviteCircleMember(
+        displayName: String,
+        relationship: String?,
+        role: ResponderRole,
+    ): Result<String> = Result.success("https://incaof.com/i/local-demo")
 
     override suspend fun history(): Result<List<ResolvedMoment>> {
         val now = clock.instant()
@@ -173,6 +200,9 @@ class LocalIcoRepository(
         )
     }
 
+    override suspend fun momentIdForAlert(alertId: String): Result<String> =
+        Result.success("moment-evening")
+
     override suspend fun confirmMoment(momentId: String, idempotencyKey: String, source: ConfirmSource): Result<Unit> {
         confirmed.value = true
         alertState.value = AlertState.RESOLVED
@@ -183,6 +213,16 @@ class LocalIcoRepository(
         dueAt = dueAt.plusSeconds(seconds.toLong())
         return nextMoment().mapCatching { it ?: error("no moment") }
     }
+
+    override suspend fun testPlan(planId: String): Result<Unit> {
+        confirmed.value = false
+        dueAt = clock.instant()
+        alertState.value = AlertState.SELF_CONTACT
+        return Result.success(Unit)
+    }
+
+    override suspend fun registerDevice(deviceId: String, registrationToken: String): Result<Unit> =
+        Result.success(Unit)
 
     /** Drives the app into the waiting state, for previews and manual checks. */
     fun simulateDue() {

@@ -17,6 +17,23 @@
     <string name="nav_circle">Circle</string>
     <string name="nav_history">History</string>
 
+    <!-- Account -->
+    <string name="account_settings">Account settings</string>
+    <string name="account_back">Back</string>
+    <string name="account_title">Delete account</string>
+    <string name="account_deletion_intro">Deleting your account is permanent. Review what happens before you continue.</string>
+    <string name="account_deletion_consequences_title">What happens immediately</string>
+    <string name="account_deletion_consequences">In Case Of stops monitoring, cancels future checks and escalations, revokes access, and starts removing your plans, Circle, alerts, and account data.</string>
+    <string name="account_deletion_confirmation_label">Type DELETE</string>
+    <string name="account_deletion_confirmation_help">Enter DELETE exactly to enable the request.</string>
+    <string name="account_deletion_action">Delete my account</string>
+    <string name="account_deletion_action_description">Permanently delete this account and stop all monitoring.</string>
+    <string name="account_deletion_requesting">Requesting deletion…</string>
+    <string name="account_deletion_pending">DELETION IN PROGRESS</string>
+    <string name="account_deletion_received">Your deletion request was received</string>
+    <string name="account_deletion_stopped">Monitoring and future work have stopped. Cleanup continues safely if a provider is temporarily unavailable.</string>
+    <string name="account_deletion_close_app">You can close the app. Sign-in will be removed when cleanup finishes.</string>
+
     <!-- Home -->
     <string name="status_all_clear">ALL CLEAR</string>
     <string name="status_action_needed">ACTION NEEDED</string>
@@ -34,12 +51,66 @@
     <string name="test_plan">Test plan</string>
     <string name="plan_active">Active</string>
     <string name="plan_paused">Paused</string>
+    <string name="plan_draft">Draft</string>
+    <string name="plan_create">Create a plan</string>
+    <string name="plan_empty">No plans yet. Describe an expected moment to create a draft.</string>
+    <string name="plan_create_intro">Describe the expected moment and what should happen if it passes. You will review every step before saving.</string>
+    <string name="plan_description_label">What should ICO notice?</string>
+    <string name="plan_description_placeholder">Every evening at 9, ask me to check in…</string>
+    <string name="plan_compile_preview">Compile preview</string>
+    <string name="plan_review">Review the plan</string>
+    <string name="plan_save_explanation">Saving creates a draft. ICO will not monitor it until consent is complete and you activate it.</string>
+    <string name="plan_save_draft">Save draft</string>
+    <string name="plan_cancel">Cancel</string>
+    <string name="plan_activate">Activate plan</string>
+    <string name="plan_resume">Resume plan</string>
+    <string name="plan_pause">Pause plan</string>
+    <string name="plan_row_description">%1$s, %2$s at %3$s, %4$s</string>
+
+    <!-- Product vocabulary -->
+    <string name="explanation_clear">Nothing needs your attention.</string>
+    <string name="explanation_waiting">We\'re waiting for your check.</string>
+    <string name="explanation_self_contact">We\'re trying to reach %1$s.</string>
+    <string name="explanation_circle">We\'re contacting the people you chose.</string>
+    <string name="explanation_checking">Backup contacts are paused while they check.</string>
+    <string name="explanation_resolved">This was closed.</string>
+    <string name="explanation_cancelled">You cancelled this check.</string>
+    <string name="explanation_exhausted">Nobody confirmed. Everyone on your plan was contacted.</string>
+    <string name="subject_you">you</string>
+    <string name="action_push_subject">Check with you</string>
+    <string name="action_sms_subject">Message you</string>
+    <string name="action_call_subject">Call you</string>
+    <string name="action_message_responder">Message</string>
+    <string name="action_call_responder">Call</string>
+    <string name="role_primary">Primary</string>
+    <string name="role_backup">Backup</string>
+    <string name="role_tertiary">Third</string>
+    <string name="release_never">Never</string>
+    <string name="release_alert_open">When a check is missed</string>
+    <string name="release_subject_call_failed">After a failed call</string>
+    <string name="release_circle_escalation">Circle escalation only</string>
+    <string name="plan_type_routine">Routine</string>
+    <string name="plan_type_journey">Journey</string>
+    <string name="plan_type_solo">Solo</string>
+    <string name="plan_type_recovery">Recovery</string>
 
     <!-- Circle -->
     <string name="verified">Verified</string>
     <string name="not_verified">Not verified</string>
     <string name="accepted">Accepted</string>
     <string name="invitation_pending">Invitation pending</string>
+    <string name="circle_invite">Invite someone</string>
+    <string name="circle_invite_intro">They receive a scoped consent link. Their contact details are never exposed to the agent.</string>
+    <string name="circle_name">Name</string>
+    <string name="circle_relationship_optional">Relationship (optional)</string>
+    <string name="circle_share_consent">Share consent link</string>
+    <string name="circle_share_message">I\'d like you to join my In Case Of Circle. Review and accept here: %1$s</string>
+    <string name="circle_create_invitation">Create invitation</string>
+    <string name="circle_creating_invitation">Creating invitation…</string>
+    <string name="circle_enter_name">Enter the person\'s name.</string>
+    <string name="circle_invitation_created">Invitation created. Share the scoped link; they must accept before any plan can rely on them.</string>
+    <string name="circle_phone_status">Phone %1$s</string>
+    <string name="circle_member_description">%1$s, %2$s, %3$s, phone %4$s</string>
 
     <!-- History -->
     <string name="resolved">Resolved</string>
@@ -50,9 +121,124 @@
     <string name="email">Email</string>
     <string name="password">Password</string>
     <string name="retry">Try again</string>
+    <string name="auth_brand_description">ICO</string>
+    <string name="auth_create_space">Create your private plan space</string>
+    <string name="auth_confirm_email">Confirm the code sent to your email</string>
+    <string name="auth_request_reset">Request a password reset code</string>
+    <string name="auth_choose_password">Choose a new password</string>
+    <string name="auth_new_password">New password</string>
+    <string name="auth_confirmation_code">Confirmation code</string>
+    <string name="auth_create_account">Create account</string>
+    <string name="auth_confirm_account">Confirm account</string>
+    <string name="auth_send_reset_code">Send reset code</string>
+    <string name="auth_set_new_password">Set new password</string>
+    <string name="auth_have_account">I already have an account</string>
+    <string name="auth_forgot_password">Forgot password?</string>
+    <string name="auth_opening_demo">Opening safe demo…</string>
+    <string name="auth_try_demo">Try judge demo</string>
+    <string name="auth_demo_explanation">Runs an isolated synthetic demo in this app. It never contacts real people.</string>
+    <string name="judge_demo_label">JUDGE DEMO</string>
+    <string name="judge_demo_description">Synthetic tenant · safe delivery sink</string>
+    <string name="judge_demo_exit">Exit demo</string>
 
     <!-- Accessibility. Never rely on colour alone to convey state. -->
     <string name="cd_status_all_clear">Status: all clear. Nothing needs your attention.</string>
     <string name="cd_status_action_needed">Status: action needed. In Case of is waiting for your check.</string>
     <string name="cd_confirm_okay">Confirm that you are okay. This resolves tonight\'s check.</string>
+
+    <!-- Drill Mode -->
+    <string name="drill_title">Testing Plan</string>
+    <string name="drill_timing_banner">Demo timing is controlled by the deployed environment</string>
+    <string name="drill_step_scheduled">Compressed schedule active</string>
+    <string name="drill_step_notification">Android check notification received</string>
+    <string name="drill_step_self_contact">Self-contact unanswered</string>
+    <string name="drill_step_circle">Circle member notified</string>
+    <string name="drill_step_claimed">Circle member claimed alert</string>
+    <string name="drill_step_paused">Backup escalation paused (10m lease)</string>
+    <string name="drill_step_resolved">Resolved: contact verified</string>
+    <string name="drill_ready">Plan verified and ready</string>
+    <string name="drill_trace_title">TELEMETRY TRACE</string>
+    <string name="drill_action_done">Done</string>
+    <string name="drill_backend_timeline">BACKEND TIMELINE</string>
+    <string name="drill_no_events">No deployed audit events have been returned yet.</string>
+    <string name="drill_status_completed">Completed.</string>
+    <string name="drill_status_progress">In progress.</string>
+    <string name="drill_status_pending">Pending.</string>
+    <string name="drill_step_description">%1$s. %2$s</string>
+    <string name="drill_alert_state">Alert State</string>
+    <string name="drill_alert_id">Alert ID</string>
+    <string name="drill_server_time_scale">Server time scale</string>
+    <string name="drill_audit_events">Audit events</string>
+    <string name="drill_last_actor">Last actor</string>
+    <string name="drill_lease_expires">Lease expires</string>
+    <string name="drill_status_starting">Starting the deployed Drill workflow…</string>
+    <string name="drill_status_waiting_moment">Waiting for the deployed Moment…</string>
+    <string name="drill_status_terminal">The backend recorded a terminal Alert state.</string>
+    <string name="drill_status_waiting_scheduler">Waiting for EventBridge Scheduler to open the Alert…</string>
+    <string name="drill_status_following">Following the deployed Alert timeline…</string>
+    <string name="drill_status_still_open">The Drill is still open. Reopen this screen to continue checking live state.</string>
+    <string name="drill_failed_start">Failed to start drill</string>
+    <string name="drill_awaiting_alert">Awaiting Alert</string>
+    <string name="drill_awaiting_server">Awaiting server</string>
+    <string name="drill_not_opened">Not opened</string>
+    <string name="drill_normal_time">Normal</string>
+    <string name="drill_none">None</string>
+    <string name="timeline_moment_due">Check requested</string>
+    <string name="timeline_action_queued">Reminder queued</string>
+    <string name="timeline_action_accepted">Text sent</string>
+    <string name="timeline_action_delivered">Text delivered</string>
+    <string name="timeline_action_undelivered">Text did not arrive</string>
+    <string name="timeline_action_failed">Could not send</string>
+    <string name="timeline_action_suppressed">Not sent — already resolved</string>
+    <string name="timeline_channel_unavailable">Call unavailable</string>
+    <string name="timeline_contact_denied">Contact not permitted</string>
+    <string name="timeline_subject_confirmed">You confirmed</string>
+    <string name="timeline_alert_claimed">Someone started checking</string>
+    <string name="timeline_responder_verified">Confirmed by your Circle</string>
+    <string name="timeline_circle_escalation">Your Circle was contacted</string>
+    <string name="timeline_state_checking">Someone is checking</string>
+    <string name="timeline_state_resolved">Resolved</string>
+
+    <!-- Relative actions -->
+    <string name="next_action_shortly">We\'ll try again shortly.</string>
+    <string name="next_action_after">We\'ll check again %1$s.</string>
+    <string name="time_today">Today</string>
+    <string name="time_tomorrow">Tomorrow</string>
+    <string name="time_yesterday">Yesterday</string>
+    <string name="time_now">now</string>
+    <plurals name="time_seconds">
+        <item quantity="one">%1$d sec</item>
+        <item quantity="other">%1$d sec</item>
+    </plurals>
+    <plurals name="time_minutes">
+        <item quantity="one">%1$d min</item>
+        <item quantity="other">%1$d min</item>
+    </plurals>
+    <plurals name="time_hours">
+        <item quantity="one">%1$d hr</item>
+        <item quantity="other">%1$d hr</item>
+    </plurals>
+    <string name="time_hours_minutes">%1$s %2$s</string>
+    <string name="time_relative_less_minute">in less than a minute</string>
+    <string name="time_relative_one_minute">in 1 minute</string>
+    <plurals name="time_relative_minutes">
+        <item quantity="one">in %1$d minute</item>
+        <item quantity="other">in %1$d minutes</item>
+    </plurals>
+    <string name="time_relative_about_hour">in about an hour</string>
+    <plurals name="time_relative_hours">
+        <item quantity="one">in %1$d hour</item>
+        <item quantity="other">in %1$d hours</item>
+    </plurals>
+    <string name="history_row_description">%1$s, resolved %2$s, %3$s</string>
+    <string name="error_offline">Couldn\'t reach In Case of. Your plan is still running.</string>
+    <string name="error_generic">Something went wrong. Try again.</string>
+    <string name="error_auth_sign_in">Couldn\'t sign in. Check your email and password.</string>
+    <string name="error_auth_sign_up">Couldn\'t create the account. Check the details and try again.</string>
+    <string name="error_auth_confirmation">That confirmation code didn\'t work. Request a new one and try again.</string>
+    <string name="error_auth_reset_request">Couldn\'t request a reset. Check the email and try again.</string>
+    <string name="error_auth_reset_confirm">That reset could not be completed. Check the code and password.</string>
+    <string name="error_plan_description">Describe what you expect and when.</string>
+    <string name="notice_plan_updated">Plan updated.</string>
+    <string name="error_demo_unavailable">The judge demo is unavailable. Try again in a moment.</string>
 </resources>

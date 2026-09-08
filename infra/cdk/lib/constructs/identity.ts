@@ -1,4 +1,4 @@
-import { Duration, RemovalPolicy } from "aws-cdk-lib";
+import { Duration, RemovalPolicy, Stack } from "aws-cdk-lib";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import { Construct } from "constructs";
 import type { IcoEnvironment } from "../environment.js";
@@ -20,6 +20,8 @@ export interface IdentityProps {
 export class Identity extends Construct {
   readonly userPool: cognito.UserPool;
   readonly client: cognito.UserPoolClient;
+  readonly webClient: cognito.UserPoolClient;
+  readonly domain: cognito.UserPoolDomain;
 
   constructor(scope: Construct, id: string, props: IdentityProps) {
     super(scope, id);
@@ -66,7 +68,40 @@ export class Identity extends Construct {
       accessTokenValidity: Duration.hours(1),
       idTokenValidity: Duration.hours(1),
       refreshTokenValidity: Duration.days(30),
+      refreshTokenRotationGracePeriod: Duration.seconds(30),
+      enableTokenRevocation: true,
       preventUserExistenceErrors: true,
+    });
+
+    // Browser authentication uses authorization-code + PKCE. The static application has
+    // no client secret and tokens never travel in the URL fragment. Cognito's managed
+    // login page also supplies sign-up, confirmation and account recovery without putting
+    // password-handling code into the marketing bundle.
+    this.webClient = this.userPool.addClient("WebClient", {
+      authFlows: { userSrp: true },
+      generateSecret: false,
+      oAuth: {
+        flows: { authorizationCodeGrant: true },
+        scopes: [cognito.OAuthScope.OPENID, cognito.OAuthScope.EMAIL],
+        callbackUrls: [
+          "https://incaof.com/app/",
+          "http://localhost:3000/app/",
+        ],
+        logoutUrls: ["https://incaof.com/", "http://localhost:3000/"],
+      },
+      accessTokenValidity: Duration.hours(1),
+      idTokenValidity: Duration.hours(1),
+      refreshTokenValidity: Duration.days(30),
+      refreshTokenRotationGracePeriod: Duration.seconds(30),
+      enableTokenRevocation: true,
+      preventUserExistenceErrors: true,
+    });
+
+    this.domain = this.userPool.addDomain("ManagedLoginDomain", {
+      cognitoDomain: {
+        domainPrefix: `ico-${props.environment.name}-${Stack.of(this).account}`,
+      },
+      managedLoginVersion: cognito.ManagedLoginVersion.NEWER_MANAGED_LOGIN,
     });
   }
 }

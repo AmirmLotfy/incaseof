@@ -16,7 +16,7 @@ from enum import StrEnum
 
 from .clock import require_aware
 from .errors import PlanValidationError
-from .ids import PlanId, PlanVersionId, StepId
+from .ids import CircleId, PersonId, PlanId, PlanVersionId, StepId
 
 MAX_STEPS = 12
 DEFAULT_LEASE_SECONDS = 600
@@ -177,17 +177,45 @@ class Trigger:
     days_of_week: tuple[str, ...] = ()
     interval_seconds: int | None = None
     offset_seconds: int | None = None
+    until_at: datetime | None = None
 
     def __post_init__(self) -> None:
         if self.kind is TriggerKind.ONE_TIME:
             if self.due_at is None:
                 raise PlanValidationError("ONE_TIME trigger requires due_at")
             require_aware(self.due_at, "trigger.due_at")
+            if any(
+                value is not None and value != ()
+                for value in (
+                    self.time_of_day,
+                    self.days_of_week,
+                    self.interval_seconds,
+                    self.offset_seconds,
+                    self.until_at,
+                )
+            ):
+                raise PlanValidationError("ONE_TIME trigger contains recurring or relative fields")
         elif self.kind is TriggerKind.RECURRING:
             if not self.time_of_day:
                 raise PlanValidationError("RECURRING trigger requires time_of_day")
-        elif self.kind is TriggerKind.RELATIVE and self.offset_seconds is None:
-            raise PlanValidationError("RELATIVE trigger requires offset_seconds")
+            if self.due_at is not None or self.offset_seconds is not None:
+                raise PlanValidationError("RECURRING trigger contains one-time or relative fields")
+            if self.until_at is not None:
+                require_aware(self.until_at, "trigger.until_at")
+        elif self.kind is TriggerKind.RELATIVE:
+            if self.offset_seconds is None:
+                raise PlanValidationError("RELATIVE trigger requires offset_seconds")
+            if any(
+                value is not None and value != ()
+                for value in (
+                    self.due_at,
+                    self.time_of_day,
+                    self.days_of_week,
+                    self.interval_seconds,
+                    self.until_at,
+                )
+            ):
+                raise PlanValidationError("RELATIVE trigger contains one-time or recurring fields")
 
 
 @dataclass(frozen=True, slots=True)
@@ -236,6 +264,7 @@ class PlanVersion:
     lease_seconds: int = DEFAULT_LEASE_SECONDS
     label: str | None = None
     activated_at: datetime | None = None
+    responder_bindings: dict[str, str] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.steps:
@@ -283,8 +312,8 @@ class Plan:
     """The mutable container. Its protection lives in versions, not here."""
 
     plan_id: PlanId
-    subject_person_id: str
-    circle_id: str
+    subject_person_id: PersonId
+    circle_id: CircleId
     plan_type: PlanType
     active_version_id: PlanVersionId | None = None
     paused: bool = False

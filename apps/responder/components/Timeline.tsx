@@ -1,4 +1,5 @@
 import { clockTime, eventLabel, type TimelineEntry } from "@/lib/incident";
+import { copy, type Locale } from "@/lib/i18n";
 
 /**
  * What has already been tried.
@@ -9,9 +10,9 @@ import { clockTime, eventLabel, type TimelineEntry } from "@/lib/incident";
  *
  * An ordered list, so a screen reader reads it as a sequence and announces its length.
  */
-export function Timeline({ entries }: { entries: TimelineEntry[] }) {
+export function Timeline({ entries, locale }: { entries: TimelineEntry[]; locale: Locale }) {
   if (entries.length === 0) {
-    return <p style={{ color: "var(--ico-graphite)" }}>Nothing has been tried yet.</p>;
+    return <p style={{ color: "var(--ico-graphite)" }}>{copy[locale].nothingTried}</p>;
   }
 
   return (
@@ -31,9 +32,9 @@ export function Timeline({ entries }: { entries: TimelineEntry[] }) {
           }}
         >
           <span className="tabular" style={{ color: "var(--ico-graphite)" }}>
-            {clockTime(entry.at)}
+            {clockTime(entry.at, locale)}
           </span>
-          <span>{eventLabel(entry.event)}</span>
+          <span>{eventLabel(entry.event, locale)}</span>
         </li>
       ))}
     </ol>

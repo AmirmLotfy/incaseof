@@ -1,0 +1,15 @@
+01|A missed check-in may be harmless. But when nobody answers, uncertainty grows fast.
+02|In Case Of watches an expected moment, never a person. Mona decides who can be contacted, and when.
+03|She describes tonight's check-in in plain language. Before anything runs, the system builds a reviewable plan.
+04|AI proposes. Validation, consent, channel readiness, and policy decide what is allowed.
+05|Mona checks the timing and escalation order, saves the plan, then starts this synthetic test.
+06|For the judge, time accelerates. The due moment opens, and every workflow step appears in the live audit.
+07|If Mona stays silent, the approved ladder advances. Consent is checked again before each delivery.
+08|The responder receives one short-lived link to this alert, with no profile or account access.
+09|I'm checking pauses escalation for a limited time. The alert remains open until someone reports an outcome.
+10|A clear human outcome closes the loop. The audit records it, and further retries stop.
+11|The signed Android app runs the same plan controls against the same deployed API.
+12|It also shows the same timeline: scheduler, workflow, queue, worker, claim, lease, and resolution.
+13|Underneath, one transaction saves the plan and delivery intent. Retries are safe, and timeouts reconcile first.
+14|Strands and Nova interpret redacted intent. They cannot schedule work, write data, or choose recipients.
+15|In Case Of closes uncertainty without surveillance. Try the public synthetic drill, and inspect the complete source.

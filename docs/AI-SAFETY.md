@@ -103,15 +103,18 @@ schema → semantic → contact authorization → safety → simulation → huma
 
 | Setting | Value |
 |---|---|
-| Primary model | `gemini-3.7-flash` (GA) |
-| Default thinking | `medium` |
-| `low` | Simple, latency-sensitive intent classification |
-| `high` | Complicated plan compilation, ambiguous multi-condition requests |
-| Optional lightweight | `gemini-3.5-flash-lite` — classification, transcript cleanup only |
-| Voice (P1) | `gemini-3.1-flash-live-preview` — preview surface, therefore **never** the only way to resolve an Alert |
+| Primary model | `us.amazon.nova-2-lite-v1:0` through Amazon Bedrock |
+| Runtime | Strands on Amazon Bedrock AgentCore Runtime |
+| Authentication | IAM / SigV4 with temporary execution-role credentials |
+| Output | Typed plan draft; deterministic validation is mandatory |
 
-Provider: `strands.models.gemini.GeminiModel`, installed via `strands-agents[gemini]`.
-The API key comes from Secrets Manager — never from the repo, never from the APK.
+Claude Sonnet 4.6 was evaluated and rejected for the deployed account after Bedrock returned
+an unsupported-country restriction. Nova 2 Lite is the AWS-native, IAM-authenticated model path;
+the product safety boundary is unchanged and no model may authorize side effects.
+| Voice | Deferred; never the only way to resolve an Alert |
+
+Provider: `strands.models.bedrock.BedrockModel`. The exact deployable artifact pins Strands,
+AgentCore and Pydantic dependencies. No provider API key is used.
 
 Do not add extra models to make the architecture look sophisticated.
 

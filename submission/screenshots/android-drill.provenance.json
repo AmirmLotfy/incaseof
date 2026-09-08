@@ -1,0 +1,19 @@
+{
+  "filename": "android-drill.png",
+  "capturedAt": "2026-09-08T05:15:56Z",
+  "sourceCommit": "3219ac83299c9566f6f8b27ef4b932a052dd953a",
+  "deviceSerialSha256": "04ab3fc382bfb33ea4fbc120f5172ecfc4aed71652e00977064492ca0f65a017",
+  "device": {
+    "model": "sdk_gphone64_arm64",
+    "sdk": 37,
+    "emulator": true
+  },
+  "app": {
+    "packageName": "com.incaof.app",
+    "versionName": "0.2.0"
+  },
+  "expectedVisibleText": "Testing Plan: Mona’s evening check-in",
+  "dimensions": "1080x2400",
+  "sha256": "48b5986825247e8a48bff2098f772dcf5f96761298f7b09156157c81e66c4396",
+  "statement": "Captured from the foreground signed release app after a UI text assertion; no image synthesis or fixture substitution."
+}

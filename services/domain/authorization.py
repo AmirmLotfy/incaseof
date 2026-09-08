@@ -120,6 +120,10 @@ def evaluate_contact(
     member = circle.member_for_role(role)
     if member is None:
         return _deny(Reason.NO_MEMBER_FOR_ROLE, f"no accepted member holds {role}")
+    if alert.version.responder_bindings and (
+        alert.version.responder_bindings.get(role.value) != str(member.person_id)
+    ):
+        return _deny(Reason.ROLE_NOT_IN_PLAN_VERSION, "role now belongs to a different person")
     if not member.is_accepted:
         return _deny(Reason.MEMBER_NOT_ACCEPTED, f"{role} membership is {member.status}")
 
@@ -231,6 +235,11 @@ def evaluate_responder_action(
     member = circle.member(responder_id)
     if member is None or not member.is_accepted:
         return _deny(Reason.NOT_A_CIRCLE_MEMBER, "not an accepted member of this Circle")
+
+    if alert.version.responder_bindings and (
+        alert.version.responder_bindings.get(member.role.value) != str(responder_id)
+    ):
+        return _deny(Reason.ROLE_NOT_IN_PLAN_VERSION, "responder is not pinned to this Alert")
 
     if member.role not in alert.version.responder_roles:
         return _deny(

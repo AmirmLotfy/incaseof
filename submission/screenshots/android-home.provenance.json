@@ -1,0 +1,19 @@
+{
+  "filename": "android-home.png",
+  "capturedAt": "2026-09-08T04:20:45Z",
+  "sourceCommit": "c2a7bdd5ad8f0c06bdb9c9269024da65763dbaac",
+  "deviceSerialSha256": "04ab3fc382bfb33ea4fbc120f5172ecfc4aed71652e00977064492ca0f65a017",
+  "device": {
+    "model": "sdk_gphone64_arm64",
+    "sdk": 37,
+    "emulator": true
+  },
+  "app": {
+    "packageName": "com.incaof.app",
+    "versionName": "0.2.0"
+  },
+  "expectedVisibleText": "ALL CLEAR",
+  "dimensions": "1080x2400",
+  "sha256": "e80964a67c5fe46b4f672155b34b6a1c3864606443cd3092231ba81cc2d8e033",
+  "statement": "Captured from the foreground signed release app after a UI text assertion; no image synthesis or fixture substitution."
+}

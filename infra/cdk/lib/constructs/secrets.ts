@@ -16,16 +16,10 @@ export interface SecretsProps {
  * readable by anyone with describe permissions on the stack.
  */
 export class Secrets extends Construct {
-  readonly geminiApiKey: secretsmanager.Secret;
   readonly responderTokenSigningKey: secretsmanager.Secret;
 
   constructor(scope: Construct, id: string, props: SecretsProps) {
     super(scope, id);
-
-    this.geminiApiKey = new secretsmanager.Secret(this, "GeminiApiKey", {
-      description: "Google AI Studio key for gemini-3.7-flash. Populated out of band.",
-      encryptionKey: props.key,
-    });
 
     this.responderTokenSigningKey = new secretsmanager.Secret(this, "ResponderTokenKey", {
       description:

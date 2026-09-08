@@ -1,8 +1,10 @@
 package com.incaof.app.feature.circle
 
+import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,10 +15,17 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -30,11 +39,14 @@ import com.incaof.app.core.design.LocalIcoColors
 import com.incaof.app.data.IcoRepository
 import com.incaof.app.domain.CircleMember
 import com.incaof.app.domain.ResponderRole
-import com.incaof.app.domain.Vocabulary
 import com.incaof.app.feature.home.userMessage
+import com.incaof.app.ui.UiMessage
 import com.incaof.app.ui.components.Notice
+import com.incaof.app.ui.components.PrimaryAction
 import com.incaof.app.ui.components.StatusMarker
 import com.incaof.app.ui.components.TabularLabel
+import com.incaof.app.ui.localizedRole
+import com.incaof.app.ui.localizedUiMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,6 +57,9 @@ class CircleViewModel(
 ) : ViewModel() {
     private val _state = MutableStateFlow<CircleUiState>(CircleUiState.Loading)
     val state: StateFlow<CircleUiState> = _state.asStateFlow()
+
+    private val _invite = MutableStateFlow(CircleInviteUiState())
+    val invite: StateFlow<CircleInviteUiState> = _invite.asStateFlow()
 
     init {
         refresh()
@@ -59,6 +74,40 @@ class CircleViewModel(
                 )
         }
     }
+
+    fun invite(displayName: String, relationship: String, role: ResponderRole) {
+        val name = displayName.trim()
+        if (name.isEmpty()) {
+            _invite.value = CircleInviteUiState(message = CircleInviteMessage.ENTER_NAME)
+            return
+        }
+        viewModelScope.launch {
+            _invite.value = CircleInviteUiState(busy = true)
+            repository.inviteCircleMember(name, relationship.trim().ifEmpty { null }, role).fold(
+                onSuccess = { inviteUrl ->
+                    _invite.value =
+                        CircleInviteUiState(
+                            message = CircleInviteMessage.CREATED,
+                            inviteUrl = inviteUrl,
+                        )
+                    refresh()
+                },
+                onFailure = { _invite.value = CircleInviteUiState(error = it.userMessage()) },
+            )
+        }
+    }
+}
+
+data class CircleInviteUiState(
+    val busy: Boolean = false,
+    val message: CircleInviteMessage? = null,
+    val error: UiMessage? = null,
+    val inviteUrl: String? = null,
+)
+
+enum class CircleInviteMessage {
+    ENTER_NAME,
+    CREATED,
 }
 
 sealed interface CircleUiState {
@@ -69,7 +118,7 @@ sealed interface CircleUiState {
     ) : CircleUiState
 
     data class Failed(
-        val message: String,
+        val message: UiMessage,
     ) : CircleUiState
 }
 
@@ -83,7 +132,12 @@ sealed interface CircleUiState {
  * green dot beside a person's name implies a kind of monitoring that does not happen.
  */
 @Composable
-fun CircleScreen(state: CircleUiState, modifier: Modifier = Modifier) {
+fun CircleScreen(
+    state: CircleUiState,
+    inviteState: CircleInviteUiState = CircleInviteUiState(),
+    onInvite: (String, String, ResponderRole) -> Unit = { _, _, _ -> },
+    modifier: Modifier = Modifier,
+) {
     when (state) {
         CircleUiState.Loading -> {
             Column(
@@ -94,7 +148,7 @@ fun CircleScreen(state: CircleUiState, modifier: Modifier = Modifier) {
         }
 
         is CircleUiState.Failed -> {
-            Notice(state.message, modifier.padding(24.dp))
+            Notice(localizedUiMessage(state.message), modifier.padding(24.dp))
         }
 
         is CircleUiState.Content -> {
@@ -102,6 +156,11 @@ fun CircleScreen(state: CircleUiState, modifier: Modifier = Modifier) {
                 modifier = modifier.fillMaxSize(),
                 contentPadding = PaddingValues(24.dp),
             ) {
+                item {
+                    InviteMember(inviteState, onInvite)
+                    Spacer(Modifier.height(24.dp))
+                    HorizontalDivider(color = LocalIcoColors.current.stone)
+                }
                 items(state.members, key = { it.id }) { member ->
                     MemberRow(member)
                     HorizontalDivider(color = LocalIcoColors.current.stone)
@@ -109,6 +168,90 @@ fun CircleScreen(state: CircleUiState, modifier: Modifier = Modifier) {
             }
         }
     }
+}
+
+@Composable
+private fun InviteMember(
+    state: CircleInviteUiState,
+    onInvite: (String, String, ResponderRole) -> Unit,
+) {
+    val context = LocalContext.current
+    var name by remember { mutableStateOf("") }
+    var relationship by remember { mutableStateOf("") }
+    var role by remember { mutableStateOf(ResponderRole.PRIMARY) }
+    Text(stringResource(R.string.circle_invite), style = MaterialTheme.typography.titleLarge)
+    Spacer(Modifier.height(8.dp))
+    Text(
+        stringResource(R.string.circle_invite_intro),
+        color = LocalIcoColors.current.graphite,
+    )
+    Spacer(Modifier.height(12.dp))
+    OutlinedTextField(
+        value = name,
+        onValueChange = { name = it },
+        label = { Text(stringResource(R.string.circle_name)) },
+        enabled = !state.busy,
+        modifier = Modifier.fillMaxWidth(),
+    )
+    Spacer(Modifier.height(8.dp))
+    OutlinedTextField(
+        value = relationship,
+        onValueChange = { relationship = it },
+        label = { Text(stringResource(R.string.circle_relationship_optional)) },
+        enabled = !state.busy,
+        modifier = Modifier.fillMaxWidth(),
+    )
+    Spacer(Modifier.height(8.dp))
+    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        ResponderRole.entries.forEach { option ->
+            val roleLabel = localizedRole(option)
+            TextButton(onClick = { role = option }, enabled = !state.busy) {
+                Text(if (role == option) "● $roleLabel" else roleLabel)
+            }
+        }
+    }
+    state.error?.let { Notice(localizedUiMessage(it)) }
+    state.message?.let {
+        Notice(
+            stringResource(
+                when (it) {
+                    CircleInviteMessage.ENTER_NAME -> R.string.circle_enter_name
+                    CircleInviteMessage.CREATED -> R.string.circle_invitation_created
+                },
+            ),
+        )
+    }
+    state.inviteUrl?.let { inviteUrl ->
+        val shareMessage = stringResource(R.string.circle_share_message, inviteUrl)
+        val chooserTitle = stringResource(R.string.circle_share_consent)
+        TextButton(
+            onClick = {
+                context.startActivity(
+                    Intent.createChooser(
+                        Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(
+                                Intent.EXTRA_TEXT,
+                                shareMessage,
+                            )
+                        },
+                        chooserTitle,
+                    ),
+                )
+            },
+        ) {
+            Text(stringResource(R.string.circle_share_consent))
+        }
+    }
+    Spacer(Modifier.height(8.dp))
+    PrimaryAction(
+        label =
+            stringResource(
+                if (state.busy) R.string.circle_creating_invitation else R.string.circle_create_invitation,
+            ),
+        onClick = { onInvite(name, relationship, role) },
+        enabled = !state.busy,
+    )
 }
 
 @Composable
@@ -126,19 +269,17 @@ private fun MemberRow(member: CircleMember) {
         } else {
             stringResource(R.string.not_verified)
         }
+    val roleLabel = localizedRole(member.role)
+    val phoneStatus = stringResource(R.string.circle_phone_status, verification)
+    val memberDescription =
+        listOfNotNull(member.displayName, member.relationship, roleLabel, phoneStatus).joinToString(", ")
 
     Column(
         Modifier
             .fillMaxWidth()
             .padding(vertical = 16.dp)
             .semantics {
-                contentDescription =
-                    buildString {
-                        append(member.displayName)
-                        member.relationship?.let { append(", $it") }
-                        append(", ${Vocabulary.role(member.role)}")
-                        append(", $acceptance, phone $verification")
-                    }
+                contentDescription = "$memberDescription, $acceptance"
             },
     ) {
         Text(member.displayName, style = MaterialTheme.typography.titleMedium, color = ico.ink)
@@ -148,7 +289,7 @@ private fun MemberRow(member: CircleMember) {
         }
         Spacer(Modifier.height(8.dp))
         Text(
-            Vocabulary.role(member.role),
+            roleLabel,
             style = MaterialTheme.typography.labelSmall,
             color = ico.graphite,
         )
@@ -159,7 +300,7 @@ private fun MemberRow(member: CircleMember) {
         )
         Spacer(Modifier.height(4.dp))
         StatusMarker(
-            label = "Phone $verification",
+            label = phoneStatus,
             color = if (member.phoneVerified) ico.primary else ico.warning,
         )
     }

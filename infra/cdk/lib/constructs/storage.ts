@@ -26,6 +26,8 @@ export class Storage extends Construct {
 
   /** Sparse index over outstanding Moments. See services/adapters/keys.py. */
   static readonly MOMENTS_DUE_INDEX = "gsi1-moments-due";
+  /** Sparse owner index for authenticated Plans, Circles, Moments and Alerts. */
+  static readonly PERSON_INDEX = "gsi2-person";
 
   constructor(scope: Construct, id: string, props: StorageProps) {
     super(scope, id);
@@ -55,6 +57,13 @@ export class Storage extends Construct {
       indexName: Storage.MOMENTS_DUE_INDEX,
       partitionKey: { name: "gsi1pk", type: dynamodb.AttributeType.STRING },
       sortKey: { name: "gsi1sk", type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+    this.table.addGlobalSecondaryIndex({
+      indexName: Storage.PERSON_INDEX,
+      partitionKey: { name: "gsi2pk", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "gsi2sk", type: dynamodb.AttributeType.STRING },
       projectionType: dynamodb.ProjectionType.ALL,
     });
   }

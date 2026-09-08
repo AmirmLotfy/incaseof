@@ -1,0 +1,276 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Least-privileged GitHub Actions entry role for the ICO demo environment.
+
+Parameters:
+  GitHubOidcProviderArn:
+    Type: String
+    Description: Existing token.actions.githubusercontent.com IAM OIDC provider ARN.
+  RepositorySubject:
+    Type: String
+    Default: AmirmLotfy@178108135/incaseof@1342743239
+    Description: Immutable GitHub owner and repository subject from the Actions OIDC token.
+  EnvironmentName:
+    Type: String
+    Default: demo
+  PublicHostedZoneId:
+    Type: String
+    Default: Z100287423NTCZJ84J736
+    Description: Route 53 public hosted zone that serves incaof.com.
+
+Resources:
+  DemoCloudFormationExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ico-demo-cfn-exec
+      Description: Service-family-scoped CloudFormation executor for the ICO demo stack.
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudformation.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ManageIcoDemoRegionalServices
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: ManageOnlyRequiredRegionalServiceFamilies
+                Effect: Allow
+                Action:
+                  - apigateway:*
+                  - bedrock-agentcore:*
+                  - cloudwatch:DeleteAlarms
+                  - cloudwatch:DeleteDashboards
+                  - cloudwatch:DescribeAlarms
+                  - cloudwatch:GetDashboard
+                  - cloudwatch:PutDashboard
+                  - cloudwatch:PutMetricAlarm
+                  - cognito-idp:*
+                  - dynamodb:*
+                  - kms:*
+                  - lambda:*
+                  - logs:*
+                  - scheduler:*
+                  - secretsmanager:*
+                  - sqs:*
+                  - states:*
+                  - tagging:GetResources
+                  - xray:GetSamplingRules
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    aws:RequestedRegion: !Ref AWS::Region
+              - Sid: ReadOnlyExactCdkAssetBucket
+                Effect: Allow
+                Action:
+                  - s3:GetBucketLocation
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:ListBucket
+                Resource:
+                  - !Sub arn:${AWS::Partition}:s3:::cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}
+                  - !Sub arn:${AWS::Partition}:s3:::cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/*
+              - Sid: ManageOnlyIcoDemoStaticBuckets
+                Effect: Allow
+                Action:
+                  - s3:CreateBucket
+                  - s3:DeleteBucket
+                  - s3:DeleteBucketPolicy
+                  - s3:GetAccelerateConfiguration
+                  - s3:GetBucketLocation
+                  - s3:GetBucketPolicy
+                  - s3:GetBucketPublicAccessBlock
+                  - s3:GetBucketTagging
+                  - s3:GetBucketVersioning
+                  - s3:GetEncryptionConfiguration
+                  - s3:ListBucket
+                  - s3:PutBucketPolicy
+                  - s3:PutBucketPublicAccessBlock
+                  - s3:PutBucketTagging
+                  - s3:PutBucketVersioning
+                  - s3:PutEncryptionConfiguration
+                Resource: !Sub arn:${AWS::Partition}:s3:::icostack-demo-hosting*
+              - Sid: ManageOnlyIcoDemoStaticObjects
+                Effect: Allow
+                Action:
+                  - s3:DeleteObject
+                  - s3:DeleteObjectVersion
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:PutObject
+                Resource: !Sub arn:${AWS::Partition}:s3:::icostack-demo-hosting*/*
+              - Sid: ManageIcoDemoEdgeServices
+                Effect: Allow
+                Action:
+                  - acm:AddTagsToCertificate
+                  - acm:DeleteCertificate
+                  - acm:DescribeCertificate
+                  - acm:ListTagsForCertificate
+                  - acm:RemoveTagsFromCertificate
+                  - acm:RequestCertificate
+                  - cloudfront:CreateDistribution
+                  - cloudfront:CreateFunction
+                  - cloudfront:CreateOriginAccessControl
+                  - cloudfront:CreateResponseHeadersPolicy
+                  - cloudfront:DeleteDistribution
+                  - cloudfront:DeleteFunction
+                  - cloudfront:DeleteOriginAccessControl
+                  - cloudfront:DeleteResponseHeadersPolicy
+                  - cloudfront:DescribeFunction
+                  - cloudfront:GetDistribution
+                  - cloudfront:GetDistributionConfig
+                  - cloudfront:GetFunction
+                  - cloudfront:GetOriginAccessControl
+                  - cloudfront:GetOriginAccessControlConfig
+                  - cloudfront:GetResponseHeadersPolicy
+                  - cloudfront:GetResponseHeadersPolicyConfig
+                  - cloudfront:ListTagsForResource
+                  - cloudfront:PublishFunction
+                  - cloudfront:TagResource
+                  - cloudfront:UntagResource
+                  - cloudfront:UpdateDistribution
+                  - cloudfront:UpdateFunction
+                  - cloudfront:UpdateOriginAccessControl
+                  - cloudfront:UpdateResponseHeadersPolicy
+                  - wafv2:CreateWebACL
+                  - wafv2:DeleteWebACL
+                  - wafv2:GetWebACL
+                  - wafv2:ListTagsForResource
+                  - wafv2:TagResource
+                  - wafv2:UntagResource
+                  - wafv2:UpdateWebACL
+                Resource: "*"
+              - Sid: ManageOnlyCanonicalWebsiteDns
+                Effect: Allow
+                Action:
+                  - route53:ChangeResourceRecordSets
+                  - route53:GetHostedZone
+                  - route53:ListResourceRecordSets
+                Resource: !Sub arn:${AWS::Partition}:route53:::hostedzone/${PublicHostedZoneId}
+              - Sid: ReadCanonicalWebsiteDnsChanges
+                Effect: Allow
+                Action: route53:GetChange
+                Resource: !Sub arn:${AWS::Partition}:route53:::change/*
+              - Sid: ReadExactCdkBootstrapVersion
+                Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+                Resource: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/cdk-bootstrap/hnb659fds/version
+              - Sid: ManageOnlyIcoDemoRoles
+                Effect: Allow
+                Action:
+                  - iam:AttachRolePolicy
+                  - iam:CreateRole
+                  - iam:DeleteRole
+                  - iam:DeleteRolePolicy
+                  - iam:DetachRolePolicy
+                  - iam:GetRole
+                  - iam:GetRolePolicy
+                  - iam:ListAttachedRolePolicies
+                  - iam:ListRolePolicies
+                  - iam:PassRole
+                  - iam:PutRolePolicy
+                  - iam:TagRole
+                  - iam:UntagRole
+                  - iam:UpdateAssumeRolePolicy
+                  - iam:UpdateRoleDescription
+                Resource: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/IcoStack-demo-*
+
+  GitHubDemoDeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ico-github-demo-deploy
+      Description: GitHub OIDC entry role for the protected ICO demo environment.
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Ref GitHubOidcProviderArn
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub repo:${RepositorySubject}:environment:${EnvironmentName}
+      Policies:
+        - PolicyName: AssumeCdkBootstrapRoles
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: sts:AssumeRole
+                Resource:
+                  - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-${AWS::Region}
+                  - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-${AWS::Region}
+                  - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-image-publishing-role-${AWS::AccountId}-${AWS::Region}
+                  - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-${AWS::Region}
+        - PolicyName: PublishDemoStaticArtifacts
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: ReadStackOutputs
+                Effect: Allow
+                Action: cloudformation:DescribeStacks
+                Resource: !Sub arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/IcoStack-demo/*
+              - Sid: ListIcoDemoBuckets
+                Effect: Allow
+                Action:
+                  - s3:GetBucketLocation
+                  - s3:ListBucket
+                Resource: !Sub arn:${AWS::Partition}:s3:::icostack-demo-hosting*
+              - Sid: PublishIcoDemoObjects
+                Effect: Allow
+                Action:
+                  - s3:DeleteObject
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource: !Sub arn:${AWS::Partition}:s3:::icostack-demo-hosting*/*
+              - Sid: InvalidateIcoDistributions
+                Effect: Allow
+                Action:
+                  - cloudfront:CreateInvalidation
+                  - cloudfront:GetDistribution
+                Resource: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/*
+                Condition:
+                  StringEquals:
+                    aws:ResourceTag/Project: in-case-of
+              - Sid: ReadCanonicalApiMapping
+                Effect: Allow
+                Action: apigateway:GET
+                Resource:
+                  - !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}::/domainnames/api.incaof.com
+                  - !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}::/domainnames/api.incaof.com/apimappings
+                  - !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}::/domainnames/api.incaof.com/apimappings/*
+              - Sid: UpdateCanonicalApiMapping
+                Effect: Allow
+                Action: apigateway:PATCH
+                Resource: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}::/domainnames/api.incaof.com/apimappings/*
+
+  AllowCdkDeployRoleToPassDemoExecutor:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: PassIcoDemoCloudFormationExecutor
+      Roles:
+        - !Sub cdk-hnb659fds-deploy-role-${AWS::AccountId}-${AWS::Region}
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: iam:PassRole
+            Resource: !GetAtt DemoCloudFormationExecutionRole.Arn
+            Condition:
+              StringEquals:
+                iam:PassedToService: cloudformation.amazonaws.com
+
+Outputs:
+  RoleArn:
+    Value: !GetAtt GitHubDemoDeployRole.Arn
+    Description: Set as the protected demo environment variable AWS_DEMO_DEPLOY_ROLE_ARN.
+  CloudFormationExecutionRoleArn:
+    Value: !GetAtt DemoCloudFormationExecutionRole.Arn
+    Description: Project-specific executor selected by the demo CDK synthesizer.

@@ -25,7 +25,7 @@ from .conftest import StubAgent
 
 
 def test_an_outage_degrades_to_explicit_choices() -> None:
-    reading = read(StubAgent(error=ConnectionError("gemini unreachable")), "I'm okay")
+    reading = read(StubAgent(error=ConnectionError("model unreachable")), "I'm okay")
 
     assert reading.degraded
     assert reading.choices == FALLBACK_CHOICES

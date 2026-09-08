@@ -8,13 +8,16 @@ model is added, and it is the test that says whether it does.
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from services.domain.alert import AlertState
 from services.domain.errors import NotAuthorized
+from services.domain.moment import ExpectedMoment
 from services.domain.plan import Channel
 from services.domain.resolution import ResolutionSource
-from services.handlers import responding
+from services.handlers import api, moment_due, responding
 
 from .conftest import MAYA, MONA, OMAR, Slice
 
@@ -110,7 +113,7 @@ def test_a_duplicate_scheduler_delivery_opens_one_alert(a_slice: Slice) -> None:
     assert first == second
 
 
-def test_a_replayed_queue_message_does_not_contact_anyone_twice(a_slice: Slice) -> None:
+def test_replaying_workflow_does_not_enqueue_the_same_action_twice(a_slice: Slice) -> None:
     """Invariant 5, end to end.
 
     The person on the other end of a duplicate is being told twice, at night, that someone
@@ -264,6 +267,64 @@ def test_a_recurring_plan_queues_its_next_occurrence(a_slice: Slice) -> None:
     assert (following.due_at - first.due_at).total_seconds() == 86_400
 
 
+def test_due_and_resolution_converge_on_one_following_moment(a_slice: Slice) -> None:
+    """Opening and resolving the same occurrence must not create two future timers."""
+    activation = a_slice.create_plan()
+    a_slice.clock.instant = activation.moment.due_at
+    a_slice.fire_moment()
+
+    queued_when_due = moment_due._queue_next_occurrence(a_slice.ctx, activation.moment.moment_id)
+    assert queued_when_due is not None
+
+    api._finish_moment(
+        a_slice.ctx,
+        type("ResolvedAlert", (), {"moment_id": activation.moment.moment_id})(),
+    )
+    api._finish_moment(
+        a_slice.ctx,
+        type("ResolvedAlert", (), {"moment_id": activation.moment.moment_id})(),
+    )
+
+    outstanding = a_slice.ctx.moments.outstanding_for_subject(MONA)
+    assert [moment.moment_id for moment in outstanding] == [queued_when_due.moment_id]
+
+
+def test_resolution_retry_recovers_a_successor_after_scheduler_failure(a_slice: Slice) -> None:
+    """A saved successor remains recoverable when timer creation fails mid-operation."""
+
+    class FailOnceScheduler:
+        def __init__(self) -> None:
+            self.failed = False
+            self.scheduled: list[str] = []
+
+        def schedule(self, moment: ExpectedMoment) -> str:
+            moment_id = str(moment.moment_id)
+            if not self.failed:
+                self.failed = True
+                raise RuntimeError("scheduler unavailable")
+            self.scheduled.append(moment_id)
+            return f"moment-{moment_id}"
+
+        def cancel(self, moment_id: object) -> None:
+            del moment_id
+
+    activation = a_slice.create_plan()
+    scheduler = FailOnceScheduler()
+    a_slice.ctx = replace(a_slice.ctx, scheduler=scheduler)
+    resolved = type("ResolvedAlert", (), {"moment_id": activation.moment.moment_id})()
+
+    with pytest.raises(RuntimeError, match="scheduler unavailable"):
+        api._finish_moment(a_slice.ctx, resolved)
+
+    saved = a_slice.ctx.moments.outstanding_for_subject(MONA)
+    assert len(saved) == 1
+    api._finish_moment(a_slice.ctx, resolved)
+
+    retried = a_slice.ctx.moments.outstanding_for_subject(MONA)
+    assert [moment.moment_id for moment in retried] == [saved[0].moment_id]
+    assert scheduler.scheduled == [str(saved[0].moment_id)]
+
+
 def test_a_one_time_plan_has_no_next_occurrence(a_slice: Slice) -> None:
     """Finishing is not an error."""
     from services.handlers import planning
@@ -276,13 +337,39 @@ def test_a_one_time_plan_has_no_next_occurrence(a_slice: Slice) -> None:
     }
     activation = a_slice.create_plan(one_time)
 
-    with pytest.raises(ValueError, match="expects nothing after"):
+    following = planning.schedule_following_moment(
+        a_slice.ctx,
+        activation.version,
+        after=activation.moment.due_at,
+        new_id=a_slice.ids,
+    )
+    assert following is None
+
+
+def test_a_bounded_recurring_plan_stops_at_its_end(a_slice: Slice) -> None:
+    from services.handlers import planning
+
+    from .conftest import EVENING_PLAN
+
+    bounded = {
+        **EVENING_PLAN,
+        "trigger": {
+            "kind": "RECURRING",
+            "timeOfDay": "21:00",
+            "untilAt": "2026-08-26T21:00:00+02:00",
+        },
+    }
+    activation = a_slice.create_plan(bounded)
+
+    assert (
         planning.schedule_following_moment(
             a_slice.ctx,
             activation.version,
             after=activation.moment.due_at,
             new_id=a_slice.ids,
         )
+        is None
+    )
 
 
 # -- the responder surface ----------------------------------------------------

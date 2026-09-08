@@ -1,0 +1,15 @@
+“I’m checking” creates a short lease. It tells everyone that a human is acting, but it does not close the Alert. If Maya disappears, escalation can continue. Only an explicit outcome—“I reached Mona; she is okay”—resolves the check.
+
+Acknowledged is never mistaken for resolved.
+
+That distinction shapes the entire system. Every Alert is pinned to the exact plan Mona approved. Every action has a durable identity. Concurrent or replayed queue messages cannot repeat a confirmed provider call. Consent and recipient membership are checked again immediately before delivery. If a provider may have accepted a message before timing out, the result enters reconciliation. The system does not blindly resend, and it does not invent success.
+
+The agent is governed structurally. Its tools accept abstract roles, never raw phone numbers, emails, or arbitrary URLs. Cedar begins from default deny. The target repeats tenant, consent, membership, channel, plan-version, Alert-state, and lease checks before any side effect.
+
+The same synthetic flow runs on the public web and in the signed Android release. The APK shown here came from a protected GitHub workflow and ran this deployed Drill across Scheduler, workflow, queue, worker, responder lease, and explicit resolution.
+
+AWS account verification currently blocks the live Nova and AgentCore invocation, so the demo says that plainly and uses a validated deterministic template. There is no fabricated model trace. The safety workflow continues because it was never entrusted to the model.
+
+In Case Of asks for no continuous location, camera, or microphone access. Most days, it stays quiet. On the unusual day, it gives the right people a calm, auditable way to close uncertainty.
+
+In Case Of. Someone notices.

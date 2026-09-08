@@ -1,0 +1,19 @@
+Most days, nothing happens.
+
+Mona makes tea. Finishes work. Comes home late. Lives her life without a camera watching, a microphone listening, or a map following every step.
+
+But sometimes a small question remains open: did she get home? Did the evening check-in happen? Is someone already looking into it?
+
+In Case Of begins with one quiet promise: if an expected moment passes unresolved, someone notices.
+
+Mona describes the plan in ordinary language. A nightly check-in. A journey home. A solo hike. Recovery after treatment. The agent turns that sentence into a literal draft: when the moment is due, how long to wait, and who may be contacted, in order.
+
+Then the software slows everything down. Mona sees every step before anything can begin. Saving creates a draft. Monitoring starts only after the required people consent, the channels are ready, and Mona explicitly activates it.
+
+The model interprets language. It never owns the timer, the contact list, or the safety state.
+
+For this judge demo, time is compressed, but the deployed path is real. EventBridge Scheduler opens the due Moment. Step Functions advances the approved ladder. DynamoDB stores the plan, the Alert, and its audit trail. SQS carries durable delivery intents to the only worker allowed to contact a provider.
+
+The screen follows those events as they happen: check requested, self-contact, reminder, escalation. For judges, the final message goes to a clearly labelled safe sink, so no real person is disturbed.
+
+When the uncertainty remains, Maya receives one expiring link for this Alert. She needs no account and no app install.

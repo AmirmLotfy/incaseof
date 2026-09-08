@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title description">
+  <title id="title">In Case Of — Someone notices</title>
+  <desc id="description">The ICO lettermark and the promise to monitor the plan, not the person.</desc>
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#303532" stroke-width="1" opacity="0.48"/>
+    </pattern>
+    <radialGradient id="signal" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#ff8055" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#e85b2a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="#111412"/>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  <rect x="62" y="58" width="1076" height="514" rx="24" fill="#171a18" stroke="#3d433f"/>
+
+  <g transform="translate(112 104)">
+    <rect x="0" y="0" width="186" height="186" rx="32" fill="#101210" stroke="#4b514d"/>
+    <rect x="32" y="62" width="17" height="66" rx="5" fill="#f6f5f0"/>
+    <path d="M101 68 C78 68 62 80 62 95 C62 110 78 122 101 122" fill="none" stroke="#f6f5f0" stroke-width="15" stroke-linecap="round"/>
+    <circle cx="143" cy="95" r="31" fill="none" stroke="#f6f5f0" stroke-width="15"/>
+    <circle cx="143" cy="95" r="11" fill="#e85b2a"/>
+    <circle cx="143" cy="95" r="32" fill="url(#signal)"/>
+  </g>
+
+  <g transform="translate(354 106)" fill="#f6f5f0" font-family="Public Sans, Arial, sans-serif">
+    <text x="0" y="25" font-size="22" font-weight="700" letter-spacing="6">IN CASE OF — ICO</text>
+    <text x="0" y="100" font-size="68" font-weight="750">Someone notices.</text>
+    <text x="0" y="158" font-size="30" font-weight="400" fill="#c9cec9">Monitor the plan, not the person.</text>
+  </g>
+
+  <line x1="112" y1="405" x2="1088" y2="405" stroke="#555c57" stroke-width="2"/>
+  <circle cx="194" cy="405" r="8" fill="#9dc9b5"/>
+  <circle cx="582" cy="405" r="8" fill="#e85b2a"/>
+  <circle cx="1006" cy="405" r="8" fill="#9dc9b5"/>
+  <g fill="#c9cec9" font-family="IBM Plex Mono, monospace" font-size="18" letter-spacing="1">
+    <text x="112" y="452">EXPECTED MOMENT</text>
+    <text x="500" y="452">SAFE ESCALATION</text>
+    <text x="922" y="452">RESOLVED</text>
+  </g>
+  <text x="112" y="526" fill="#f6f5f0" font-family="Public Sans, Arial, sans-serif" font-size="24">Governed AWS agents. Explicit human judgment.</text>
+</svg>

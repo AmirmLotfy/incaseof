@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "status": "FINAL_REVIEWED",
+  "producedAt": "2026-09-08T08:28:48Z",
+  "tool": "OpenAI built-in image_gen",
+  "modelMode": "GPT Image 2",
+  "useCase": "ads-marketing",
+  "inputAssets": [
+    {
+      "path": "submission/video/higgsfield/scene-01-independent-life.png",
+      "sha256": "27883bbbd08188bb67046f5f7f27f585316abc6a3abf82ce4a2f707484ad3a20",
+      "role": "Preserved cinematic human scene"
+    },
+    {
+      "path": "submission/screenshots/android-drill.png",
+      "sha256": "48b5986825247e8a48bff2098f772dcf5f96761298f7b09156157c81e66c4396",
+      "role": "Real signed Android drill proof"
+    },
+    {
+      "path": "apps/marketing/public/images/ico-logo.png",
+      "sha256": "3ff9653ae65922c1167f70eb5bbfe06f875ec1d12a67bea83055608be3e11b0e",
+      "role": "Exact ICO brand mark"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "YouTube thumbnail",
+      "rawProjectCopy": "submission/video/final/ico-youtube-thumbnail-gpt-image-2.png",
+      "canonicalPath": "submission/video/final/ico-youtube-thumbnail.png",
+      "canonicalWidth": 1280,
+      "canonicalHeight": 720,
+      "canonicalSha256": "b2568528ef61ed281dbf59181877c2abe307f1773d6dc6251e6a7450f60debe7",
+      "prompt": "Create a final 16:9 YouTube thumbnail using the preserved cinematic human scene, the intact real Android drill proof in a phone, and the exact ICO logo. Place the human at center-right, a bold dark editorial title zone at left, and the phone at far right. Use charcoal, off-white, burnt orange, and teal. Exact text: SOMEONE NOTICES. and A GOVERNED AWS AGENT. No fake badges, emergency imagery, panic, arrows, clickbait, or watermark.",
+      "reviewed": true
+    },
+    {
+      "name": "Devpost project image",
+      "rawProjectCopy": "submission/devpost/in-case-of-project-gpt-image-2-3x2.png",
+      "rawWidth": 1536,
+      "rawHeight": 1024,
+      "canonicalPath": "submission/devpost/in-case-of-project-1800x1200.png",
+      "canonicalWidth": 1800,
+      "canonicalHeight": 1200,
+      "canonicalSha256": "1babe367d572ed00716a5ea36f772f9e3259055907375ccbd5c66d6e584107ff",
+      "prompt": "Create a final exact 3:2 Devpost project image using the preserved cinematic woman making tea at Cairo blue hour, the intact real Android drill screenshot, and the exact ICO logo. Use a charcoal information zone at left, the woman at center-right, and the phone at far right. Exact text: IN CASE OF, SOMEONE NOTICES., and MONITOR THE PLAN. NOT THE PERSON. No fake awards, emergency imagery, panic, surveillance, arrows, clickbait, or watermark.",
+      "reviewed": true
+    }
+  ],
+  "rightsNotes": "Original project-specific generation from project-owned brand and product evidence plus a reviewed fictional Higgsfield scene. No stock image, fake product UI, award badge, or watermark was introduced."
+}

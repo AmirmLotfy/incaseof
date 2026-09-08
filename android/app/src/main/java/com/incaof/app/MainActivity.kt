@@ -1,19 +1,38 @@
 package com.incaof.app
 
+import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -22,7 +41,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.incaof.app.core.auth.AuthState
 import com.incaof.app.core.design.InCaseOfTheme
+import com.incaof.app.core.design.LocalIcoColors
 import com.incaof.app.core.di.ViewModelFactory
+import com.incaof.app.core.notifications.IcoNotifications
+import com.incaof.app.core.notifications.PushRegistration
+import com.incaof.app.feature.account.AccountScreen
+import com.incaof.app.feature.account.AccountViewModel
 import com.incaof.app.feature.circle.CircleScreen
 import com.incaof.app.feature.circle.CircleViewModel
 import com.incaof.app.feature.history.HistoryScreen
@@ -31,11 +55,14 @@ import com.incaof.app.feature.home.HomeScreen
 import com.incaof.app.feature.home.HomeViewModel
 import com.incaof.app.feature.onboarding.AuthViewModel
 import com.incaof.app.feature.onboarding.SignInScreen
+import com.incaof.app.feature.plans.PlanComposerScreen
 import com.incaof.app.feature.plans.PlanDetailScreen
 import com.incaof.app.feature.plans.PlansScreen
 import com.incaof.app.feature.plans.PlansViewModel
 import com.incaof.app.ui.Destination
 import com.incaof.app.ui.IcoNavigationBar
+import com.incaof.app.ui.UiMessage
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,26 +79,73 @@ class MainActivity : ComponentActivity() {
             InCaseOfTheme {
                 val auth: AuthViewModel = viewModel(factory = factory)
                 val session by auth.session.collectAsStateWithLifecycle()
+                var demoFactory by remember { mutableStateOf<ViewModelFactory?>(null) }
+                var demoBusy by remember { mutableStateOf(false) }
+                var demoError by remember { mutableStateOf<UiMessage?>(null) }
+                val scope = rememberCoroutineScope()
+                val notificationPermission =
+                    rememberLauncherForActivityResult(
+                        ActivityResultContracts.RequestPermission(),
+                    ) { /* Delivery continues through the next rung when permission is denied. */ }
+
+                LaunchedEffect(session) {
+                    if (session is AuthState.SignedIn && BuildConfig.HAS_PUSH) {
+                        if (
+                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                            !IcoNotifications.canNotify(this@MainActivity)
+                        ) {
+                            notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                        PushRegistration.refresh(this@MainActivity, container.repository)
+                    }
+                }
 
                 splash.setKeepOnScreenCondition { session is AuthState.Unknown }
 
-                when (session) {
-                    AuthState.Unknown -> {
-                        Loading()
-                    }
+                val activeDemoFactory = demoFactory
+                if (activeDemoFactory != null) {
+                    IcoApp(
+                        factory = activeDemoFactory,
+                        demoMode = true,
+                        onExitDemo = { demoFactory = null },
+                    )
+                } else {
+                    when (session) {
+                        AuthState.Unknown -> {
+                            Loading()
+                        }
 
-                    is AuthState.SignedIn -> {
-                        IcoApp(factory)
-                    }
+                        is AuthState.SignedIn -> {
+                            IcoApp(factory)
+                        }
 
-                    else -> {
-                        val error by auth.error.collectAsStateWithLifecycle()
-                        val busy by auth.busy.collectAsStateWithLifecycle()
-                        SignInScreen(
-                            onSignIn = auth::signIn,
-                            error = error,
-                            busy = busy,
-                        )
+                        else -> {
+                            val error by auth.error.collectAsStateWithLifecycle()
+                            val busy by auth.busy.collectAsStateWithLifecycle()
+                            SignInScreen(
+                                state = session,
+                                onSignIn = auth::signIn,
+                                onSignUp = auth::signUp,
+                                onConfirm = auth::confirmSignUp,
+                                onRequestReset = auth::requestPasswordReset,
+                                onConfirmReset = auth::confirmPasswordReset,
+                                onTryJudgeDemo = {
+                                    demoBusy = true
+                                    demoError = null
+                                    scope.launch {
+                                        container.startJudgeDemo().fold(
+                                            onSuccess = { demoFactory = it },
+                                            onFailure = {
+                                                demoError = UiMessage.DEMO_UNAVAILABLE
+                                            },
+                                        )
+                                        demoBusy = false
+                                    }
+                                },
+                                error = demoError ?: error,
+                                busy = busy || demoBusy,
+                            )
+                        }
                     }
                 }
             }
@@ -89,10 +163,17 @@ private fun Loading() {
 }
 
 @Composable
-private fun IcoApp(factory: ViewModelFactory) {
+private fun IcoApp(
+    factory: ViewModelFactory,
+    demoMode: Boolean = false,
+    onExitDemo: () -> Unit = {},
+) {
     val navController = rememberNavController()
 
     Scaffold(
+        topBar = {
+            if (demoMode) JudgeDemoBanner(onExitDemo)
+        },
         bottomBar = { IcoNavigationBar(navController) },
     ) { insets ->
         NavHost(
@@ -101,41 +182,134 @@ private fun IcoApp(factory: ViewModelFactory) {
             modifier = Modifier.padding(insets),
         ) {
             composable(Destination.HOME.route) {
-                val vm: HomeViewModel = viewModel(factory = factory)
+                val vm: HomeViewModel = viewModel(key = viewModelKey(demoMode, "home"), factory = factory)
                 val state by vm.state.collectAsStateWithLifecycle()
                 HomeScreen(
                     state = state,
                     onConfirm = vm::confirm,
                     onExtend = vm::extend,
                     onNeedSomeone = { navController.navigate(Destination.CIRCLE.route) },
+                    onAccount = { navController.navigate(ACCOUNT_ROUTE) },
                     onRetry = vm::refresh,
                 )
             }
 
+            composable(ACCOUNT_ROUTE) {
+                val vm: AccountViewModel = viewModel(key = viewModelKey(demoMode, "account"), factory = factory)
+                val state by vm.state.collectAsStateWithLifecycle()
+                AccountScreen(
+                    state = state,
+                    onConfirmationChange = vm::changeConfirmation,
+                    onDelete = vm::deleteAccount,
+                    onBack = { navController.popBackStack() },
+                )
+                androidx.activity.compose.BackHandler { navController.popBackStack() }
+            }
+
             composable(Destination.PLANS.route) {
-                val vm: PlansViewModel = viewModel(factory = factory)
+                val vm: PlansViewModel = viewModel(key = viewModelKey(demoMode, "plans"), factory = factory)
                 val state by vm.state.collectAsStateWithLifecycle()
                 val selected by vm.selected.collectAsStateWithLifecycle()
+                val composer by vm.composer.collectAsStateWithLifecycle()
+                val action by vm.action.collectAsStateWithLifecycle()
+                var testingPlan by androidx.compose.runtime.remember {
+                    androidx.compose.runtime.mutableStateOf<com.incaof.app.domain.Plan?>(null)
+                }
 
+                val drillPlan = testingPlan
                 val plan = selected
-                if (plan == null) {
-                    PlansScreen(state = state, onSelect = vm::select)
-                } else {
-                    PlanDetailScreen(plan = plan, onTest = {})
-                    androidx.activity.compose.BackHandler { vm.clearSelection() }
+                when {
+                    composer.visible -> {
+                        PlanComposerScreen(
+                            state = composer,
+                            onCompile = vm::compile,
+                            onSave = vm::saveDraft,
+                            onCancel = vm::cancelCreate,
+                        )
+                        androidx.activity.compose.BackHandler { vm.cancelCreate() }
+                    }
+
+                    drillPlan != null -> {
+                        val drillVm =
+                            androidx.compose.runtime.remember(drillPlan.id) {
+                                factory.createDrillViewModel(drillPlan)
+                            }
+                        val drillState by drillVm.state.collectAsStateWithLifecycle()
+                        com.incaof.app.feature.drill.DrillScreen(
+                            state = drillState,
+                            onFinish = { testingPlan = null },
+                        )
+                        androidx.activity.compose.BackHandler { testingPlan = null }
+                    }
+
+                    plan != null -> {
+                        PlanDetailScreen(
+                            plan = plan,
+                            action = action,
+                            onActivate = { vm.activate(plan.id) },
+                            onPause = { vm.pause(plan.id) },
+                            onResume = { vm.resume(plan.id) },
+                            onTest = { testingPlan = plan },
+                        )
+                        androidx.activity.compose.BackHandler { vm.clearSelection() }
+                    }
+
+                    else -> {
+                        PlansScreen(state = state, onSelect = vm::select, onCreate = vm::startCreate)
+                    }
                 }
             }
 
             composable(Destination.CIRCLE.route) {
-                val vm: CircleViewModel = viewModel(factory = factory)
+                val vm: CircleViewModel = viewModel(key = viewModelKey(demoMode, "circle"), factory = factory)
                 val state by vm.state.collectAsStateWithLifecycle()
-                CircleScreen(state = state)
+                val invite by vm.invite.collectAsStateWithLifecycle()
+                CircleScreen(state = state, inviteState = invite, onInvite = vm::invite)
             }
 
             composable(Destination.HISTORY.route) {
-                val vm: HistoryViewModel = viewModel(factory = factory)
+                val vm: HistoryViewModel = viewModel(key = viewModelKey(demoMode, "history"), factory = factory)
                 val state by vm.state.collectAsStateWithLifecycle()
                 HistoryScreen(state = state)
+            }
+        }
+    }
+}
+
+private fun viewModelKey(demoMode: Boolean, screen: String): String =
+    "${if (demoMode) "demo" else "account"}-$screen"
+
+private const val ACCOUNT_ROUTE = "account-settings"
+
+@Composable
+private fun JudgeDemoBanner(onExit: () -> Unit) {
+    val ico = LocalIcoColors.current
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = ico.signal,
+    ) {
+        Column {
+            Spacer(Modifier.height(32.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        stringResource(R.string.judge_demo_label),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = ico.ink,
+                    )
+                    Text(
+                        stringResource(R.string.judge_demo_description),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = ico.ink,
+                    )
+                }
+                TextButton(onClick = onExit) {
+                    Text(stringResource(R.string.judge_demo_exit), color = ico.ink)
+                }
             }
         }
     }

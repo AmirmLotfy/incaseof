@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">In Case Of</string>
+    <string name="tagline">هناك من ينتبه.</string>
+
+    <!-- Notifications -->
+    <string name="channel_moments">فحوصات الاطمئنان</string>
+    <string name="channel_moments_description">يسألك إن كنت بخير في الأوقات التي اخترتها.</string>
+    <string name="notification_moment_body">هل كل شيء بخير؟</string>
+    <string name="check_in">فحص الاطمئنان</string>
+    <string name="action_im_okay">أنا بخير</string>
+    <string name="confirm_failed">تعذر إرسال ردك. افتح In Case Of وحاول مرة أخرى.</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">الرئيسية</string>
+    <string name="nav_plans">الخطط</string>
+    <string name="nav_circle">دائرة الدعم</string>
+    <string name="nav_history">السجل</string>
+
+    <!-- Account -->
+    <string name="account_settings">إعدادات الحساب</string>
+    <string name="account_back">رجوع</string>
+    <string name="account_title">حذف الحساب</string>
+    <string name="account_deletion_intro">حذف حسابك نهائي. راجع ما سيحدث قبل المتابعة.</string>
+    <string name="account_deletion_consequences_title">ما يحدث فورًا</string>
+    <string name="account_deletion_consequences">يتوقف In Case Of عن المتابعة، ويلغي الفحوصات والتصعيدات المقبلة، ويلغي الوصول، ويبدأ حذف خططك ودائرة الدعم والتنبيهات وبيانات الحساب.</string>
+    <string name="account_deletion_confirmation_label">اكتب DELETE</string>
+    <string name="account_deletion_confirmation_help">أدخل DELETE كما هي لتفعيل الطلب.</string>
+    <string name="account_deletion_action">حذف حسابي</string>
+    <string name="account_deletion_action_description">حذف هذا الحساب نهائيًا وإيقاف كل المتابعة.</string>
+    <string name="account_deletion_requesting">جارٍ طلب الحذف…</string>
+    <string name="account_deletion_pending">الحذف قيد التنفيذ</string>
+    <string name="account_deletion_received">تم استلام طلب الحذف</string>
+    <string name="account_deletion_stopped">توقفت المتابعة والأعمال المقبلة. تستمر عملية التنظيف بأمان إذا تعذر الوصول إلى أحد مزودي الخدمة مؤقتًا.</string>
+    <string name="account_deletion_close_app">يمكنك إغلاق التطبيق. ستتم إزالة تسجيل الدخول بعد اكتمال التنظيف.</string>
+
+    <!-- Home -->
+    <string name="status_all_clear">كل شيء بخير</string>
+    <string name="status_action_needed">يلزم اتخاذ إجراء</string>
+    <string name="next_label">التالي</string>
+    <string name="if_unresolved">إذا لم يتم الاطمئنان</string>
+    <string name="expected">الوقت المتوقع</string>
+    <string name="need_someone">أحتاج إلى شخص</string>
+    <string name="give_me_more_time">أعطني وقتًا إضافيًا</string>
+    <string name="next_action">الإجراء التالي</string>
+
+    <!-- Plans -->
+    <string name="what_happens">ما الذي سيحدث</string>
+    <string name="shared_if_needed">يتم مشاركته عند الحاجة</string>
+    <string name="your_circle">دائرة الدعم</string>
+    <string name="test_plan">اختبار الخطة</string>
+    <string name="plan_active">نشطة</string>
+    <string name="plan_paused">متوقفة مؤقتًا</string>
+    <string name="plan_draft">مسودة</string>
+    <string name="plan_create">إنشاء خطة</string>
+    <string name="plan_empty">لا توجد خطط بعد. صِف موعدًا متوقعًا لإنشاء مسودة.</string>
+    <string name="plan_create_intro">صِف الموعد المتوقع وما الذي يجب أن يحدث إذا مرّ دون اطمئنان. ستراجع كل خطوة قبل الحفظ.</string>
+    <string name="plan_description_label">ما الذي ينبغي أن ينتبه إليه ICO؟</string>
+    <string name="plan_description_placeholder">كل مساء في التاسعة، اطلب مني تسجيل الاطمئنان…</string>
+    <string name="plan_compile_preview">إنشاء معاينة</string>
+    <string name="plan_review">مراجعة الخطة</string>
+    <string name="plan_save_explanation">ينشئ الحفظ مسودة. لن يبدأ ICO المتابعة حتى تكتمل الموافقة وتفعّل الخطة.</string>
+    <string name="plan_save_draft">حفظ المسودة</string>
+    <string name="plan_cancel">إلغاء</string>
+    <string name="plan_activate">تفعيل الخطة</string>
+    <string name="plan_resume">استئناف الخطة</string>
+    <string name="plan_pause">إيقاف الخطة مؤقتًا</string>
+    <string name="plan_row_description">%1$s، %2$s عند %3$s، %4$s</string>
+
+    <!-- Product vocabulary -->
+    <string name="explanation_clear">لا يوجد ما يتطلب انتباهك.</string>
+    <string name="explanation_waiting">ننتظر تسجيل اطمئنانك.</string>
+    <string name="explanation_self_contact">نحاول الوصول إلى %1$s.</string>
+    <string name="explanation_circle">نتواصل مع الأشخاص الذين اخترتهم.</string>
+    <string name="explanation_checking">تم إيقاف جهات الاتصال الاحتياطية مؤقتًا بينما يتحقق أحدهم.</string>
+    <string name="explanation_resolved">تم إغلاق هذا الفحص.</string>
+    <string name="explanation_cancelled">لقد ألغيت هذا الفحص.</string>
+    <string name="explanation_exhausted">لم يؤكد أحد. تم التواصل مع جميع الأشخاص في خطتك.</string>
+    <string name="subject_you">أنت</string>
+    <string name="action_push_subject">الاطمئنان عليك</string>
+    <string name="action_sms_subject">إرسال رسالة إليك</string>
+    <string name="action_call_subject">الاتصال بك</string>
+    <string name="action_message_responder">إرسال رسالة</string>
+    <string name="action_call_responder">اتصال</string>
+    <string name="role_primary">أساسي</string>
+    <string name="role_backup">احتياطي</string>
+    <string name="role_tertiary">ثالث</string>
+    <string name="release_never">أبدًا</string>
+    <string name="release_alert_open">عند فوات فحص الاطمئنان</string>
+    <string name="release_subject_call_failed">بعد تعذر الاتصال</string>
+    <string name="release_circle_escalation">عند التصعيد إلى دائرة الدعم فقط</string>
+    <string name="plan_type_routine">روتين</string>
+    <string name="plan_type_journey">رحلة</string>
+    <string name="plan_type_solo">وقت منفرد</string>
+    <string name="plan_type_recovery">تعافٍ</string>
+
+    <!-- Circle -->
+    <string name="verified">تم التحقق</string>
+    <string name="not_verified">لم يتم التحقق</string>
+    <string name="accepted">تم القبول</string>
+    <string name="invitation_pending">الدعوة قيد الانتظار</string>
+    <string name="circle_invite">دعوة شخص</string>
+    <string name="circle_invite_intro">سيتلقى رابط موافقة محدود الصلاحية. لا تُعرض بيانات اتصاله على الوكيل.</string>
+    <string name="circle_name">الاسم</string>
+    <string name="circle_relationship_optional">صلة القرابة أو العلاقة (اختياري)</string>
+    <string name="circle_share_consent">مشاركة رابط الموافقة</string>
+    <string name="circle_share_message">أود دعوتك للانضمام إلى دائرة دعمي في In Case Of. راجع الدعوة واقبلها هنا: %1$s</string>
+    <string name="circle_create_invitation">إنشاء الدعوة</string>
+    <string name="circle_creating_invitation">جارٍ إنشاء الدعوة…</string>
+    <string name="circle_enter_name">أدخل اسم الشخص.</string>
+    <string name="circle_invitation_created">تم إنشاء الدعوة. شارك الرابط المحدود؛ يجب أن يقبله الشخص قبل أن تعتمد عليه أي خطة.</string>
+    <string name="circle_phone_status">الهاتف: %1$s</string>
+    <string name="circle_member_description">%1$s، %2$s، %3$s، الهاتف: %4$s</string>
+
+    <!-- History -->
+    <string name="resolved">تم الاطمئنان</string>
+    <string name="history_empty">لا يوجد شيء لعرضه بعد. تظهر فحوصات الاطمئنان المكتملة هنا.</string>
+
+    <!-- Auth -->
+    <string name="sign_in">تسجيل الدخول</string>
+    <string name="email">البريد الإلكتروني</string>
+    <string name="password">كلمة المرور</string>
+    <string name="retry">حاول مرة أخرى</string>
+    <string name="auth_brand_description">ICO</string>
+    <string name="auth_create_space">أنشئ مساحة خططك الخاصة</string>
+    <string name="auth_confirm_email">أكد الرمز المرسل إلى بريدك الإلكتروني</string>
+    <string name="auth_request_reset">اطلب رمز إعادة تعيين كلمة المرور</string>
+    <string name="auth_choose_password">اختر كلمة مرور جديدة</string>
+    <string name="auth_new_password">كلمة المرور الجديدة</string>
+    <string name="auth_confirmation_code">رمز التأكيد</string>
+    <string name="auth_create_account">إنشاء حساب</string>
+    <string name="auth_confirm_account">تأكيد الحساب</string>
+    <string name="auth_send_reset_code">إرسال رمز إعادة التعيين</string>
+    <string name="auth_set_new_password">تعيين كلمة المرور الجديدة</string>
+    <string name="auth_have_account">لدي حساب بالفعل</string>
+    <string name="auth_forgot_password">نسيت كلمة المرور؟</string>
+    <string name="auth_opening_demo">جارٍ فتح العرض الآمن…</string>
+    <string name="auth_try_demo">تجربة عرض التحكيم</string>
+    <string name="auth_demo_explanation">يشغّل عرضًا اصطناعيًا معزولًا داخل التطبيق. لا يتواصل مع أشخاص حقيقيين.</string>
+    <string name="judge_demo_label">عرض التحكيم</string>
+    <string name="judge_demo_description">حساب اصطناعي · وجهة تسليم آمنة</string>
+    <string name="judge_demo_exit">الخروج من العرض</string>
+
+    <!-- Accessibility -->
+    <string name="cd_status_all_clear">الحالة: كل شيء بخير. لا يوجد ما يتطلب انتباهك.</string>
+    <string name="cd_status_action_needed">الحالة: يلزم اتخاذ إجراء. ينتظر In Case Of ردك.</string>
+    <string name="cd_confirm_okay">أكد أنك بخير. يؤدي هذا إلى إكمال فحص الليلة.</string>
+
+    <!-- Drill Mode -->
+    <string name="drill_title">اختبار الخطة</string>
+    <string name="drill_timing_banner">يتم التحكم في توقيت العرض التجريبي من خلال البيئة المنشورة</string>
+    <string name="drill_step_scheduled">الجدول الزمني المضغوط نشط</string>
+    <string name="drill_step_notification">تم استلام إشعار الفحص على Android</string>
+    <string name="drill_step_self_contact">لم يتم الرد على التواصل مع صاحب الحساب</string>
+    <string name="drill_step_circle">تم إشعار أحد أفراد دائرة الدعم</string>
+    <string name="drill_step_claimed">تولى أحد أفراد دائرة الدعم التنبيه</string>
+    <string name="drill_step_paused">تم إيقاف التصعيد الاحتياطي مؤقتًا لمدة 10 دقائق</string>
+    <string name="drill_step_resolved">تم الاطمئنان: تم التحقق من التواصل</string>
+    <string name="drill_ready">تم التحقق من الخطة وهي جاهزة</string>
+    <string name="drill_trace_title">سجل التتبع</string>
+    <string name="drill_action_done">تم</string>
+    <string name="drill_backend_timeline">الخط الزمني للخادم</string>
+    <string name="drill_no_events">لم تتم إعادة أي أحداث تدقيق منشورة بعد.</string>
+    <string name="drill_status_completed">مكتمل.</string>
+    <string name="drill_status_progress">قيد التنفيذ.</string>
+    <string name="drill_status_pending">قيد الانتظار.</string>
+    <string name="drill_step_description">%1$s. %2$s</string>
+    <string name="drill_alert_state">حالة التنبيه</string>
+    <string name="drill_alert_id">معرّف التنبيه</string>
+    <string name="drill_server_time_scale">مقياس وقت الخادم</string>
+    <string name="drill_audit_events">أحداث التدقيق</string>
+    <string name="drill_last_actor">آخر منفّذ</string>
+    <string name="drill_lease_expires">انتهاء مهلة التحقق</string>
+    <string name="drill_status_starting">جارٍ بدء سير اختبار الخطة المنشور…</string>
+    <string name="drill_status_waiting_moment">ننتظر الموعد المنشور…</string>
+    <string name="drill_status_terminal">سجّل الخادم حالة نهائية للتنبيه.</string>
+    <string name="drill_status_waiting_scheduler">ننتظر EventBridge Scheduler لفتح التنبيه…</string>
+    <string name="drill_status_following">جارٍ متابعة الخط الزمني للتنبيه المنشور…</string>
+    <string name="drill_status_still_open">لا يزال اختبار الخطة مفتوحًا. أعد فتح هذه الشاشة لمواصلة فحص الحالة المباشرة.</string>
+    <string name="drill_failed_start">تعذر بدء اختبار الخطة</string>
+    <string name="drill_awaiting_alert">في انتظار التنبيه</string>
+    <string name="drill_awaiting_server">في انتظار الخادم</string>
+    <string name="drill_not_opened">لم يُفتح</string>
+    <string name="drill_normal_time">عادي</string>
+    <string name="drill_none">لا يوجد</string>
+    <string name="timeline_moment_due">طُلب تسجيل الاطمئنان</string>
+    <string name="timeline_action_queued">تم وضع التذكير في قائمة الإرسال</string>
+    <string name="timeline_action_accepted">تم إرسال الرسالة النصية</string>
+    <string name="timeline_action_delivered">وصلت الرسالة النصية</string>
+    <string name="timeline_action_undelivered">لم تصل الرسالة النصية</string>
+    <string name="timeline_action_failed">تعذر الإرسال</string>
+    <string name="timeline_action_suppressed">لم تُرسل — تم الاطمئنان بالفعل</string>
+    <string name="timeline_channel_unavailable">الاتصال غير متاح</string>
+    <string name="timeline_contact_denied">التواصل غير مسموح</string>
+    <string name="timeline_subject_confirmed">أكدت أنك بخير</string>
+    <string name="timeline_alert_claimed">بدأ شخص في التحقق</string>
+    <string name="timeline_responder_verified">أكدت دائرة الدعم الاطمئنان</string>
+    <string name="timeline_circle_escalation">تم التواصل مع دائرة الدعم</string>
+    <string name="timeline_state_checking">يتحقق شخص الآن</string>
+    <string name="timeline_state_resolved">تم الاطمئنان</string>
+
+    <!-- Relative actions -->
+    <string name="next_action_shortly">سنحاول مرة أخرى قريبًا.</string>
+    <string name="next_action_after">سنتحقق مرة أخرى %1$s.</string>
+    <string name="time_today">اليوم</string>
+    <string name="time_tomorrow">غدًا</string>
+    <string name="time_yesterday">أمس</string>
+    <string name="time_now">الآن</string>
+    <plurals name="time_seconds">
+        <item quantity="zero">٠ ثانية</item>
+        <item quantity="one">ثانية واحدة</item>
+        <item quantity="two">ثانيتان</item>
+        <item quantity="few">%1$d ثوانٍ</item>
+        <item quantity="many">%1$d ثانية</item>
+        <item quantity="other">%1$d ثانية</item>
+    </plurals>
+    <plurals name="time_minutes">
+        <item quantity="zero">٠ دقيقة</item>
+        <item quantity="one">دقيقة واحدة</item>
+        <item quantity="two">دقيقتان</item>
+        <item quantity="few">%1$d دقائق</item>
+        <item quantity="many">%1$d دقيقة</item>
+        <item quantity="other">%1$d دقيقة</item>
+    </plurals>
+    <plurals name="time_hours">
+        <item quantity="zero">٠ ساعة</item>
+        <item quantity="one">ساعة واحدة</item>
+        <item quantity="two">ساعتان</item>
+        <item quantity="few">%1$d ساعات</item>
+        <item quantity="many">%1$d ساعة</item>
+        <item quantity="other">%1$d ساعة</item>
+    </plurals>
+    <string name="time_hours_minutes">%1$s و%2$s</string>
+    <string name="time_relative_less_minute">خلال أقل من دقيقة</string>
+    <string name="time_relative_one_minute">خلال دقيقة واحدة</string>
+    <plurals name="time_relative_minutes">
+        <item quantity="zero">الآن</item>
+        <item quantity="one">خلال دقيقة واحدة</item>
+        <item quantity="two">خلال دقيقتين</item>
+        <item quantity="few">خلال %1$d دقائق</item>
+        <item quantity="many">خلال %1$d دقيقة</item>
+        <item quantity="other">خلال %1$d دقيقة</item>
+    </plurals>
+    <string name="time_relative_about_hour">خلال نحو ساعة</string>
+    <plurals name="time_relative_hours">
+        <item quantity="zero">الآن</item>
+        <item quantity="one">خلال ساعة واحدة</item>
+        <item quantity="two">خلال ساعتين</item>
+        <item quantity="few">خلال %1$d ساعات</item>
+        <item quantity="many">خلال %1$d ساعة</item>
+        <item quantity="other">خلال %1$d ساعة</item>
+    </plurals>
+    <string name="history_row_description">%1$s، تم الاطمئنان %2$s، %3$s</string>
+    <string name="error_offline">تعذر الوصول إلى In Case Of. لا تزال خطتك تعمل.</string>
+    <string name="error_generic">حدث خطأ. حاول مرة أخرى.</string>
+    <string name="error_auth_sign_in">تعذر تسجيل الدخول. تحقق من البريد الإلكتروني وكلمة المرور.</string>
+    <string name="error_auth_sign_up">تعذر إنشاء الحساب. تحقق من البيانات وحاول مرة أخرى.</string>
+    <string name="error_auth_confirmation">رمز التأكيد غير صحيح. اطلب رمزًا جديدًا وحاول مرة أخرى.</string>
+    <string name="error_auth_reset_request">تعذر طلب إعادة التعيين. تحقق من البريد الإلكتروني وحاول مرة أخرى.</string>
+    <string name="error_auth_reset_confirm">تعذر إكمال إعادة التعيين. تحقق من الرمز وكلمة المرور.</string>
+    <string name="error_plan_description">صِف ما تتوقعه وموعده.</string>
+    <string name="notice_plan_updated">تم تحديث الخطة.</string>
+    <string name="error_demo_unavailable">عرض التحكيم غير متاح. حاول مرة أخرى بعد قليل.</string>
+</resources>

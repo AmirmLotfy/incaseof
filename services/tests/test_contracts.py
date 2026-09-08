@@ -103,6 +103,19 @@ def test_delivery_is_not_a_stop_condition(compiled_plan_schema: dict[str, Any]) 
         assert forbidden not in allowed, f"{forbidden} must never close an Alert"
 
 
+def test_end_bound_is_only_valid_for_recurring_plans(
+    compiled_plan_schema: dict[str, Any],
+) -> None:
+    document = load_fixture(Path("packages/test-fixtures/valid/evening-routine.json"))
+    document["trigger"] = {
+        "kind": "ONE_TIME",
+        "dueAt": "2026-08-26T21:00:00+02:00",
+        "untilAt": "2026-08-27T05:00:00+02:00",
+    }
+    with pytest.raises(ValidationError):
+        Draft202012Validator(compiled_plan_schema).validate(document)
+
+
 def test_context_release_defaults_to_never(compiled_plan_schema: dict[str, Any]) -> None:
     """Every context signal is private until the user opts in, in advance."""
     policy = compiled_plan_schema["properties"]["contextPolicy"]["properties"]

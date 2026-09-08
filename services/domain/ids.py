@@ -19,6 +19,8 @@ MomentId = NewType("MomentId", str)
 AlertId = NewType("AlertId", str)
 ActionId = NewType("ActionId", str)
 ConsentId = NewType("ConsentId", str)
+InvitationId = NewType("InvitationId", str)
+DeviceId = NewType("DeviceId", str)
 
 
 class IdFactory(Protocol):

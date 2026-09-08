@@ -16,7 +16,8 @@ uv run pytest evals
 ```
 
 Dataset integrity runs by default. Live-model evaluations are marked `@pytest.mark.eval` and
-excluded from the default run, because they cost money and need `GEMINI_API_KEY`:
+excluded from the default run because they cost money and require an authenticated AWS role with
+permission to invoke the locked Bedrock inference profile:
 
 ```bash
 uv run pytest evals -m eval

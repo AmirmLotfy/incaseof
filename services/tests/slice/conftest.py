@@ -37,6 +37,7 @@ from services.adapters.dynamo import (
     DynamoMomentRepository,
     DynamoPlanRepository,
 )
+from services.adapters.outbox import DynamoOutbox
 from services.adapters.queue import InMemoryActionQueue
 from services.domain.circle import (
     Circle,
@@ -290,6 +291,8 @@ def a_slice() -> Iterator[Slice]:
                     {"AttributeName": "sk", "AttributeType": "S"},
                     {"AttributeName": keys.GSI1_PK, "AttributeType": "S"},
                     {"AttributeName": keys.GSI1_SK, "AttributeType": "S"},
+                    {"AttributeName": keys.GSI2_PK, "AttributeType": "S"},
+                    {"AttributeName": keys.GSI2_SK, "AttributeType": "S"},
                 ],
                 GlobalSecondaryIndexes=[
                     {
@@ -299,7 +302,15 @@ def a_slice() -> Iterator[Slice]:
                             {"AttributeName": keys.GSI1_SK, "KeyType": "RANGE"},
                         ],
                         "Projection": {"ProjectionType": "ALL"},
-                    }
+                    },
+                    {
+                        "IndexName": keys.GSI2,
+                        "KeySchema": [
+                            {"AttributeName": keys.GSI2_PK, "KeyType": "HASH"},
+                            {"AttributeName": keys.GSI2_SK, "KeyType": "RANGE"},
+                        ],
+                        "Projection": {"ProjectionType": "ALL"},
+                    },
                 ],
                 BillingMode="PAY_PER_REQUEST",
             )
@@ -313,6 +324,7 @@ def a_slice() -> Iterator[Slice]:
                 alerts=DynamoAlertRepository(table),
                 circles=DynamoCircleRepository(table),
                 actions=DynamoActionLog(table),
+                outbox=DynamoOutbox(table),
                 audit=DynamoAuditLog(table),
                 clock=clock,
                 scale=REAL_TIME,

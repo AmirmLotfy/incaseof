@@ -42,12 +42,16 @@ class ExpectedMoment:
     due_at: datetime
     grace_until: datetime
     status: MomentStatus = MomentStatus.SCHEDULED
+    is_drill: bool = False
+    time_scale: float = 1.0
 
     def __post_init__(self) -> None:
         require_aware(self.due_at, "due_at")
         require_aware(self.grace_until, "grace_until")
         if self.grace_until < self.due_at:
             raise PlanValidationError("grace cannot end before the moment is due")
+        if not 0 < self.time_scale <= 1.0:
+            raise PlanValidationError("moment time_scale must be in (0, 1]")
 
     def is_due(self, now: datetime) -> bool:
         return now >= self.due_at
@@ -98,6 +102,13 @@ def _localise(day: datetime, at: time, zone: ZoneInfo) -> datetime:
 
 
 def next_due_at(trigger: Trigger, timezone: str, after: datetime) -> datetime | None:
+    candidate = _next_unbounded(trigger, timezone, after)
+    if candidate is not None and trigger.until_at is not None and candidate > trigger.until_at:
+        return None
+    return candidate
+
+
+def _next_unbounded(trigger: Trigger, timezone: str, after: datetime) -> datetime | None:
     """The next instant this trigger expects something to happen, strictly after ``after``.
 
     Always returned in **UTC**, even though the arithmetic happens in the plan's zone.
@@ -142,10 +153,7 @@ def next_due_at(trigger: Trigger, timezone: str, after: datetime) -> datetime | 
     # each day's anchor re-syncs it. So "22:00 every three hours" yields 22:00, 01:00,
     # 04:00 ... and lands back exactly on 22:00 the next day rather than drifting.
     #
-    # The chain therefore runs continuously rather than stopping at dawn. A plan that
-    # should only cover one night needs an explicit end bound, which the schema does not
-    # yet have -- see the Phase 5 note in docs/PRD.md. Until then, a bounded night is
-    # expressed as a RELATIVE or ONE_TIME plan, and pausing stops a running chain.
+    # The caller applies the explicit until_at bound to this candidate.
     previous = _previous_anchor(local_after, at, zone, allowed)
     if previous is None:
         return forward.astimezone(UTC)
@@ -199,10 +207,14 @@ def moment_for(
     version_id: PlanVersionId,
     due_at: datetime,
     grace_seconds: int,
+    is_drill: bool = False,
+    time_scale: float = 1.0,
 ) -> ExpectedMoment:
     return ExpectedMoment(
         moment_id=moment_id,
         version_id=version_id,
         due_at=due_at,
         grace_until=due_at + timedelta(seconds=grace_seconds),
+        is_drill=is_drill,
+        time_scale=time_scale,
     )

@@ -39,6 +39,13 @@ class TriggerDraft(BaseModel):
         default_factory=list
     )
     intervalSeconds: int | None = None
+    untilAt: str | None = Field(
+        default=None,
+        description=(
+            "RECURRING: inclusive ISO-8601 end instant with offset. "
+            "Required for bounded periods such as tonight."
+        ),
+    )
     offsetSeconds: int | None = Field(default=None, description="RELATIVE only")
 
 
@@ -119,6 +126,8 @@ Rules that are not negotiable:
 - contextPolicy defaults to NEVER for every signal. Only include a signal if the person
   explicitly asked for it to be shared, and only at the stage they asked for.
 - Use the timezone you were given. Never guess one.
+- Time-limited recurring requests such as "tonight" require an explicit untilAt. Never
+  turn a bounded request into an indefinitely recurring plan.
 
 If the description is too vague to build a plan from, say so instead of inventing details.
 """

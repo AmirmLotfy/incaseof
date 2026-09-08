@@ -48,7 +48,7 @@ other Alert, Plan, or Circle member.
 | Phone endpoints | KMS-encrypted at rest; never returned to clients in plaintext; never given to the model |
 | Context snapshots | KMS-encrypted; released only per the pinned Plan Version's policy |
 | Location | **Off by default.** Not required for P0 |
-| Gemini API key | Secrets Manager. Never in the repo, never in the APK |
+| Model credentials | Temporary AWS execution-role credentials; no model API key in the repo, clients or APK |
 | Signing secrets | Secrets Manager, rotatable |
 | Logs | PII-redacted. Phone numbers never logged, even at DEBUG |
 

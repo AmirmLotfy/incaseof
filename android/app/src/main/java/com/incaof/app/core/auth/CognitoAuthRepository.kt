@@ -66,6 +66,26 @@ class CognitoAuthRepository : AuthRepository {
             }.onFailure { Log.w(TAG, "confirmation failed: ${it.javaClass.simpleName}") }
         }
 
+    override suspend fun requestPasswordReset(email: String): Result<Unit> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                Amplify.Auth.resetPassword(email)
+                Unit
+            }.onFailure { Log.w(TAG, "password reset request failed: ${it.javaClass.simpleName}") }
+        }
+
+    override suspend fun confirmPasswordReset(
+        email: String,
+        code: String,
+        newPassword: String,
+    ): Result<Unit> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                Amplify.Auth.confirmResetPassword(email, newPassword, code)
+                Unit
+            }.onFailure { Log.w(TAG, "password reset confirmation failed: ${it.javaClass.simpleName}") }
+        }
+
     override suspend fun signOut() =
         withContext(Dispatchers.IO) {
             Amplify.Auth.signOut()

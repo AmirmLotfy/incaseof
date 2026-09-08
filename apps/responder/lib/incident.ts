@@ -44,36 +44,57 @@ export type IncidentError = "INVALID_LINK" | "UNREACHABLE";
  * names never reach a screen. Nothing here speculates — the page says what was tried, never
  * what it might mean.
  */
-const EVENT_LABELS: Record<string, string> = {
-  MOMENT_DUE: "Check requested",
+const EVENT_LABELS: Record<Locale, Record<string, string>> = {
+  en: {
+    MOMENT_DUE: "Check requested",
   // "Queued" and "sent" and "delivered" are three different facts and the page keeps them
   // apart. A carrier accepting a message is not the same as a phone receiving one, and
   // somebody reading this is deciding whether to get in a car — so the timeline only ever
   // claims the step it can actually evidence.
-  ACTION_QUEUED: "Reminder queued",
-  ACTION_ACCEPTED: "Text sent",
-  ACTION_DELIVERED: "Text delivered",
-  ACTION_UNDELIVERED: "Text did not arrive",
-  CHANNEL_UNAVAILABLE: "Call unavailable",
-  ACTION_FAILED: "Could not send",
-  ACTION_SUPPRESSED: "Not sent — already resolved",
-  STATE_CIRCLE_ESCALATION: "You were contacted",
-  ALERT_CLAIMED: "Someone started checking",
-  RESPONDER_VERIFIED: "Confirmed",
+    ACTION_QUEUED: "Reminder queued",
+    ACTION_ACCEPTED: "Text sent",
+    ACTION_DELIVERED: "Text delivered",
+    ACTION_UNDELIVERED: "Text did not arrive",
+    CHANNEL_UNAVAILABLE: "Call unavailable",
+    ACTION_FAILED: "Could not send",
+    ACTION_SUPPRESSED: "Not sent — already resolved",
+    STATE_CIRCLE_ESCALATION: "You were contacted",
+    ALERT_CLAIMED: "Someone started checking",
+    RESPONDER_VERIFIED: "Confirmed",
+  },
+  ar: {
+    MOMENT_DUE: "طُلب تسجيل الاطمئنان",
+    ACTION_QUEUED: "تم وضع التذكير في قائمة الإرسال",
+    ACTION_ACCEPTED: "تم إرسال الرسالة النصية",
+    ACTION_DELIVERED: "وصلت الرسالة النصية",
+    ACTION_UNDELIVERED: "لم تصل الرسالة النصية",
+    CHANNEL_UNAVAILABLE: "الاتصال غير متاح",
+    ACTION_FAILED: "تعذر الإرسال",
+    ACTION_SUPPRESSED: "لم تُرسل — تم الاطمئنان بالفعل",
+    STATE_CIRCLE_ESCALATION: "تم التواصل معك",
+    ALERT_CLAIMED: "بدأ شخص في التحقق",
+    RESPONDER_VERIFIED: "تم التأكيد",
+  },
 };
 
-export function eventLabel(event: string): string {
+export function eventLabel(event: string): string;
+export function eventLabel(event: string, locale: Locale): string;
+export function eventLabel(event: string, locale: Locale = "en"): string {
+  const selected = locale === "ar" ? "ar" : "en";
   return (
-    EVENT_LABELS[event] ??
+    EVENT_LABELS[selected][event] ??
     event.toLowerCase().replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase())
   );
 }
 
 /** 9:00 PM. Times are the page's core content, so they are rendered with tabular figures. */
-export function clockTime(iso: string): string {
+export function clockTime(iso: string, locale: Locale = "en"): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  return date.toLocaleTimeString(locale === "ar" ? "ar-EG" : "en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 /** "09:42" — how long a lease has left. */
@@ -87,16 +108,22 @@ export function countdown(toIso: string, from: Date = new Date()): string {
 }
 
 /** "in 12 minutes". Approximate on purpose — a ticking countdown manufactures urgency. */
-export function relativeTime(toIso: string, from: Date = new Date()): string {
+export function relativeTime(
+  toIso: string,
+  from: Date = new Date(),
+  locale: Locale = "en",
+): string {
   const gap = new Date(toIso).getTime() - from.getTime();
-  if (Number.isNaN(gap) || gap <= 0) return "shortly";
+  const words = copy[locale];
+  if (Number.isNaN(gap) || gap <= 0) return words.shortly;
 
   const minutes = Math.round(gap / 60000);
-  if (minutes < 1) return "in less than a minute";
-  if (minutes === 1) return "in 1 minute";
-  if (minutes < 60) return `in ${minutes} minutes`;
-  if (minutes < 90) return "in about an hour";
+  if (minutes < 1) return words.lessMinute;
+  if (minutes === 1) return words.oneMinute;
+  if (minutes < 60) return words.minutes(minutes);
+  if (minutes < 90) return words.aboutHour;
 
   const hours = Math.round(minutes / 60);
-  return hours === 1 ? "in about an hour" : `in about ${hours} hours`;
+  return hours === 1 ? words.aboutHour : words.hours(hours);
 }
+import { copy, type Locale } from "./i18n";

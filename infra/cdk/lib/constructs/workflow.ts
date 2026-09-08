@@ -154,4 +154,22 @@ export class Workflow extends Construct {
       }),
     );
   }
+
+  /** Let the deletion worker remove timers, without permission to create new work. */
+  grantCancelSchedules(grantee: iam.IGrantable): void {
+    const group = this.scheduleGroup.name ?? "";
+    grantee.grantPrincipal.addToPrincipalPolicy(
+      new iam.PolicyStatement({
+        actions: ["scheduler:DeleteSchedule"],
+        resources: [
+          Stack.of(this).formatArn({
+            service: "scheduler",
+            resource: "schedule",
+            resourceName: `${group}/*`,
+            arnFormat: ArnFormat.SLASH_RESOURCE_NAME,
+          }),
+        ],
+      }),
+    );
+  }
 }

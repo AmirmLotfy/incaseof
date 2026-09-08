@@ -32,20 +32,28 @@ object NetworkModule {
         }
 
     fun api(auth: AuthRepository): IcoApi =
+        retrofit(auth, demoRoutes = false)
+
+    /** Uses the same API contract while confining every product call to the demo realm. */
+    fun demoApi(auth: AuthRepository): IcoApi =
+        retrofit(auth, demoRoutes = true)
+
+    private fun retrofit(auth: AuthRepository, demoRoutes: Boolean): IcoApi =
         Retrofit
             .Builder()
             .baseUrl(BuildConfig.API_BASE_URL)
-            .client(client(auth))
+            .client(client(auth, demoRoutes))
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
             .create(IcoApi::class.java)
 
-    private fun client(auth: AuthRepository): OkHttpClient =
+    private fun client(auth: AuthRepository, demoRoutes: Boolean): OkHttpClient =
         OkHttpClient
             .Builder()
             .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
             .writeTimeout(15, TimeUnit.SECONDS)
+            .apply { if (demoRoutes) addInterceptor(DemoRouteInterceptor()) }
             .addInterceptor(BearerTokenInterceptor(auth))
             .apply {
                 if (BuildConfig.DEBUG) {
@@ -56,6 +64,34 @@ object NetworkModule {
                     )
                 }
             }.build()
+}
+
+/**
+ * Constrains an authenticated demo session to the synthetic namespace.
+ *
+ * The session-minting endpoint is already in that namespace. Every other product route is
+ * rewritten before transmission, so a demo credential can never accidentally reach a
+ * Cognito-protected route or device registration.
+ */
+class DemoRouteInterceptor : Interceptor {
+    override fun intercept(chain: Interceptor.Chain): okhttp3.Response {
+        val request = chain.request()
+        val path = request.url.encodedPath
+        val rewritten =
+            if (path.startsWith("/v1/") && path != "/v1/demo/session") {
+                request
+                    .newBuilder()
+                    .url(
+                        request.url
+                            .newBuilder()
+                            .encodedPath(path.replaceFirst("/v1/", "/v1/demo/"))
+                            .build(),
+                    ).build()
+            } else {
+                request
+            }
+        return chain.proceed(rewritten)
+    }
 }
 
 /**

@@ -16,6 +16,33 @@ plugins {
 val hasFirebaseConfig = file("google-services.json").exists()
 if (hasFirebaseConfig) {
     apply(plugin = "com.google.gms.google-services")
+
+    // The protected Firebase client is intentionally registered only for the signed
+    // com.incaof.app release. The debug package has a different applicationId and must
+    // remain push-disabled instead of trying to consume release credentials.
+    tasks.matching { it.name == "processDebugGoogleServices" }.configureEach {
+        enabled = false
+    }
+}
+
+val configuredApiBaseUrl = project.findProperty("ico.apiBaseUrl") as String?
+val configuredCognitoPoolId = project.findProperty("ico.cognitoPoolId") as String?
+val configuredCognitoClientId = project.findProperty("ico.cognitoClientId") as String?
+val releaseRequested = gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = true) }
+val releaseKeystorePath = providers.environmentVariable("ICO_ANDROID_KEYSTORE_PATH").orNull
+val releaseKeystorePassword = providers.environmentVariable("ICO_ANDROID_KEYSTORE_PASSWORD").orNull
+val releaseKeyAlias = providers.environmentVariable("ICO_ANDROID_KEY_ALIAS").orNull
+val releaseKeyPassword = providers.environmentVariable("ICO_ANDROID_KEY_PASSWORD").orNull
+
+if (releaseRequested) {
+    require(!configuredApiBaseUrl.isNullOrBlank()) { "Release requires -Pico.apiBaseUrl" }
+    require(!configuredCognitoPoolId.isNullOrBlank()) { "Release requires -Pico.cognitoPoolId" }
+    require(!configuredCognitoClientId.isNullOrBlank()) { "Release requires -Pico.cognitoClientId" }
+    require(hasFirebaseConfig) { "Release requires app/google-services.json from the protected environment" }
+    require(!releaseKeystorePath.isNullOrBlank()) { "Release requires ICO_ANDROID_KEYSTORE_PATH" }
+    require(!releaseKeystorePassword.isNullOrBlank()) { "Release requires ICO_ANDROID_KEYSTORE_PASSWORD" }
+    require(!releaseKeyAlias.isNullOrBlank()) { "Release requires ICO_ANDROID_KEY_ALIAS" }
+    require(!releaseKeyPassword.isNullOrBlank()) { "Release requires ICO_ANDROID_KEY_PASSWORD" }
 }
 
 android {
@@ -26,8 +53,8 @@ android {
         applicationId = "com.incaof.app"
         minSdk = 26
         targetSdk = 37
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -37,7 +64,28 @@ android {
         buildConfigField("String", "COGNITO_POOL_ID", "\"${prop("ico.cognitoPoolId", "")}\"")
         buildConfigField("String", "COGNITO_CLIENT_ID", "\"${prop("ico.cognitoClientId", "")}\"")
         buildConfigField("String", "COGNITO_REGION", "\"${prop("ico.cognitoRegion", "us-east-1")}\"")
-        buildConfigField("boolean", "HAS_PUSH", hasFirebaseConfig.toString())
+        buildConfigField("boolean", "HAS_PUSH", "false")
+        buildConfigField("boolean", "ALLOW_LOCAL_DATA", "true")
+    }
+
+    signingConfigs {
+        if (
+            !releaseKeystorePath.isNullOrBlank() &&
+            !releaseKeystorePassword.isNullOrBlank() &&
+            !releaseKeyAlias.isNullOrBlank() &&
+            !releaseKeyPassword.isNullOrBlank()
+        ) {
+            create("release") {
+                storeFile = file(releaseKeystorePath)
+                storePassword = releaseKeystorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+                enableV1Signing = true
+                enableV2Signing = true
+                enableV3Signing = true
+                enableV4Signing = true
+            }
+        }
     }
 
     buildTypes {
@@ -45,6 +93,9 @@ android {
             applicationIdSuffix = ".debug"
         }
         release {
+            buildConfigField("boolean", "ALLOW_LOCAL_DATA", "false")
+            buildConfigField("boolean", "HAS_PUSH", hasFirebaseConfig.toString())
+            signingConfig = signingConfigs.findByName("release")
             isMinifyEnabled = true
             // Shrinking code without shrinking resources leaves the unused half behind.
             isShrinkResources = true

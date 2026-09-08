@@ -1,0 +1,44 @@
+{
+  "capturedAt": "2026-09-08T09:10:34.902Z",
+  "baseUrl": "https://incaof.com",
+  "outputPath": "submission/video/remake/captures/live-demo-flow.webm",
+  "sha256": "a7d8bec1bb65ca8956de28789d2012bdb9fb18e235bc1e100305e4f3bb7e31fe",
+  "events": [
+    {
+      "label": "landing-ready",
+      "seconds": 5.162
+    },
+    {
+      "label": "demo-ready",
+      "seconds": 14.151
+    },
+    {
+      "label": "preview-ready",
+      "seconds": 25.778
+    },
+    {
+      "label": "draft-saved",
+      "seconds": 36.473
+    },
+    {
+      "label": "drill-started",
+      "seconds": 40.835
+    },
+    {
+      "label": "circle-escalation-visible",
+      "seconds": 138.425
+    },
+    {
+      "label": "responder-room-ready",
+      "seconds": 149.539
+    },
+    {
+      "label": "lease-created",
+      "seconds": 157.722
+    },
+    {
+      "label": "alert-resolved",
+      "seconds": 166.367
+    }
+  ]
+}

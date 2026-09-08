@@ -5,25 +5,15 @@
 
 ---
 
-## STATUS: SPECIFIED (Refero research still outstanding)
+## STATUS: LOCKED
 
 The rule is that no significant surface gets built without locked references, because
 "make it beautiful" with nothing to work from is how a product turns into generic AI slop.
 
-Refero is not installed, so the **build contract itself is the reference of record** for
-Phase 3. It specifies these screens concretely — layout, hierarchy, and copy — so nothing
-below is invented. Each surface cites the section that governs it.
-
-**What is still missing:** comparative research. The contract says *what* to build; Refero
-would show how comparable products solve the same problems, and would likely sharpen
-spacing, density and motion. That remains worth doing before the marketing site (Phase 6),
-which has no equivalent specification and is the surface most at risk of drifting generic.
-
-To add it later:
-```
-/plugin marketplace add referodesign/refero_skill
-/plugin install refero@refero
-```
+The build contract is the reference of record for product hierarchy and language. The
+locked Mobbin references below provide comparative evidence for the responder timeline,
+contingency status, and critical account-action patterns. Each implemented surface records
+what it takes and rejects before build work begins.
 
 ---
 
@@ -168,15 +158,52 @@ LOCATION (off). Pre-authorisation explained by showing it rather than describing
 **What we reject:** A shield illustration, a padlock, and the word "privacy-first" standing
 on its own. Privacy is shown by what the product does not collect.
 
+### Account deletion
+**Primary reference:** [Base Security Cooldown](https://mobbin.com/screens/4a620c15-cd48-4970-b9c7-97b77074462f) · **Status:** LOCKED
+
+**What we take:** Deliberate typed confirmation before a critical account action, the
+consequence stated before the control, and an explicit progress state after acceptance.
+The existing contingency-utility visual language remains dominant: plain rules, direct
+copy, one action, and no decorative warning treatment.
+
+**What we borrow:** The product's established active-check hierarchy: consequence first,
+then one required action. The public page uses the marketing site's editorial rhythm so it
+reads as part of In Case Of rather than as a provider form.
+
+**What we reject:** A single-tap destructive button, a vague "Are you sure?" dialog,
+retention promises the system cannot prove, and a completed message before Cognito deletion.
+Signal Critical is reserved for the final action text; the whole page does not become red.
+
+**Flow:** Public instructions → authenticated Account section → type `DELETE` → durable
+request accepted → monitoring-stopped progress screen → sign-in ceases after cleanup.
+
+---
+
+## Production References (Mobbin Research)
+
+### 1. Incident Room Timeline & Activity Trace
+- **[incident.io Incident Timeline](https://mobbin.com/screens/590e4229-15d9-4d12-808b-2e5479a1d804)** & **[incident.io Activity Log](https://mobbin.com/screens/9a03356b-daf2-4c06-95a6-facc978430ae)**
+  - **What we take:** Pure vertical chronological trace, explicit state transitions (`Investigating → Fixing`), assigned owner indicator, clean metadata side panel.
+  - **What we reject:** Complex SaaS sub-navigation, comment threads, and multi-tab overhead. The responder Incident Room must remain single-action.
+- **[Better Stack Incident Timeline](https://mobbin.com/screens/df22e3d7-456f-4669-a06f-2ef144dd38d1)**
+  - **What we take:** High-contrast dot-and-line tree with explicit attribution ("Acknowledged by [name]", "Resolved by [name]"). Validates our core invariant: *Acknowledged does not equal resolved*.
+
+### 2. Contingency Utility & Status Cards
+- **[Flighty Flight Status Card](https://mobbin.com/screens/a315a3cc-6234-4d7c-a3ce-9271f5a10092)**
+  - **What we take:** Departure board aesthetic, tabular figures for countdowns, single amber/orange accent token against dark background, instant readability at a glance.
+- **[American Airlines Lockscreen Status](https://mobbin.com/screens/ac125762-9da7-4dda-b694-8304e323c2bb)**
+  - **What we take:** Compact urgency representation (`Boards in 17 minutes`) paired with a single status tag (`DELAYED`).
+- **[Base Security Cooldown](https://mobbin.com/screens/4a620c15-cd48-4970-b9c7-97b77074462f)**
+  - **What we take:** Cooldown timing before critical action confirmation, ensuring deliberate interaction rather than accidental dismissal.
+
 ---
 
 ## Still requiring research before build
 
-Nothing blocking remains for the surfaces in P0. What Refero would still add, and where it
-would matter most:
+Nothing blocking remains for the surfaces in P0. What Refero and Mobbin add to future iterations:
 
-| Surface | Why research would still help |
+| Surface | Research focus |
 |---|---|
-| Marketing section rhythm | The contract specifies each section; comparative work would sharpen density, vertical rhythm and where to let the page breathe |
-| Hero timeline motion | Timing and easing are unspecified. Motion explains causality here, and getting it wrong makes the mechanism harder to read, not easier |
-| Incident Room at small sizes | The layout is specified; how it degrades on a 320px lock-screen browser is not |
+| Marketing section rhythm | Comparative editorial layout density and vertical pacing |
+| Hero timeline motion | Easing and cadence of the real escalation ladder progression |
+| Small mobile viewports | Responsive 320px lockscreen card degradation |

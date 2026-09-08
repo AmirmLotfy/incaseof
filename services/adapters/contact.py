@@ -20,7 +20,7 @@ from typing import Any, Protocol
 
 from services.domain.circle import CircleMember
 from services.domain.contact_endpoint import EndpointType
-from services.domain.ids import AlertId
+from services.domain.ids import AlertId, PersonId
 from services.domain.plan import Channel
 
 
@@ -42,7 +42,21 @@ class DeliveryStatus(StrEnum):
     DELIVERED = "DELIVERED"
     UNDELIVERED = "UNDELIVERED"
     FAILED = "FAILED"
+    UNKNOWN = "UNKNOWN"
     CHANNEL_UNAVAILABLE = "CHANNEL_UNAVAILABLE"
+
+
+class ProviderNotInvoked(Exception):
+    """A transient adapter failure occurred before any provider side effect."""
+
+
+@dataclass(frozen=True, slots=True)
+class DeliveryRecipient:
+    """An authorized identity. Endpoints remain solely inside provider adapters."""
+
+    person_id: PersonId
+    display_name: str
+    is_subject: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,7 +83,7 @@ class ContactSender(Protocol):
         self,
         *,
         alert_id: AlertId,
-        member: CircleMember | None,
+        member: CircleMember | DeliveryRecipient | None,
         channel: Channel,
         body: str,
         link: str | None,
@@ -93,7 +107,7 @@ class RecordingSender:
         self,
         *,
         alert_id: AlertId,
-        member: CircleMember | None,
+        member: CircleMember | DeliveryRecipient | None,
         channel: Channel,
         body: str,
         link: str | None,
@@ -108,7 +122,9 @@ class RecordingSender:
                 "alertId": alert_id,
                 # The recipient is recorded by id and display name. Even here there is no
                 # endpoint, because nothing upstream ever produced one.
-                "recipient": member.display_name if member else "subject",
+                "recipient": member.display_name
+                if member and not getattr(member, "is_subject", False)
+                else "subject",
                 "recipientId": member.person_id if member else None,
                 "channel": channel.value,
                 "body": body,
@@ -122,6 +138,31 @@ class RecordingSender:
 
     def on(self, channel: Channel) -> list[dict[str, object]]:
         return [m for m in self.sent if m["channel"] == channel.value]
+
+
+@dataclass(frozen=True, slots=True)
+class SafeDemoSender:
+    """Accept a demo delivery without resolving or contacting any real endpoint.
+
+    This is an explicit provider boundary for the public judge tenant, not a fallback. The
+    real Scheduler, workflow, queue, worker, authorization, idempotency and audit path all
+    run; only the final external side effect is redirected to a named, non-contacting sink.
+    """
+
+    def send(
+        self,
+        *,
+        alert_id: AlertId,
+        member: CircleMember | DeliveryRecipient | None,
+        channel: Channel,
+        body: str,
+        link: str | None,
+    ) -> Delivery:
+        del member, body, link
+        if not channel.is_available_in_p0:
+            return Delivery(status=DeliveryStatus.CHANNEL_UNAVAILABLE)
+        reference = f"safe-sink:{alert_id}:{channel.value}"
+        return Delivery(status=DeliveryStatus.ACCEPTED, provider_reference=reference)
 
 
 @dataclass
@@ -143,7 +184,7 @@ class SmsSender:
         self,
         *,
         alert_id: AlertId,
-        member: CircleMember | None,
+        member: CircleMember | DeliveryRecipient | None,
         channel: Channel,
         body: str,
         link: str | None,
@@ -156,7 +197,10 @@ class SmsSender:
         if member is None:
             return Delivery(status=DeliveryStatus.FAILED, error_code="NO_RECIPIENT")
 
-        endpoint = self.endpoints.for_person(member.person_id, EndpointType.PHONE)
+        try:
+            endpoint = self.endpoints.for_person(member.person_id, EndpointType.PHONE)
+        except Exception as error:
+            raise ProviderNotInvoked(type(error).__name__) from error
         if endpoint is None:
             return Delivery(status=DeliveryStatus.FAILED, error_code="NO_ENDPOINT")
         if not endpoint.is_usable:
@@ -169,17 +213,23 @@ class SmsSender:
 
         try:
             number = self.endpoints.reveal(endpoint)
-            attributes: dict[str, Any] = {
-                # Transactional, not promotional: a safety message must not be dropped for
-                # cost optimisation, and must not be subject to marketing opt-out lists.
-                "AWS.SNS.SMS.SMSType": {"DataType": "String", "StringValue": "Transactional"},
-            }
-            if self.sender_id:
-                attributes["AWS.SNS.SMS.SenderID"] = {
-                    "DataType": "String",
-                    "StringValue": self.sender_id,
-                }
+        except Exception as error:
+            # No provider call happened, so a later worker may retry after the endpoint
+            # store recovers.
+            raise ProviderNotInvoked(type(error).__name__) from error
 
+        attributes: dict[str, Any] = {
+            # Transactional, not promotional: a safety message must not be dropped for
+            # cost optimisation, and must not be subject to marketing opt-out lists.
+            "AWS.SNS.SMS.SMSType": {"DataType": "String", "StringValue": "Transactional"},
+        }
+        if self.sender_id:
+            attributes["AWS.SNS.SMS.SenderID"] = {
+                "DataType": "String",
+                "StringValue": self.sender_id,
+            }
+
+        try:
             response = self.sns.publish(
                 PhoneNumber=number,
                 Message=text,
@@ -188,7 +238,7 @@ class SmsSender:
         except Exception as error:
             # The number must not appear in the message, and provider exceptions have been
             # known to echo their input.
-            return Delivery(status=DeliveryStatus.FAILED, error_code=type(error).__name__)
+            return Delivery(status=DeliveryStatus.UNKNOWN, error_code=type(error).__name__)
 
         # ACCEPTED, not SENT. SNS has taken the message; whether a handset ever sees it is
         # a separate fact that arrives later on the delivery-receipt path, if at all.
@@ -221,7 +271,7 @@ class PushSender:
         self,
         *,
         alert_id: AlertId,
-        member: CircleMember | None,
+        member: CircleMember | DeliveryRecipient | None,
         channel: Channel,
         body: str,
         link: str | None,
@@ -231,7 +281,10 @@ class PushSender:
         if member is None:
             return Delivery(status=DeliveryStatus.FAILED, error_code="NO_RECIPIENT")
 
-        endpoint = self.endpoints.for_person(member.person_id, EndpointType.PUSH_TOKEN)
+        try:
+            endpoint = self.endpoints.for_person(member.person_id, EndpointType.PUSH_TOKEN)
+        except Exception as error:
+            raise ProviderNotInvoked(type(error).__name__) from error
         if endpoint is None:
             return Delivery(status=DeliveryStatus.FAILED, error_code="NO_ENDPOINT")
         if not endpoint.is_usable:
@@ -239,6 +292,10 @@ class PushSender:
 
         try:
             target = self.endpoints.reveal(endpoint)
+        except Exception as error:
+            raise ProviderNotInvoked(type(error).__name__) from error
+
+        try:
             response = self.sns.publish(
                 TargetArn=target,
                 # Deliberately not `body`. See the class docstring: the responder message
@@ -266,7 +323,7 @@ class PushSender:
             # EndpointDisabled is the ordinary case here: the app was uninstalled, or FCM
             # retired the token. It is a failed rung, not an error worth losing -- the
             # ladder simply moves on to a human.
-            return Delivery(status=DeliveryStatus.FAILED, error_code=type(error).__name__)
+            return Delivery(status=DeliveryStatus.UNKNOWN, error_code=type(error).__name__)
 
         return Delivery(
             status=DeliveryStatus.ACCEPTED,
@@ -290,7 +347,7 @@ class ChannelRouter:
         self,
         *,
         alert_id: AlertId,
-        member: CircleMember | None,
+        member: CircleMember | DeliveryRecipient | None,
         channel: Channel,
         body: str,
         link: str | None,

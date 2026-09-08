@@ -30,7 +30,6 @@ import com.incaof.app.core.time.TimeFormat
 import com.incaof.app.domain.AlertState
 import com.incaof.app.domain.Moment
 import com.incaof.app.domain.Plan
-import com.incaof.app.domain.Vocabulary
 import com.incaof.app.ui.components.LadderRung
 import com.incaof.app.ui.components.MomentTime
 import com.incaof.app.ui.components.Notice
@@ -39,6 +38,13 @@ import com.incaof.app.ui.components.SecondaryAction
 import com.incaof.app.ui.components.SectionHeading
 import com.incaof.app.ui.components.StatusMarker
 import com.incaof.app.ui.components.TabularLabel
+import com.incaof.app.ui.localizedAction
+import com.incaof.app.ui.localizedDayAndTime
+import com.incaof.app.ui.localizedExplanation
+import com.incaof.app.ui.localizedOffset
+import com.incaof.app.ui.localizedRelative
+import com.incaof.app.ui.localizedRole
+import com.incaof.app.ui.localizedUiMessage
 import java.time.Duration
 import java.time.Instant
 
@@ -55,6 +61,7 @@ fun HomeScreen(
     onConfirm: () -> Unit,
     onExtend: (Int) -> Unit,
     onNeedSomeone: () -> Unit,
+    onAccount: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
     now: Instant = Instant.now(),
@@ -70,13 +77,14 @@ fun HomeScreen(
 
         is HomeUiState.Failed -> {
             Column(modifier = modifier.fillMaxSize().padding(24.dp)) {
-                Notice(state.message)
+                Notice(localizedUiMessage(state.message))
                 SecondaryAction(stringResource(R.string.retry), onRetry)
+                SecondaryAction(stringResource(R.string.account_settings), onAccount)
             }
         }
 
         is HomeUiState.Content -> {
-            HomeContent(state, onConfirm, onExtend, onNeedSomeone, modifier, now)
+            HomeContent(state, onConfirm, onExtend, onNeedSomeone, onAccount, modifier, now)
         }
     }
 }
@@ -87,6 +95,7 @@ private fun HomeContent(
     onConfirm: () -> Unit,
     onExtend: (Int) -> Unit,
     onNeedSomeone: () -> Unit,
+    onAccount: () -> Unit,
     modifier: Modifier = Modifier,
     now: Instant = Instant.now(),
 ) {
@@ -124,17 +133,22 @@ private fun HomeContent(
         Spacer(Modifier.height(24.dp))
 
         if (state.moment == null) {
-            Notice(Vocabulary.explanation(null))
+            Notice(localizedExplanation(null))
         } else if (needsAction) {
             WaitingOnYou(state.moment, state, onConfirm, onExtend, onNeedSomeone, now)
         } else {
             NextMoment(state.moment, state.activePlan)
         }
 
+        if (!needsAction) {
+            Spacer(Modifier.height(24.dp))
+            SecondaryAction(stringResource(R.string.account_settings), onAccount)
+        }
+
         state.error?.let {
             Spacer(Modifier.height(16.dp))
             Text(
-                text = it,
+                text = localizedUiMessage(it),
                 style = MaterialTheme.typography.bodyLarge,
                 color = ico.critical,
                 modifier = Modifier.semantics { liveRegion = LiveRegionMode.Assertive },
@@ -158,7 +172,7 @@ private fun WaitingOnYou(
     Text(moment.planLabel, style = MaterialTheme.typography.headlineMedium, color = ico.ink)
     Spacer(Modifier.height(8.dp))
     Text(
-        Vocabulary.explanation(moment.alertState),
+        localizedExplanation(moment.alertState),
         style = MaterialTheme.typography.bodyLarge,
         color = ico.graphite,
     )
@@ -204,7 +218,7 @@ private fun NextMoment(moment: Moment, plan: Plan?) {
     Spacer(Modifier.height(4.dp))
     Text(moment.planLabel, style = MaterialTheme.typography.headlineMedium, color = ico.ink)
     Spacer(Modifier.height(4.dp))
-    TabularLabel(TimeFormat.dayAndTime(moment.dueAt), color = ico.graphite)
+    TabularLabel(localizedDayAndTime(moment.dueAt), color = ico.graphite)
 
     if (plan != null && plan.steps.isNotEmpty()) {
         Spacer(Modifier.height(32.dp))
@@ -217,7 +231,7 @@ private fun NextMoment(moment: Moment, plan: Plan?) {
         ) {
             plan.steps.forEach { step ->
                 LadderRung(
-                    time = TimeFormat.offset(step.offsetSeconds),
+                    time = localizedOffset(step.offsetSeconds),
                     action = rungLabel(step.action, step.targetRole, plan),
                 )
             }
@@ -225,24 +239,27 @@ private fun NextMoment(moment: Moment, plan: Plan?) {
     }
 }
 
+@Composable
 private fun rungLabel(
     action: com.incaof.app.domain.StepAction,
     role: com.incaof.app.domain.ResponderRole?,
     plan: Plan,
 ): String {
-    if (action.isSubjectDirected) return Vocabulary.action(action)
+    val actionLabel = localizedAction(action)
+    if (action.isSubjectDirected) return actionLabel
     val member = plan.circle.firstOrNull { it.role == role }
+    val target = member?.displayName ?: role?.let { localizedRole(it) }.orEmpty()
     // Name the person when we know them; fall back to the role, never to a number.
-    return "${Vocabulary.action(action)} ${member?.displayName ?: role?.let(Vocabulary::role).orEmpty()}"
-        .trim()
+    return "$actionLabel $target".trim()
 }
 
+@Composable
 private fun nextActionSentence(moment: Moment, now: Instant): String {
     val gap = Duration.between(now, moment.graceUntil)
     return if (gap.isNegative || gap.isZero) {
-        "We'll try again shortly."
+        stringResource(R.string.next_action_shortly)
     } else {
-        "We'll check again ${TimeFormat.relative(now, moment.graceUntil)}."
+        stringResource(R.string.next_action_after, localizedRelative(now, moment.graceUntil))
     }
 }
 
@@ -268,6 +285,7 @@ private fun HomeAllClearPreview() {
             onConfirm = {},
             onExtend = {},
             onNeedSomeone = {},
+            onAccount = {},
             onRetry = {},
         )
     }
@@ -293,6 +311,7 @@ private fun HomeActionNeededPreview() {
             onConfirm = {},
             onExtend = {},
             onNeedSomeone = {},
+            onAccount = {},
             onRetry = {},
         )
     }

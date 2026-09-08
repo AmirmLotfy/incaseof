@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v7
+      - uses: astral-sh/setup-uv@v10.0.1
         with:
           enable-cache: true
       - run: uv sync --frozen
@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -82,11 +82,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          enable-cache: true
       - run: npm ci
+      - name: Build exact Lambda deployment artifact
+        run: ./scripts/build-lambda.sh
+      - name: Build exact AgentCore deployment artifact
+        run: ./scripts/build-agentcore-runtime.sh
       - name: Typecheck
         run: npm run typecheck -w @incaseof/infra
       - name: Template assertions
@@ -109,6 +116,8 @@ jobs:
         run: python3 scripts/check-phone-numbers.py
       - name: No design slop
         run: ./scripts/check-antislop.sh
+      - name: Shell scripts parse
+        run: bash -n scripts/*.sh
       - name: Docs carry the product boundary
         run: |
           missing=0

@@ -1,11 +1,17 @@
 import js from "@eslint/js";
+import tseslint from "typescript-eslint";
 
-export default [
+export default tseslint.config(
   js.configs.recommended,
-  { ignores: [".next/**", "node_modules/**", "next-env.d.ts"] },
+  ...tseslint.configs.recommended,
+  { ignores: [".next/**", "out/**", "node_modules/**", "next-env.d.ts"] },
   {
     files: ["**/*.{ts,tsx}"],
-    languageOptions: { ecmaVersion: "latest", sourceType: "module" },
-    rules: { "no-unused-vars": "off", "no-undef": "off" },
+    rules: {
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "no-undef": "off",
+    },
   },
-];
+);

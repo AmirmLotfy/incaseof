@@ -6,6 +6,7 @@ import com.incaof.app.domain.CircleMember
 import com.incaof.app.domain.Moment
 import com.incaof.app.domain.Plan
 import com.incaof.app.domain.ResolvedMoment
+import com.incaof.app.domain.TimelineEvent
 import java.time.Instant
 
 /**
@@ -23,7 +24,34 @@ class RecordingRepository(
     private val failOnWrite: Throwable? = null,
 ) : IcoRepository {
     val confirmCalls = mutableListOf<Triple<String, String, ConfirmSource>>()
+    val deleteAccountCalls = mutableListOf<String>()
     var extendCalls = mutableListOf<Pair<String, Int>>()
+
+    private var deletion: AccountDeletion? = null
+
+    override suspend fun deleteAccount(confirmation: String): Result<AccountDeletion> {
+        deleteAccountCalls += confirmation
+        (failOnWrite ?: failWith)?.let { return Result.failure(it) }
+        return Result.success(
+            AccountDeletion(
+                requestId = "deletion-test",
+                status = "PENDING",
+                requestedAt = "2026-09-08T12:00:00Z",
+                monitoringStopped = true,
+                nextSteps = listOf("Future checks are cancelled.", "Your data will be removed."),
+            ).also { deletion = it },
+        )
+    }
+
+    override suspend fun accountDeletion(): Result<AccountDeletion> =
+        deletion?.let(Result.Companion::success)
+            ?: Result.failure(NoSuchElementException("No account deletion request"))
+
+    override suspend fun compilePlan(description: String, timezone: String): Result<CompiledPlanDraft> =
+        Result.failure(UnsupportedOperationException("not used by this test"))
+
+    override suspend fun createPlan(draft: CompiledPlanDraft): Result<Plan> =
+        Result.failure(UnsupportedOperationException("not used by this test"))
 
     override suspend fun nextMoment(): Result<Moment?> = failWith?.let { Result.failure(it) } ?: Result.success(moment)
 
@@ -31,11 +59,40 @@ class RecordingRepository(
 
     override suspend fun plan(planId: String): Result<Plan> = Result.failure(NoSuchElementException(planId))
 
+    override suspend fun activatePlan(planId: String): Result<Plan> = Result.failure(NoSuchElementException(planId))
+
+    override suspend fun pausePlan(planId: String): Result<Plan> = Result.failure(NoSuchElementException(planId))
+
+    override suspend fun resumePlan(planId: String): Result<Plan> = Result.failure(NoSuchElementException(planId))
+
     override suspend fun circle(): Result<List<CircleMember>> = Result.success(emptyList())
+
+    override suspend fun inviteCircleMember(
+        displayName: String,
+        relationship: String?,
+        role: com.incaof.app.domain.ResponderRole,
+    ): Result<String> = Result.success("https://incaof.com/i/test-invitation")
 
     override suspend fun history(): Result<List<ResolvedMoment>> = Result.success(emptyList())
 
-    override suspend fun timeline(alertId: String): Result<Alert> = Result.failure(NoSuchElementException(alertId))
+    override suspend fun timeline(alertId: String): Result<Alert> {
+        val current = moment ?: return Result.failure(NoSuchElementException(alertId))
+        if (current.alertId != alertId) return Result.failure(NoSuchElementException(alertId))
+        return Result.success(
+            Alert(
+                id = alertId,
+                state = current.alertState ?: AlertState.SCHEDULED,
+                planLabel = current.planLabel,
+                expectedAt = current.dueAt,
+                ownerName = null,
+                leaseExpiresAt = null,
+                timeline = listOf(TimelineEvent(current.dueAt, "SYSTEM", "MOMENT_DUE")),
+            ),
+        )
+    }
+
+    override suspend fun momentIdForAlert(alertId: String): Result<String> =
+        Result.failure(NoSuchElementException(alertId))
 
     override suspend fun confirmMoment(momentId: String, idempotencyKey: String, source: ConfirmSource): Result<Unit> {
         confirmCalls += Triple(momentId, idempotencyKey, source)
@@ -53,6 +110,17 @@ class RecordingRepository(
             ?: Result.failure(IllegalStateException("no moment"))
     }
 
+    val testPlanCalls = mutableListOf<String>()
+
+    override suspend fun testPlan(planId: String): Result<Unit> {
+        testPlanCalls += planId
+        (failOnWrite ?: failWith)?.let { return Result.failure(it) }
+        return Result.success(Unit)
+    }
+
+    override suspend fun registerDevice(deviceId: String, registrationToken: String): Result<Unit> =
+        Result.success(Unit)
+
     companion object {
         fun waiting(now: Instant = Instant.parse("2026-08-26T21:00:00Z")) =
             RecordingRepository(
@@ -62,6 +130,9 @@ class RecordingRepository(
                     dueAt = now,
                     graceUntil = now,
                     alertState = AlertState.SELF_CONTACT,
+                    alertId = "alert-evening",
+                    isDrill = true,
+                    timeScale = 0.02,
                 ),
             )
     }

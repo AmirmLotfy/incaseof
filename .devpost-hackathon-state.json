@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "hackathon": {
+    "id": 30317,
+    "slug": "agentsforhumans",
+    "name": "Agents for Humans Hackathon",
+    "project_id": 1395552,
+    "project_slug": "in-case-of-ygk5uj"
+  },
+  "rules_acknowledged": true,
+  "completed_stages": [
+    "start-hackathon",
+    "review-hackathon-rules",
+    "resources",
+    "prepare-submission"
+  ],
+  "current_stage": "submit-project",
+  "next_command": "submit-project",
+  "submission": {
+    "status": "ready-for-final-confirmation",
+    "draft_file": "devpost-submission.md",
+    "remaining_required_input": null,
+    "video_url": "https://youtu.be/hDcBwr9dFsY",
+    "builder_id_supplied": true,
+    "release_commit": "78649c70dad1550e5dc716dd69fbad00ef41e1c0",
+    "release_tag": "hackathon-submission-2026-09-09"
+  },
+  "recovered_at": "2026-09-08T08:28:48Z",
+  "recovery_note": "Reconstructed from the authenticated Devpost project, live official requirements, and repository release evidence after the prior session was lost."
+}

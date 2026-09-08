@@ -9,21 +9,91 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
 from datetime import datetime
+from threading import Lock
 
+from services.domain.account import Profile
 from services.domain.agent_decision import AgentDecision
 from services.domain.alert import Alert
+from services.domain.capacity import (
+    AccountPlanCapacityExhausted,
+    GlobalPlanCapacityExhausted,
+    PlanCapacityUsage,
+)
 from services.domain.circle import Circle, ConsentGrant
 from services.domain.idempotency import IdempotencyKey
 from services.domain.ids import (
     AlertId,
     CircleId,
+    InvitationId,
     MomentId,
     PersonId,
     PlanId,
     PlanVersionId,
 )
+from services.domain.invitation import CircleInvitation
 from services.domain.moment import ExpectedMoment, MomentStatus
 from services.domain.plan import Plan, PlanVersion
+
+
+@dataclass
+class InMemoryProfileRepository:
+    profiles: dict[PersonId, Profile] = field(default_factory=dict)
+
+    def get(self, person_id: PersonId) -> Profile | None:
+        return self.profiles.get(person_id)
+
+    def save(self, profile: Profile) -> None:
+        self.profiles[profile.person_id] = profile
+
+
+@dataclass
+class InMemoryPlanCapacityRepository:
+    reservations: dict[PlanId, PersonId] = field(default_factory=dict)
+    _lock: Lock = field(default_factory=Lock)
+
+    def usage(self, person_id: PersonId) -> PlanCapacityUsage:
+        with self._lock:
+            return PlanCapacityUsage(
+                account_reserved=sum(owner == person_id for owner in self.reservations.values()),
+                global_reserved=len(self.reservations),
+            )
+
+    def reserve(
+        self,
+        *,
+        person_id: PersonId,
+        plan_id: PlanId,
+        account_limit: int,
+        global_limit: int,
+        at: datetime,
+    ) -> PlanCapacityUsage:
+        del at
+        with self._lock:
+            existing = self.reservations.get(plan_id)
+            if existing is not None:
+                if existing != person_id:
+                    raise ValueError("capacity reservation belongs to another account")
+            else:
+                account_reserved = sum(owner == person_id for owner in self.reservations.values())
+                if account_reserved >= account_limit:
+                    raise AccountPlanCapacityExhausted("account plan capacity is exhausted")
+                if len(self.reservations) >= global_limit:
+                    raise GlobalPlanCapacityExhausted("global plan capacity is exhausted")
+                self.reservations[plan_id] = person_id
+            return PlanCapacityUsage(
+                account_reserved=sum(owner == person_id for owner in self.reservations.values()),
+                global_reserved=len(self.reservations),
+            )
+
+    def release(self, *, person_id: PersonId, plan_id: PlanId, at: datetime) -> None:
+        del at
+        with self._lock:
+            existing = self.reservations.get(plan_id)
+            if existing is None:
+                return
+            if existing != person_id:
+                raise ValueError("capacity reservation belongs to another account")
+            del self.reservations[plan_id]
 
 
 @dataclass
@@ -40,6 +110,10 @@ class InMemoryPlanRepository:
     def get_version(self, version_id: PlanVersionId) -> PlanVersion | None:
         return self.versions.get(version_id)
 
+    def latest_version(self, plan_id: PlanId) -> PlanVersion | None:
+        candidates = (version for version in self.versions.values() if version.plan_id == plan_id)
+        return max(candidates, key=lambda version: version.version_number, default=None)
+
     def save_version(self, version: PlanVersion) -> None:
         if version.version_id in self.versions:
             raise ValueError(
@@ -48,10 +122,30 @@ class InMemoryPlanRepository:
             )
         self.versions[version.version_id] = version
 
-    def activate(self, plan_id: PlanId, version_id: PlanVersionId, at: datetime) -> Plan:
+    def list_for_subject(self, subject_person_id: PersonId) -> tuple[Plan, ...]:
+        return tuple(
+            sorted(
+                (p for p in self.plans.values() if p.subject_person_id == subject_person_id),
+                key=lambda p: str(p.plan_id),
+            )
+        )
+
+    def activate(
+        self,
+        plan_id: PlanId,
+        version_id: PlanVersionId,
+        at: datetime,
+        bindings: dict[str, str] | None = None,
+    ) -> Plan:
         plan = self.plans[plan_id]
         version = self.versions[version_id]
-        self.versions[version_id] = replace(version, activated_at=at)
+        self.versions[version_id] = replace(
+            version,
+            activated_at=version.activated_at or at,
+            responder_bindings=version.responder_bindings
+            if version.activated_at
+            else (bindings or {}),
+        )
         activated = replace(plan, active_version_id=version_id, paused=False)
         self.plans[plan_id] = activated
         return activated
@@ -60,12 +154,45 @@ class InMemoryPlanRepository:
 @dataclass
 class InMemoryMomentRepository:
     moments: dict[MomentId, ExpectedMoment] = field(default_factory=dict)
+    owners: dict[MomentId, PersonId] = field(default_factory=dict)
 
     def get(self, moment_id: MomentId) -> ExpectedMoment | None:
         return self.moments.get(moment_id)
 
-    def save(self, moment: ExpectedMoment) -> None:
+    def save(
+        self,
+        moment: ExpectedMoment,
+        *,
+        subject_person_id: PersonId | None = None,
+    ) -> None:
         self.moments[moment.moment_id] = moment
+        if subject_person_id is not None:
+            self.owners[moment.moment_id] = subject_person_id
+
+    def next_for_subject(
+        self, subject_person_id: PersonId, instant: datetime
+    ) -> ExpectedMoment | None:
+        del instant  # overdue moments intentionally remain eligible
+        outstanding = (
+            moment
+            for moment_id, moment in self.moments.items()
+            if self.owners.get(moment_id) == subject_person_id
+            and moment.status in {MomentStatus.SCHEDULED, MomentStatus.DUE}
+        )
+        return min(outstanding, key=lambda moment: moment.due_at, default=None)
+
+    def outstanding_for_subject(self, subject_person_id: PersonId) -> tuple[ExpectedMoment, ...]:
+        return tuple(
+            sorted(
+                (
+                    moment
+                    for moment_id, moment in self.moments.items()
+                    if self.owners.get(moment_id) == subject_person_id
+                    and moment.status in {MomentStatus.SCHEDULED, MomentStatus.DUE}
+                ),
+                key=lambda moment: moment.due_at,
+            )
+        )
 
     def due_before(self, instant: datetime) -> tuple[ExpectedMoment, ...]:
         return tuple(
@@ -79,9 +206,23 @@ class InMemoryMomentRepository:
 class InMemoryAlertRepository:
     alerts: dict[AlertId, Alert] = field(default_factory=dict)
     _by_moment: dict[MomentId, AlertId] = field(default_factory=dict)
+    owners: dict[AlertId, PersonId] = field(default_factory=dict)
 
     def get(self, alert_id: AlertId) -> Alert | None:
         return self.alerts.get(alert_id)
+
+    def list_for_subject(self, subject_person_id: PersonId) -> tuple[Alert, ...]:
+        return tuple(
+            sorted(
+                (
+                    alert
+                    for alert_id, alert in self.alerts.items()
+                    if self.owners.get(alert_id) == subject_person_id
+                ),
+                key=lambda alert: alert.opened_at,
+                reverse=True,
+            )
+        )
 
     def save(self, alert: Alert) -> None:
         self.alerts[alert.alert_id] = alert
@@ -90,13 +231,20 @@ class InMemoryAlertRepository:
         existing_id = self._by_moment.get(moment_id)
         return self.alerts.get(existing_id) if existing_id else None
 
-    def open_for_moment(self, alert: Alert) -> Alert:
+    def open_for_moment(
+        self,
+        alert: Alert,
+        *,
+        subject_person_id: PersonId | None = None,
+    ) -> Alert:
         """Conditional insert keyed on the Moment. Invariant 1."""
         existing_id = self._by_moment.get(alert.moment_id)
         if existing_id is not None:
             return self.alerts[existing_id]
         self._by_moment[alert.moment_id] = alert.alert_id
         self.alerts[alert.alert_id] = alert
+        if subject_person_id is not None:
+            self.owners[alert.alert_id] = subject_person_id
         return alert
 
 
@@ -108,6 +256,16 @@ class InMemoryCircleRepository:
     def get(self, circle_id: CircleId) -> Circle | None:
         return self.circles.get(circle_id)
 
+    def for_owner(self, owner_person_id: PersonId) -> Circle | None:
+        return next(
+            (
+                circle
+                for circle in self.circles.values()
+                if circle.owner_person_id == owner_person_id
+            ),
+            None,
+        )
+
     def consents_for(self, plan_id: PlanId) -> dict[PersonId, ConsentGrant]:
         return dict(self.consents.get(plan_id, {}))
 
@@ -116,6 +274,17 @@ class InMemoryCircleRepository:
 
     def save_consent(self, consent: ConsentGrant) -> None:
         self.consents.setdefault(consent.plan_id, {})[consent.responder_person_id] = consent
+
+
+@dataclass
+class InMemoryInvitationRepository:
+    invitations: dict[InvitationId, CircleInvitation] = field(default_factory=dict)
+
+    def get(self, invitation_id: InvitationId) -> CircleInvitation | None:
+        return self.invitations.get(invitation_id)
+
+    def save(self, invitation: CircleInvitation) -> None:
+        self.invitations[invitation.invitation_id] = invitation
 
 
 @dataclass

@@ -2,7 +2,7 @@
   "name": "incaseof",
   "version": "0.1.0",
   "private": true,
-  "description": "In Case of \u2014 someone notices.",
+  "description": "In Case of — someone notices.",
   "license": "Apache-2.0",
   "workspaces": [
     "apps/marketing",
@@ -19,6 +19,7 @@
     "tokens": "npm run tokens -w @incaseof/design-tokens",
     "tokens:check": "npm run check -w @incaseof/design-tokens",
     "contracts:check": "npm run check -w @incaseof/contracts",
+    "capture:submission": "node scripts/capture-live-web.mjs",
     "test:a11y": "npm run build --workspace apps/responder --workspace apps/marketing && node --import tsx --test test/a11y.test.ts"
   },
   "engines": {
@@ -28,6 +29,7 @@
     "@axe-core/playwright": "4.13.0",
     "axe-core": "4.13.0",
     "playwright": "1.62.1",
-    "tsx": "4.23.12"
+    "tsx": "4.23.12",
+    "typescript-eslint": "^8.69.0"
   }
 }

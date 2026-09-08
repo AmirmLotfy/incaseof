@@ -1,0 +1,19 @@
+{
+  "filename": "android-create.png",
+  "capturedAt": "2026-09-08T04:24:39Z",
+  "sourceCommit": "d147111031669b76ac80f374cc21bd6b0832ffbf",
+  "deviceSerialSha256": "04ab3fc382bfb33ea4fbc120f5172ecfc4aed71652e00977064492ca0f65a017",
+  "device": {
+    "model": "sdk_gphone64_arm64",
+    "sdk": 37,
+    "emulator": true
+  },
+  "app": {
+    "packageName": "com.incaof.app",
+    "versionName": "0.2.0"
+  },
+  "expectedVisibleText": "AgentCore was unavailable. This is the validated Routine template; no model trace exists for this preview.",
+  "dimensions": "1080x2400",
+  "sha256": "073d7e0160dedc8f8abd2cc289308189207e38a8d403796d9d896054e77b00b1",
+  "statement": "Captured from the foreground signed release app after a UI text assertion; no image synthesis or fixture substitution."
+}

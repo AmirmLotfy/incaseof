@@ -146,9 +146,8 @@ INTERVAL = Trigger(kind=TriggerKind.RECURRING, time_of_day="22:00", interval_sec
 def test_an_interval_chain_repeats_from_its_anchor() -> None:
     """22:00 every three hours yields 22:00, 01:00, 04:00 ... continuously.
 
-    The chain runs on rather than stopping at dawn: the schema has no end bound, so a plan
-    meant to cover a single night is expressed as RELATIVE or ONE_TIME instead. Asserting
-    the real behaviour rather than the hoped-for one keeps that gap visible.
+    An interval without an explicit bound continues. Time-limited language is compiled
+    with ``until_at`` and tested separately below.
     """
     just_after_anchor = utc(2026, 8, 26, 20, 30)  # 22:30 Amsterdam
     first = next_due_at(INTERVAL, "Europe/Amsterdam", just_after_anchor)
@@ -158,6 +157,29 @@ def test_an_interval_chain_repeats_from_its_anchor() -> None:
     second = next_due_at(INTERVAL, "Europe/Amsterdam", first)
     assert second is not None
     assert second - first == timedelta(seconds=10800)
+
+
+def test_an_interval_honors_its_inclusive_end_bound() -> None:
+    final = utc(2026, 8, 27, 5, 0)
+    trigger = Trigger(
+        kind=TriggerKind.RECURRING,
+        time_of_day="22:00",
+        interval_seconds=10800,
+        until_at=final,
+    )
+    before_final = utc(2026, 8, 27, 2, 0)
+
+    assert next_due_at(trigger, "Europe/Amsterdam", before_final) == final
+    assert next_due_at(trigger, "Europe/Amsterdam", final) is None
+
+
+def test_only_recurring_triggers_accept_an_end_bound() -> None:
+    with pytest.raises(PlanValidationError, match="recurring fields"):
+        Trigger(
+            kind=TriggerKind.RELATIVE,
+            offset_seconds=60,
+            until_at=utc(2026, 8, 27, 5, 0),
+        )
 
 
 def test_an_interval_chain_stays_locked_to_its_anchor() -> None:

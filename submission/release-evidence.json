@@ -4,7 +4,7 @@
   "sourceCommitAtStart": "6ef1e7119ffc34cd3f20fb4cd27db4a0e56aa13b",
   "acceptedCommit": null,
   "tag": null,
-  "verifiedAt": "2026-09-08T00:55:22Z",
+  "verifiedAt": "2026-09-08T01:40:52Z",
   "aws": {
     "accountIdRedacted": true,
     "deploymentPrincipal": "protected GitHub OIDC role ico-github-demo-deploy with project-specific CloudFormation executor ico-demo-cfn-exec; no long-lived AWS access key",
@@ -155,6 +155,18 @@
       "productionFundedGlobalSlots": 0,
       "deployedToStagingOrProduction": false,
       "positiveCapacityCostValidated": false
+    },
+    "terminalMomentAdvancement": {
+      "sourceCommit": "5f4812279a4b8e2b54219a8f21390610da127631",
+      "ciRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/34177296272",
+      "localPreflightPassed": true,
+      "deterministicSuccessorIdentity": true,
+      "dueResolutionCancellationConverge": true,
+      "schedulerFailureRecoveryPassed": true,
+      "cancellationReplayRecoveryPassed": true,
+      "oneTimeCapacityReleasePassed": true,
+      "boundedRecurrenceCapacityReleasePassed": true,
+      "deployedToDemo": false
     }
   },
   "urls": {
@@ -185,9 +197,22 @@
       "resourceKeyCountPerLocale": 202,
       "viewModelMessagesLanguageNeutral": true,
       "unitLintKtlintAssembleDebugPassed": true,
+      "ciRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/34174945178",
       "renderedArabicRtlVerified": false,
       "mixedDirectionPhoneNumbersVerified": false
     }
+  },
+  "webLocalization": {
+    "signedResponderCommit": "971b68309d36eca6ffa0eca449c363673bbbc13b",
+    "authenticatedWebCommit": "67afcd5275611a1c85b0b539273ee8a07928ec08",
+    "ciRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/34176123799",
+    "arabicEnglishAuthenticatedWeb": true,
+    "arabicEnglishPublicDeletion": true,
+    "arabicEnglishSignedResponder": true,
+    "rtl320PixelBrowserVerified": true,
+    "browserAccessibilityCasesPassed": 19,
+    "marketingHomeAndDemoArabicComplete": false,
+    "deployedToEdge": false
   },
   "canary": {
     "lastCheckedAt": "2026-09-05T12:08:54Z",
@@ -251,14 +276,14 @@
     {
       "name": "unified-preflight",
       "status": "PASSED",
-      "verifiedAt": "2026-09-07T23:27:45Z",
-      "details": "All 19 local gates on delivery, account, phone-verification, deletion and durable-capacity foundations at fc17c7b4699e24dac846cf8922a867206bc7314b; exact Lambda and AgentCore artifacts; 460 Python tests; 50 CDK assertions; 61 API routes in parity; 16 Playwright browser/accessibility cases"
+      "verifiedAt": "2026-09-08T01:37:00Z",
+      "details": "All 19 local gates passed at 5f4812279a4b8e2b54219a8f21390610da127631; exact Lambda and AgentCore artifacts; 467 Python tests; 50 CDK assertions; 61 API routes in parity; 19 Playwright browser/accessibility cases; Android assemble, unit, lint and ktlint"
     },
     {
       "name": "github-actions",
       "status": "PASSED",
-      "verifiedAt": "2026-09-07T22:47:00Z",
-      "details": "Run 34167493503; Python, Web, Android, Guardrails and Infrastructure all passed on account-deletion checkpoint e90ec0031e4047b1eae9c87219613d16c3ad3ea4, including exact Lambda and AgentCore artifact builds; capacity commit CI remains separately tracked until terminal"
+      "verifiedAt": "2026-09-08T01:40:00Z",
+      "details": "Run 34177296272; Python, Web, Android, Guardrails and Infrastructure all passed on replay-safe terminal Moment checkpoint 5f4812279a4b8e2b54219a8f21390610da127631, including exact Lambda and AgentCore artifact builds"
     },
     {
       "name": "github-oidc-deployment-identity",
@@ -275,11 +300,11 @@
   ],
   "sourceControl": {
     "branch": "codex/hackathon-final",
-    "headCommitAtLastGreenRun": "e90ec0031e4047b1eae9c87219613d16c3ad3ea4",
+    "headCommitAtLastGreenRun": "5f4812279a4b8e2b54219a8f21390610da127631",
     "publicBranchPushed": true,
     "pullRequest": "https://github.com/AmirmLotfy/incaseof/pull/15",
     "pullRequestState": "DRAFT",
-    "githubActionsRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/34167493503"
+    "githubActionsRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/34177296272"
   },
   "artifacts": {
     "architecturePngSha256": "176687736f479c1efa93a24fa7d95c6761bb1a4c31e6497bf66e75cf6729d43d",

@@ -1,0 +1,24 @@
+{
+  "capturedAt": "2026-09-08T02:29:00Z",
+  "mode": "public-https-fallback",
+  "baseUrl": "https://amirmlotfy.github.io",
+  "sourceCommit": "2093918a4c00584fcba14260a58e35fad527d557",
+  "deploymentCommit": "e770493059c9661ffc20bf4d2f17287c838cb502",
+  "captures": [
+    {
+      "filename": "marketing-desktop.png",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "6b6d2ef52e18066b1d857b3139da29393e23c6a7934bc7d241fa7723c95c0f75",
+      "sourceUrl": "https://amirmlotfy.github.io/"
+    },
+    {
+      "filename": "marketing-mobile.png",
+      "width": 390,
+      "height": 844,
+      "sha256": "c15032684b6dbd8a142e3ea24aeaa94c524a062a6825f0b8680d6b4ee8bfa1b7",
+      "sourceUrl": "https://amirmlotfy.github.io/"
+    }
+  ],
+  "statement": "Browser captures came from the public GitHub Pages HTTPS fallback without request interception or fixture substitution. They are not canonical-domain final evidence while incaof.com certificate issuance is pending."
+}

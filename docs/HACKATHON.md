@@ -28,8 +28,8 @@ In Case Of closes uncertainty; it does not decide whether someone is in danger.
 
 **Public code-repository URL:** https://github.com/AmirmLotfy/incaseof
 
-**Project image:** `submission/devpost/in-case-of-project-1800x1200.png` — generate only
-after the accepted live captures exist.
+**Project image:** `submission/devpost/in-case-of-project-1800x1200.png` — generated from the
+canonical live capture set.
 
 **Architecture upload:** `submission/architecture/in-case-of-architecture.png` (required);
 the editable SVG and one-page PDF are beside it.
@@ -38,7 +38,7 @@ the editable SVG and one-page PDF are beside it.
 
 **Public demo-video URL:** `[USER INPUT REQUIRED AFTER YOUTUBE/VIMEO UPLOAD]`
 
-**Optional builder.aws post URLs:** `[PUBLISH AFTER LIVE ACCEPTANCE; RECORD AT LEAST ONE]`
+**Optional builder.aws post URLs:** `[OPTIONAL BONUS DRAFTS ARE READY]`
 
 ## About the project
 
@@ -54,11 +54,21 @@ At the due time, deterministic software opens an Alert. The subject can confirm 
 
 ### How we built it
 
-The Android client uses Kotlin and Jetpack Compose. The marketing site, authenticated web app, public judge demo and zero-install responder experience use Next.js 16 static exports behind private Amazon S3 origins and Amazon CloudFront.
+The Android client uses Kotlin and Jetpack Compose. The marketing site, authenticated web app,
+public judge demo and zero-install responder experience use Next.js 16 static exports. The
+canonical hackathon site is published through GitHub Pages with a verified domain and enforced
+HTTPS; the AWS CloudFront distribution remains blocked by account verification.
 
 Amazon Cognito authenticates subjects. Amazon API Gateway exposes an explicit route list to Python 3.12 AWS Lambda handlers. Amazon DynamoDB stores versioned Plans, Moments, Alerts, consent and audit events. Amazon EventBridge Scheduler owns due times; AWS Step Functions Standard and Amazon SQS drive retried, idempotent escalation.
 
-Natural language is interpreted by a Strands agent running in Amazon Bedrock AgentCore Runtime with AWS-native Amazon Nova 2 Lite through Amazon Bedrock. AWS execution-role credentials replace model API keys. The runtime has no DynamoDB, Scheduler, SQS, SNS or contact permission. AgentCore Gateway accepts only abstract roles, and an AgentCore Policy Engine evaluates Cedar policies in ENFORCE mode. Typed schema, time-zone, consent and safety validators re-check every draft before it can be saved.
+Natural-language interpretation is implemented as a Strands agent targeting Amazon Bedrock
+AgentCore Runtime and AWS-native Amazon Nova 2 Lite through Amazon Bedrock. AWS execution-role
+credentials replace model API keys. The runtime has no DynamoDB, Scheduler, SQS, SNS or contact
+permission. AgentCore Gateway accepts only abstract roles, and an AgentCore Policy Engine evaluates
+Cedar policies in ENFORCE mode. Typed schema, time-zone, consent and safety validators re-check
+every draft before it can be saved. AWS account verification currently blocks model invocation and
+new AgentCore versions, so the public demo labels and uses the same deterministic validated safe
+template; the schedule, workflow, queue, worker and responder resolution still run live in AWS.
 
 ### Challenges we ran into
 

@@ -98,10 +98,11 @@ The final go/no-go command is intentionally stricter than local preflight:
 ./scripts/verify-submission-ready.sh
 ```
 
-It checks the accepted public commit/tag, canonical live URLs, signed APK and checksum, physical
-device evidence, AgentCore/model canary, resolved live Drill, architecture uploads, all real
-screenshots, the 3:2 project image, public video, Builder ID and at least one builder.aws post.
-Local tests alone cannot make this command pass.
+It checks the accepted public commit/tag, canonical live URLs, signed APK and checksum, resolved
+live Drill, architecture uploads, all real screenshots, the 3:2 project image, public video and
+Builder ID. AgentCore deployment, a live demo, physical-device evidence and builder.aws posts can
+strengthen the entry but are not hackathon eligibility requirements. Local tests alone cannot make
+this command pass.
 
 ---
 

@@ -28,15 +28,16 @@ In Case Of closes uncertainty; it does not decide whether someone is in danger.
 
 **Public code-repository URL:** https://github.com/AmirmLotfy/incaseof
 
-**Project image:** `submission/devpost/in-case-of-project-1800x1200.png` — composed from a reviewed
-Higgsfield story frame and the real signed-Android drill capture.
+**Project image:** `submission/devpost/in-case-of-project-1800x1200.png` — a reviewed GPT Image 2
+composition grounded in the exact ICO logo, a Higgsfield story frame and the real signed-Android
+drill capture.
 
 **Architecture upload:** `submission/architecture/in-case-of-architecture.png` (required);
 the editable SVG and one-page PDF are beside it.
 
-**AWS Builder ID:** `[USER INPUT REQUIRED]`
+**AWS Builder ID:** supplied in the authenticated Devpost submission.
 
-**Public demo-video URL:** `[USER INPUT REQUIRED AFTER YOUTUBE/VIMEO UPLOAD]`
+**Public demo-video URL:** https://youtu.be/hDcBwr9dFsY
 
 **Optional builder.aws post URLs:** `[OPTIONAL BONUS DRAFTS ARE READY]`
 
@@ -84,7 +85,7 @@ Unresolved does not mean danger. The useful action is to close uncertainty witho
 
 ### What's next for In Case Of
 
-After carefully reviewed pilots, we would add scoped context snapshots and additional channels such as voice and WhatsApp. Those channels must preserve the same consent, role-only addressing, idempotency and explicit-resolution rules. ICO will not become automatic emergency dispatch.
+After carefully reviewed pilots, we would validate physical-device delivery, finish provider registration, and improve scoped context snapshots while preserving the same consent, role-only addressing, idempotency and explicit-resolution rules. ICO will not become automatic emergency dispatch.
 
 ## Built with
 

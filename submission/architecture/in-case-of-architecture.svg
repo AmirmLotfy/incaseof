@@ -1,53 +1,62 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1600" viewBox="0 0 2400 1600">
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1600" viewBox="0 0 2400 1600" role="img" aria-labelledby="title desc">
+  <title id="title">In Case Of AWS architecture</title>
+  <desc id="desc">A clean two-lane architecture showing a side-effect-free AI interpretation path and a deterministic AWS execution path.</desc>
   <defs>
-    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0 0 L12 6 L0 12 Z" fill="#646B66"/></marker>
-    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="7" stdDeviation="10" flood-color="#171A18" flood-opacity=".10"/></filter>
+    <filter id="shadow" x="-15%" y="-15%" width="130%" height="145%"><feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#111512" flood-opacity=".10"/></filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0 0L12 6 0 12Z" fill="#66706A"/></marker>
     <style>
-      .title{font:700 54px 'Arial',sans-serif;fill:#171A18}.subtitle{font:400 24px 'Arial',sans-serif;fill:#646B66}
-      .lane{font:700 19px 'Arial',sans-serif;letter-spacing:2px;fill:#646B66}.h{font:700 25px 'Arial',sans-serif;fill:#171A18}.b{font:400 19px 'Arial',sans-serif;fill:#464C48}.small{font:400 16px 'Arial',sans-serif;fill:#646B66}
-      .box{fill:#fff;stroke:#C9CEC9;stroke-width:2;rx:20;filter:url(#shadow)}.aws{fill:#FFF5EC;stroke:#E85B2A}.ai{fill:#EAF5F1;stroke:#3A7665}.data{fill:#F1F2EF;stroke:#646B66}
-      .flow{fill:none;stroke:#646B66;stroke-width:4;marker-end:url(#arrow)}.dash{fill:none;stroke:#9AA19C;stroke-width:3;stroke-dasharray:10 9;marker-end:url(#arrow)}
+      .kicker{font-family:Arial,sans-serif;font-size:22px;font-weight:700;letter-spacing:3px;fill:#E85B2A}.title{font-family:Arial,sans-serif;font-size:66px;font-weight:700;fill:#151A17}.sub{font-family:Arial,sans-serif;font-size:27px;font-weight:400;fill:#626B66}.lane{font-family:Arial,sans-serif;font-size:21px;font-weight:700;letter-spacing:2.6px}.h{font-family:Arial,sans-serif;font-size:29px;font-weight:700;fill:#151A17}.b{font-family:Arial,sans-serif;font-size:21px;font-weight:400;fill:#505A54}.small{font-family:Arial,sans-serif;font-size:18px;font-weight:400;fill:#66706A}.chip{font-family:Arial,sans-serif;font-size:22px;font-weight:700;fill:#26302B}.line{fill:none;stroke:#66706A;stroke-width:4;marker-end:url(#arrow)}
     </style>
   </defs>
-  <rect width="2400" height="1600" fill="#F6F5F0"/>
-  <rect x="80" y="68" width="82" height="82" rx="18" fill="#171A18"/>
-  <rect x="94" y="92" width="8" height="34" rx="2" fill="#F6F5F0"/>
-  <path d="M126 95 C114 95 108 101 108 109 C108 117 114 123 126 123" stroke="#F6F5F0" stroke-width="7" stroke-linecap="round" fill="none"/>
-  <circle cx="142" cy="109" r="15" stroke="#F6F5F0" stroke-width="7" fill="none"/><circle cx="142" cy="109" r="5" fill="#E85B2A"/>
-  <text x="188" y="111" class="title">In Case Of - ICO</text><text x="188" y="146" class="subtitle">Governed contingency utility on AWS - monitor the plan, not the person</text>
-
-  <text x="90" y="235" class="lane">PEOPLE AND SURFACES</text>
-  <rect class="box" x="90" y="270" width="330" height="150"/><text x="125" y="321" class="h">Android app</text><text x="125" y="354" class="b">Create, consent, activate</text><text x="125" y="384" class="b">confirm, extend, Drill</text>
-  <rect class="box" x="470" y="270" width="330" height="150"/><text x="505" y="321" class="h">Web app</text><text x="505" y="354" class="b">Cognito PKCE session</text><text x="505" y="384" class="b">same plan lifecycle</text>
-  <rect class="box" x="850" y="270" width="330" height="150"/><text x="885" y="321" class="h">Judge demo</text><text x="885" y="354" class="b">Synthetic tenant</text><text x="885" y="384" class="b">accelerated safe workflow</text>
-  <rect class="box" x="1230" y="270" width="330" height="150"/><text x="1265" y="321" class="h">Responder</text><text x="1265" y="354" class="b">Scoped signed link</text><text x="1265" y="384" class="b">claim lease and resolve</text>
-
-  <text x="90" y="500" class="lane">EDGE, IDENTITY AND API</text>
-  <rect class="box aws" x="90" y="535" width="410" height="160"/><text x="125" y="586" class="h">CloudFront + WAF</text><text x="125" y="620" class="b">Private S3 static origins</text><text x="125" y="652" class="small">HSTS, CSP, clean-path rewrites</text>
-  <rect class="box aws" x="565" y="535" width="370" height="160"/><text x="600" y="586" class="h">Amazon Cognito</text><text x="600" y="620" class="b">Public mobile and web clients</text><text x="600" y="652" class="small">SRP and authorization code + PKCE</text>
-  <rect class="box aws" x="1000" y="535" width="430" height="160"/><text x="1035" y="586" class="h">Amazon API Gateway</text><text x="1035" y="620" class="b">Explicit routes + throttles</text><text x="1035" y="652" class="small">Cognito JWT or narrow signed token</text>
-  <rect class="box aws" x="1495" y="535" width="410" height="160"/><text x="1530" y="586" class="h">API Lambda facade</text><text x="1530" y="620" class="b">Tenant and consent checks</text><text x="1530" y="652" class="small">Typed validation + idempotency</text>
-
-  <text x="90" y="785" class="lane">AI INTERPRETATION - SIDE EFFECT FREE</text>
-  <rect class="box ai" x="90" y="820" width="425" height="180"/><text x="125" y="872" class="h">AgentCore Runtime</text><text x="125" y="906" class="b">Strands plan compiler</text><text x="125" y="938" class="small">IAM / SigV4, validated subject context</text><text x="125" y="965" class="small">No state, schedule, or contact grants</text>
-  <rect class="box ai" x="580" y="820" width="390" height="180"/><text x="615" y="872" class="h">Amazon Bedrock</text><text x="615" y="906" class="b">Amazon Nova 2 Lite</text><text x="615" y="938" class="small">AWS execution-role credentials</text><text x="615" y="965" class="small">No model API key in clients</text>
-  <rect class="box ai" x="1035" y="820" width="420" height="180"/><text x="1070" y="872" class="h">Gateway + Policy</text><text x="1070" y="906" class="b">Role-only tool vocabulary</text><text x="1070" y="938" class="small">Cedar ENFORCE, default deny</text><text x="1070" y="965" class="small">Forbid-wins authorization</text>
-  <rect class="box ai" x="1520" y="820" width="385" height="180"/><text x="1555" y="872" class="h">Deterministic guard</text><text x="1555" y="906" class="b">Schema, time, safety</text><text x="1555" y="938" class="small">Model proposes a typed draft</text><text x="1555" y="965" class="small">Software authorizes every action</text>
-
-  <text x="90" y="1090" class="lane">DETERMINISTIC WORKFLOW AND DATA</text>
-  <rect class="box aws" x="90" y="1125" width="350" height="175"/><text x="125" y="1176" class="h">EventBridge</text><text x="125" y="1210" class="b">Expected Moment schedules</text><text x="125" y="1242" class="small">At-least-once and cancellable</text>
-  <rect class="box aws" x="495" y="1125" width="395" height="175"/><text x="530" y="1176" class="h">Step Functions</text><text x="530" y="1210" class="b">Standard escalation loop</text><text x="530" y="1242" class="small">wait, dispatch, lease, close</text>
-  <rect class="box aws" x="945" y="1125" width="330" height="175"/><text x="980" y="1176" class="h">SQS + worker</text><text x="980" y="1210" class="b">Idempotent attempts</text><text x="980" y="1242" class="small">DLQ + safe demo sink</text>
-  <rect class="box data" x="1330" y="1125" width="350" height="175"/><text x="1365" y="1176" class="h">DynamoDB</text><text x="1365" y="1210" class="b">Plans, Alerts, audit</text><text x="1365" y="1242" class="small">PITR, owner indexes, KMS</text>
-  <rect class="box aws" x="1735" y="1125" width="365" height="175"/><text x="1770" y="1176" class="h">SNS / FCM</text><text x="1770" y="1210" class="b">Release-only delivery</text><text x="1770" y="1242" class="small">Endpoints resolved in worker only</text>
-
-  <rect class="box data" x="90" y="1390" width="2010" height="115"/><text x="125" y="1437" class="h">CloudWatch + X-Ray</text><text x="125" y="1473" class="b">API p99/error rate - Lambda - AgentCore latency/failures - workflow - Scheduler - DLQ; traces and redacted audit evidence</text>
-
-  <path class="dash" d="M255 420 V470 H750 V520"/><path class="dash" d="M635 420 V465 H295 V520"/><path class="dash" d="M1015 420 V450 H295 V520"/><path class="dash" d="M1395 420 V435 H295 V520"/>
-  <path class="flow" d="M935 650 H985"/><path class="flow" d="M1430 615 H1480"/>
-  <path class="flow" d="M1700 695 V760 H302 V805"/><path class="flow" d="M515 910 H565"/><path class="dash" d="M970 910 H1020"/><path class="dash" d="M1455 910 H1505"/>
-  <path class="flow" d="M1700 695 V1060 H265 V1110"/><path class="flow" d="M440 1212 H480"/><path class="flow" d="M890 1212 H930"/><path class="flow" d="M1275 1212 H1315"/><path class="dash" d="M1680 1212 H1720"/>
-  <path class="dash" d="M1095 1390 V1320"/>
-  <text x="2140" y="1444" class="small">governed AI boundary</text><rect x="2110" y="1428" width="18" height="18" rx="4" fill="#3A7665"/>
-  <text x="2140" y="1475" class="small">deterministic AWS service</text><rect x="2110" y="1459" width="18" height="18" rx="4" fill="#E85B2A"/>
+  <rect width="2400" height="1600" fill="#F5F2EA"/>
+  <circle cx="112" cy="110" r="50" fill="#151A17"/>
+  <path d="M86 84v52M105 84v52M129 92a25 25 0 1 0 0 36" fill="none" stroke="#F5F2EA" stroke-width="9" stroke-linecap="round"/>
+  <circle cx="151" cy="110" r="16" fill="none" stroke="#F5F2EA" stroke-width="8"/><circle cx="151" cy="110" r="5" fill="#E85B2A"/>
+  <text x="190" y="86" class="kicker">IN CASE OF • ICO</text>
+  <text x="190" y="148" class="title">Governed AI. Deterministic safety.</text>
+  <text x="190" y="194" class="sub">The model proposes a plan. Software authorizes, executes, and records every action.</text>
+  <rect x="1965" y="82" width="330" height="66" rx="33" fill="#151A17"/><circle cx="2010" cy="115" r="9" fill="#54B69A"/><text x="2034" y="124" font-family="Arial,sans-serif" font-size="21" font-weight="700" fill="#FFF">LIVE JUDGE PATH • AWS</text>
+  <text x="100" y="284" class="lane" fill="#66706A">PEOPLE AND SURFACES</text>
+  <g filter="url(#shadow)">
+    <rect x="100" y="315" width="500" height="116" rx="24" fill="#FFF"/><rect x="675" y="315" width="500" height="116" rx="24" fill="#FFF"/>
+    <rect x="1250" y="315" width="500" height="116" rx="24" fill="#FFF"/><rect x="1825" y="315" width="475" height="116" rx="24" fill="#FFF"/>
+  </g>
+  <text x="350" y="365" class="chip" text-anchor="middle">ANDROID</text><text x="350" y="399" class="small" text-anchor="middle">Create • consent • activate</text>
+  <text x="925" y="365" class="chip" text-anchor="middle">WEB APP</text><text x="925" y="399" class="small" text-anchor="middle">Review • confirm • extend</text>
+  <text x="1500" y="365" class="chip" text-anchor="middle">JUDGE DEMO</text><text x="1500" y="399" class="small" text-anchor="middle">Synthetic • isolated • accelerated</text>
+  <text x="2062" y="365" class="chip" text-anchor="middle">RESPONDER LINK</text><text x="2062" y="399" class="small" text-anchor="middle">Claim • lease • resolve</text>
+  <path d="M1200 431v36" class="line"/>
+  <rect x="420" y="480" width="1560" height="118" rx="30" fill="#151A17" filter="url(#shadow)"/>
+  <text x="510" y="530" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#98CDBD">TRUSTED ENTRY</text>
+  <text x="510" y="568" font-family="Arial,sans-serif" font-size="29" font-weight="700" fill="#FFF">Amazon Cognito  →  API Gateway  →  typed Lambda facade</text>
+  <text x="1880" y="551" font-family="Arial,sans-serif" font-size="19" fill="#C9D2CD" text-anchor="end">JWT or narrow signed token • tenant scope • throttles</text>
+  <g filter="url(#shadow)"><rect x="100" y="670" width="1050" height="520" rx="34" fill="#E7F2EE" stroke="#78AFA0" stroke-width="3"/><rect x="1250" y="670" width="1050" height="520" rx="34" fill="#FFF0E6" stroke="#F09A73" stroke-width="3"/></g>
+  <circle cx="168" cy="742" r="34" fill="#397665"/><text x="168" y="752" text-anchor="middle" font-family="Arial,sans-serif" font-size="27" font-weight="700" fill="#FFF">1</text>
+  <text x="222" y="738" class="lane" fill="#397665">INTERPRET • SIDE-EFFECT FREE</text><text x="222" y="778" class="h">Language becomes a candidate plan.</text>
+  <rect x="160" y="835" width="290" height="120" rx="22" fill="#FFF"/><rect x="480" y="835" width="290" height="120" rx="22" fill="#FFF"/><rect x="800" y="835" width="290" height="120" rx="22" fill="#FFF"/>
+  <text x="305" y="883" class="h" font-size="26" text-anchor="middle">Strands agent</text><text x="305" y="919" class="small" text-anchor="middle">Role-only tools</text>
+  <text x="625" y="883" class="h" font-size="26" text-anchor="middle">Nova 2 Lite</text><text x="625" y="919" class="small" text-anchor="middle">Intent → structure</text>
+  <text x="945" y="883" class="h" font-size="26" text-anchor="middle">Cedar policy</text><text x="945" y="919" class="small" text-anchor="middle">Default deny</text>
+  <path d="M450 895h23M770 895h23" class="line"/>
+  <rect x="160" y="995" width="930" height="112" rx="22" fill="#397665"/>
+  <text x="625" y="1041" text-anchor="middle" font-family="Arial,sans-serif" font-size="28" font-weight="700" fill="#FFF">OUTPUT: schema-validated preview</text>
+  <text x="625" y="1078" text-anchor="middle" font-family="Arial,sans-serif" font-size="19" fill="#DDECE7">NO DATA WRITES • NO SCHEDULES • NO CONTACT DELIVERY</text>
+  <circle cx="1318" cy="742" r="34" fill="#E85B2A"/><text x="1318" y="752" text-anchor="middle" font-family="Arial,sans-serif" font-size="27" font-weight="700" fill="#FFF">2</text>
+  <text x="1372" y="738" class="lane" fill="#C34820">AUTHORIZE + EXECUTE</text><text x="1372" y="778" class="h">A reviewed plan becomes durable work.</text>
+  <rect x="1310" y="835" width="430" height="108" rx="22" fill="#FFF"/><rect x="1810" y="835" width="430" height="108" rx="22" fill="#FFF"/>
+  <text x="1525" y="878" class="h" font-size="25" text-anchor="middle">DynamoDB transaction</text><text x="1525" y="912" class="small" text-anchor="middle">Plan version + outbox</text>
+  <text x="2025" y="878" class="h" font-size="25" text-anchor="middle">EventBridge Scheduler</text><text x="2025" y="912" class="small" text-anchor="middle">Owns the due moment</text><path d="M1740 889h63" class="line"/>
+  <rect x="1310" y="985" width="430" height="108" rx="22" fill="#FFF"/><rect x="1810" y="985" width="430" height="108" rx="22" fill="#FFF"/>
+  <text x="1525" y="1028" class="h" font-size="25" text-anchor="middle">Step Functions</text><text x="1525" y="1062" class="small" text-anchor="middle">Wait • escalate • lease</text>
+  <text x="2025" y="1028" class="h" font-size="25" text-anchor="middle">SQS delivery worker</text><text x="2025" y="1062" class="small" text-anchor="middle">Idempotent • reauthorized</text>
+  <path d="M2025 943v35M1810 1039h-63" class="line"/>
+  <rect x="1310" y="1120" width="930" height="44" rx="22" fill="#E85B2A"/><text x="1775" y="1149" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#FFF">SNS / FCM • DEMO SAFE SINK • UNKNOWN OUTCOMES RECONCILE BEFORE RETRY</text>
+  <path d="M1150 1050h62" class="line"/><rect x="1168" y="1006" width="128" height="88" rx="18" fill="#F5F2EA" stroke="#D7D1C5" stroke-width="2"/>
+  <text x="1232" y="1042" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#6A6258">EXPLICIT</text><text x="1232" y="1066" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#6A6258">ACTIVATION</text>
+  <rect x="100" y="1260" width="2200" height="184" rx="32" fill="#151A17"/>
+  <circle cx="168" cy="1327" r="34" fill="#F2B34C"/><text x="168" y="1337" text-anchor="middle" font-family="Arial,sans-serif" font-size="27" font-weight="700" fill="#151A17">3</text>
+  <text x="222" y="1323" class="lane" fill="#F2B34C">CLOSE THE LOOP</text><text x="222" y="1365" font-family="Arial,sans-serif" font-size="31" font-weight="700" fill="#FFF">Responder claim  →  checking lease  →  explicit outcome  →  Alert resolved</text>
+  <text x="222" y="1407" font-family="Arial,sans-serif" font-size="20" fill="#C9D2CD">Every transition is appended to the audit trail. “I’m checking” never means “resolved.”</text>
+  <rect x="1640" y="1308" width="590" height="85" rx="20" fill="#26312C"/><text x="1935" y="1344" text-anchor="middle" font-family="Arial,sans-serif" font-size="20" font-weight="700" fill="#98CDBD">OPERATIONS</text><text x="1935" y="1374" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" fill="#FFF">CloudWatch • X-Ray • KMS • redacted evidence</text>
+  <text x="100" y="1520" font-family="Arial,sans-serif" font-size="20" font-weight="700" fill="#397665">GREEN = AI MAY PROPOSE</text><text x="420" y="1520" font-family="Arial,sans-serif" font-size="20" font-weight="700" fill="#E85B2A">ORANGE = SOFTWARE MAY ACT</text><text x="2300" y="1520" text-anchor="end" class="small">in-case-of-architecture • September 2026</text>
 </svg>

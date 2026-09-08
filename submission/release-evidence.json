@@ -4,7 +4,7 @@
   "sourceCommitAtStart": "6ef1e7119ffc34cd3f20fb4cd27db4a0e56aa13b",
   "acceptedCommit": null,
   "tag": null,
-  "verifiedAt": "2026-09-08T01:40:52Z",
+  "verifiedAt": "2026-09-08T10:00:55Z",
   "aws": {
     "accountIdRedacted": true,
     "deploymentPrincipal": "protected GitHub OIDC role ico-github-demo-deploy with project-specific CloudFormation executor ico-demo-cfn-exec; no long-lived AWS access key",
@@ -341,22 +341,24 @@
   ],
   "sourceControl": {
     "branch": "codex/hackathon-final",
-    "headCommitAtLastGreenRun": "5f4812279a4b8e2b54219a8f21390610da127631",
+    "headCommitAtLastGreenRun": "44655d9ff1b2f37f617fa50ceab5692c7a2b19ee",
     "publicBranchPushed": true,
     "pullRequest": "https://github.com/AmirmLotfy/incaseof/pull/15",
     "pullRequestState": "DRAFT",
-    "githubActionsRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/34177296272"
+    "githubActionsRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/34206922522"
   },
   "artifacts": {
-    "architecturePngSha256": "176687736f479c1efa93a24fa7d95c6761bb1a4c31e6497bf66e75cf6729d43d",
-    "architecturePdfSha256": "62c9e46ed0f81a79127754df65ba21fa02f3b2c82cd6ebdaa47680cdb443e72b",
+    "architecturePngSha256": "0918e74bb3657f48b2307a5e4453bacf789dc91cecabfa90207c12404ccfcd00",
+    "architecturePdfSha256": "df1b09800f399123c0094a056f83baba1d1717a82b9baaf734854dbe9b0d4564",
     "projectImage": "submission/devpost/in-case-of-project-1800x1200.png",
-    "projectImageStatus": "FINAL_CINEMATIC_HIGGSFIELD_CANONICAL_DETERMINISTIC_FALLBACK",
-    "projectImageSha256": "aa960373708d24ca0920d9f05d832c8e4a3ca162a42bbddba155cbf685562fe4",
-    "videoReviewMaster": "submission/video/final/ico-demo-master-1080p.mp4",
-    "videoReviewStatus": "FINAL_CINEMATIC_HIGGSFIELD_CANONICAL_DETERMINISTIC_FALLBACK",
-    "videoReviewMasterSha256": "f116f1be809b4558a9e512a5ac6421693cc34e3448156f5399f854509efe3cbe",
-    "videoThumbnailSha256": "b1f52f5b1ac9b8cb8821b173d1003b377f2f1806090e063a518db807e067700b",
+    "projectImageStatus": "FINAL_GPT_IMAGE_2_CINEMATIC_CANONICAL_DETERMINISTIC_FALLBACK",
+    "projectImageSha256": "1babe367d572ed00716a5ea36f772f9e3259055907375ccbd5c66d6e584107ff",
+    "projectImageProvenance": "submission/devpost/gpt-image-generation-provenance.json",
+    "videoReviewMaster": "submission/video/final/ico-demo-v4-1080p.mp4",
+    "videoReviewStatus": "FINAL_LIVE_PRODUCT_MARCUS_VOICE_CANONICAL_DETERMINISTIC_FALLBACK",
+    "videoReviewMasterSha256": "03d43ea95f734759b182539980894d747062e1f68ad0f976297873eefecbfe6a",
+    "videoThumbnailSha256": "b2568528ef61ed281dbf59181877c2abe307f1773d6dc6251e6a7450f60debe7",
+    "videoThumbnailProvider": "OpenAI built-in image_gen / GPT Image 2 mode",
     "webCaptureProvenance": "submission/screenshots/web-provenance.json",
     "webCaptureMode": "SUBMISSION_CANONICAL_DETERMINISTIC_FALLBACK",
     "screenshots": [
@@ -373,16 +375,31 @@
       "submission/screenshots/android-circle.png",
       "submission/screenshots/android-drill.png"
     ],
-    "videoDurationSeconds": 266.0,
+    "videoDurationSeconds": 136.2,
     "videoResolution": "1920x1080",
-    "videoNarrationProvider": "Higgsfield Seed Audio 1.0 / Maeve preset",
-    "videoGeneratedAssetCount": 6,
-    "videoHiggsfieldCreditsCharged": 181.6,
-    "videoMusic": "Original project-authored procedural score"
+    "videoNarrationProvider": "Higgsfield Qwen Audio 3.0 TTS Flash / Marcus preset",
+    "videoGeneratedAssetCount": 0,
+    "videoMusic": "Original project-authored procedural score",
+    "publishedUploadLocalPath": "submission/video/final/ico-demo-v4-1080p.mp4",
+    "publishedUploadSha256": "03d43ea95f734759b182539980894d747062e1f68ad0f976297873eefecbfe6a",
+    "videoNarrationJobCount": 15
   },
-  "videoUrl": null,
+  "videoUrl": "https://youtu.be/hDcBwr9dFsY",
+  "videoPublication": {
+    "platform": "YouTube",
+    "videoId": "hDcBwr9dFsY",
+    "visibility": "PUBLIC",
+    "publishedAt": "2026-09-08",
+    "durationShown": "2:17",
+    "timedEnglishCaptionsUploaded": true,
+    "timedEnglishCaptionCueCount": 15,
+    "customThumbnailUploaded": true,
+    "thumbnailFileShown": "ico-youtube-thumbnail.png",
+    "copyrightCheck": "NO_ISSUES_FOUND",
+    "communityGuidelinesCheck": "NO_ISSUES_FOUND"
+  },
   "blogUrls": [],
-  "builderIdSupplied": false,
+  "builderIdSupplied": true,
   "notes": [
     "This is a truthful partial evidence manifest, not an acceptance record.",
     "Do not publish canonical demo or production-ready claims until every null and blocker required by the submission gate is resolved."
@@ -403,5 +420,31 @@
       "builder.aws posts"
     ],
     "note": "AgentCore access, builder.aws publication and physical-phone evidence are not hackathon eligibility gates. The canonical fallback remains disclosed; AgentCore restoration would improve technical scoring."
-  }
+  },
+  "videoNarration": {
+    "provider": "Higgsfield Qwen Audio 3.0 TTS Flash",
+    "engine": "qwen_audio_tts",
+    "voice": "Marcus",
+    "voiceId": "6f98d3dd-324f-4845-8c28-c1d1647a06cd",
+    "gender": "male",
+    "acceptedJobIds": [
+      "d1526d95-aaae-49d3-903b-8bdf2ca8249d",
+      "626aee2e-17c8-4159-8bcf-fabe03626e02",
+      "d60edc4a-f9c1-4280-ab66-4e694ca067f5",
+      "caf16e8e-ddae-4792-8e2c-6a537520f20c",
+      "63befa3a-4872-4d37-9a1a-50c747a2b6cc",
+      "36addf76-4e5a-4e70-a2d3-d6aed0c8a714",
+      "a3c40479-4f58-4a7a-abd4-a860f70cc613",
+      "93c45a43-3d2a-4ace-aafa-c0b63081bddc",
+      "9ea8eb0a-c546-487b-a2f2-16aa06587f88",
+      "6f845752-5f9a-42c8-bdd9-b8a4ac3cc83c",
+      "1fd6d749-56e9-4738-bf53-8d2a1cbb780f",
+      "22170788-ad31-43c9-8423-02afc57ee2f7",
+      "bde14d03-a6c5-48dc-af3d-a1a2840de261",
+      "1d50f1ad-4644-4dc0-82c2-be1008d176a3",
+      "fc029561-9d24-4cbb-81ec-d7970f640085"
+    ]
+  },
+  "videoMusic": "Original project-authored procedural score; no third-party recording or sample",
+  "videoPicture": "Full-frame live public browser recording, live Android emulator recordings, project architecture and project-authored graphics; no generated character or stock footage used"
 }

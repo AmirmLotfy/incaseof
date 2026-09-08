@@ -71,6 +71,20 @@ submission/video/final/
 submission/video/higgsfield/*.png
 submission/video/higgsfield/*.mp4
 submission/video/higgsfield/*.wav
+submission/video/remake/captures/*.mp4
+submission/video/remake/captures/*.webm
+submission/video/remake/voice/*.wav
+submission/video/remake/cards/
+submission/video/remake/qc/
+submission/video/v3/auditions/
+submission/video/v3/cards/
+submission/video/v3/qc/
+submission/video/v3/voice/*.mp3
+submission/video/v3/voice/*.wav
+submission/video/v4/cards/
+submission/video/v4/qc/
+submission/video/v4/voice/*.mp3
+submission/video/v4/voice/*.wav
 
 # ---- Vendored agent skills ----
 # Installed with `npx skills add referodesign/refero_skill --skill refero-design`.

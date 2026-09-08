@@ -2,27 +2,23 @@
 
 ## Title
 
-In Case Of — Someone notices. | Governed AWS Agent Demo
+In Case Of — Someone Notices | Governed AWS Agent Demo
 
 ## Description
 
-In Case Of quietly watches expected moments and helps trusted people close uncertainty without continuous surveillance.
+When an expected check-in goes unanswered, In Case Of follows one calm, consented escalation path until a person closes the loop.
 
-This 4:26 film follows the complete product flow: natural-language plan, validated preview, explicit activation, scheduled Moment, escalation, responder claim, temporary checking lease, explicit resolution and an auditable event trail. It combines a cinematic human story with the real public web demo and signed Android release.
+This 2:17 hackathon demo shows the real public web flow, the deployed AWS workflow and audit timeline, the short-lived responder link, explicit resolution, and the signed Android client.
 
-Try the live demo: https://incaof.com/demo
+Try the synthetic judge demo: https://incaof.com/demo
 
-Explore the public source: https://github.com/AmirmLotfy/incaseof
+Project page: https://incaof.com
 
-Install the signed Android demo: https://incaof.com/downloads/in-case-of.apk
+Source: https://github.com/AmirmLotfy/incaseof
 
-Built with Strands Agents SDK, Amazon Bedrock AgentCore, Amazon Nova 2 Lite, AWS Lambda, Step Functions, EventBridge Scheduler, SQS, DynamoDB, Cognito, API Gateway, SNS, KMS and CloudWatch.
+Technical note: AgentCore access is temporarily unavailable in the demo account, so the compiler visibly falls back to a schema-validated deterministic preview. The workflow evidence is returned by the deployed API; no model trace or real-person delivery is fabricated.
 
-Current demo disclosure: AWS account verification and the applied zero AgentCore-version quota prevent a fresh model-backed runtime deployment. The public demo therefore labels and uses the same deterministic validated fallback. The schedule, workflow, queue, worker, responder lease and explicit resolution run live in AWS.
-
-Visual story assets and narration were produced for this project with Higgsfield. The background score is original project-authored procedural synthesis. No stock footage, stock music or cloned voice is used.
-
-#AWS #AmazonBedrock #AgentCore #StrandsAgents #Hackathon #Android
+Built for the Agents for Humans hackathon. Track: Everyday Agents.
 
 ## Audience and visibility
 
@@ -33,6 +29,17 @@ Visual story assets and narration were produced for this project with Higgsfield
 
 ## Upload assets
 
-- Video: `submission/video/final/ico-demo-master-1080p.mp4`
+- Video: `submission/video/final/ico-demo-v4-1080p.mp4`
 - Thumbnail: `submission/video/final/ico-youtube-thumbnail.png`
-- Captions: `submission/video/final/ico-demo.en.srt`
+- Captions: `submission/video/final/ico-demo-v4.en.srt`
+
+## Published URL
+
+https://youtu.be/hDcBwr9dFsY
+
+## Publication checks
+
+- Public visibility confirmed.
+- Fifteen timed English caption cues published.
+- YouTube copyright check: no issues found.
+- YouTube Community Guidelines check: no issues found.

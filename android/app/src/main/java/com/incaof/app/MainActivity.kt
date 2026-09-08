@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -282,7 +283,10 @@ private const val ACCOUNT_ROUTE = "account-settings"
 @Composable
 private fun JudgeDemoBanner(onExit: () -> Unit) {
     val ico = LocalIcoColors.current
-    Surface(color = ico.signal) {
+    Surface(
+        modifier = Modifier.fillMaxWidth().statusBarsPadding(),
+        color = ico.signal,
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,

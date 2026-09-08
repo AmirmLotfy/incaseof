@@ -57,7 +57,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${publicSans.variable} ${plexMono.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${publicSans.variable} ${plexMono.variable}`}>
       <body>{children}</body>
     </html>
   );

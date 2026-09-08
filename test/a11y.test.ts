@@ -557,6 +557,38 @@ describe("marketing site accessibility", () => {
     await page.close();
   });
 
+  it("the authenticated Arabic web app is RTL, translated, and fits a small phone", async () => {
+    const page = await newPage();
+    const calls: string[] = [];
+    await page.setViewportSize({ width: 320, height: 720 });
+    await mockConfiguredApp(page, calls);
+    await page.goto(`${MARKETING}/app?lang=ar`);
+    await page.getByRole("heading", { name: "الخطط" }).waitFor();
+
+    assert.equal(await page.locator("html").getAttribute("lang"), "ar");
+    assert.equal(await page.locator("html").getAttribute("dir"), "rtl");
+    assert.equal(await page.getByLabel("دعوة شخص").count(), 1);
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    assert.ok(overflow <= 0, `${overflow}px of authenticated Arabic horizontal overflow`);
+    const found = await violations(page);
+    assert.deepEqual(found, [], `\n    ${found.join("\n    ")}\n`);
+    await page.close();
+  });
+
+  it("the public Arabic deletion path explains the lifecycle in RTL", async () => {
+    const page = await newPage();
+    await page.goto(`${MARKETING}/delete-account?lang=ar`);
+    await page.getByRole("heading", { name: "حذف حسابك" }).waitFor();
+
+    assert.equal(await page.locator("html").getAttribute("dir"), "rtl");
+    assert.equal(await page.getByText(/تتوقف المتابعة فور قبول الطلب/).count(), 1);
+    const found = await violations(page);
+    assert.deepEqual(found, [], `\n    ${found.join("\n    ")}\n`);
+    await page.close();
+  });
+
   it("requires typed confirmation and shows deletion progress", async () => {
     const page = await newPage();
     const calls: string[] = [];

@@ -37,6 +37,10 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+html[dir="rtl"] body {
+  font-family: Tahoma, Arial, var(--font-public-sans), sans-serif;
+}
+
 .shell {
   max-width: var(--page);
   margin: 0 auto;
@@ -151,8 +155,8 @@ button:focus-visible {
 }
 
 .app-pane + .app-pane {
-  border-left: 1px solid var(--ico-stone);
-  padding-left: clamp(1.5rem, 4vw, 3rem);
+  border-inline-start: 1px solid var(--ico-stone);
+  padding-inline-start: clamp(1.5rem, 4vw, 3rem);
 }
 
 .app-label {
@@ -323,8 +327,29 @@ button:focus-visible {
 .account-deletion-steps ul {
   display: grid;
   gap: 0.75rem;
-  padding-left: 1.4rem;
+  padding-inline-start: 1.4rem;
   margin: 1.5rem 0;
+}
+
+.language-toggle {
+  display: block;
+  margin-inline-start: auto;
+  margin-bottom: 1rem;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--ico-stone);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ico-ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.mono,
+.tabular {
+  direction: ltr;
+  unicode-bidi: isolate;
 }
 
 .account-deletion-steps p {
@@ -380,7 +405,7 @@ button:focus-visible {
   }
 
   .app-pane + .app-pane {
-    border-left: 0;
+    border-inline-start: 0;
     border-top: 1px solid var(--ico-stone);
     padding: 2rem 0 0;
   }

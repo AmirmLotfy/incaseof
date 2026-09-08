@@ -167,14 +167,14 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 - Live deterministic Drill: after that scoped-role OIDC deployment, the direct API verifier created synthetic plan `8870c8dc-3c80-40ec-a189-c64afa5ab84a`, accelerated Moment `36c1810a-380f-5d27-8273-8a62c64f367e`, and resolved Alert `84d3d2cd-1c6a-4abc-ac7e-a517f6f6cc37`. Thirteen deployed audit events include four distinct ACTION_QUEUED/ACTION_ACCEPTED pairs, Circle escalation, responder claim and `RESPONDER_VERIFIED`; all four outbox rows are terminal ACCEPTED and worker references are restricted to `safe-sink:`. After the in-progress lease wait elapsed, the Standard workflow re-read the terminal Alert and finished `SUCCEEDED`. The AgentCore compile was not part of this proof and still returns the designed 503 fallback.
 - Release negative test: `assembleRelease` refuses to run without explicit backend and signing inputs.
 
-## Hackathon submission blockers
+## Hackathon submission status
 
 The official rules require a working Strands-based project, public source, architecture diagram,
 a public video of at most five minutes, and the participant's AWS Builder ID. AgentCore deployment,
 a live demo, and builder.aws posts can improve scoring but are optional. Physical-device and real SMS
 evidence remain production acceptance work rather than hackathon eligibility gates.
 
-1. Submit the completed authenticated Devpost draft.
+Submitted on Devpost: https://devpost.com/software/in-case-of-ygk5uj
 
 AWS account verification and AgentCore quota case `178851871600399` remain active score-improvement
 work. If AWS restores access before judging, deploy the corrected Nova runtime and capture the model

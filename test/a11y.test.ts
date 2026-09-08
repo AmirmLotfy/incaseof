@@ -351,7 +351,7 @@ describe("responder web accessibility", () => {
       await page.getByText(/contact ladder has stopped/i).count(),
       1,
     );
-    assert.equal(await page.getByRole("button").count(), 0);
+    assert.equal(await page.locator("button.action").count(), 0);
     const found = await violations(page);
     assert.deepEqual(found, [], `\n    ${found.join("\n    ")}\n`);
     await page.close();
@@ -363,6 +363,24 @@ describe("responder web accessibility", () => {
     await page.goto(`${BASE}/r/invalid`);
     await page.getByRole("heading", { name: /isn’t valid/i }).waitFor();
 
+    const found = await violations(page);
+    assert.deepEqual(found, [], `\n    ${found.join("\n    ")}\n`);
+    await page.close();
+  });
+
+  it("the Arabic Incident Room is RTL, usable at 320px, and has no WCAG AA violations", async () => {
+    const page = await newPage();
+    await page.setViewportSize({ width: 320, height: 568 });
+    await mockIncidentApi(page);
+    await page.goto(`${BASE}/r/sample?lang=ar`);
+    await page.getByRole("button", { name: "أنا أتحقق" }).waitFor();
+
+    assert.equal(await page.locator("html").getAttribute("lang"), "ar");
+    assert.equal(await page.locator("html").getAttribute("dir"), "rtl");
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    assert.ok(overflow <= 0, `${overflow}px of Arabic horizontal overflow`);
     const found = await violations(page);
     assert.deepEqual(found, [], `\n    ${found.join("\n    ")}\n`);
     await page.close();
@@ -400,12 +418,13 @@ describe("responder web accessibility", () => {
     await page.waitForTimeout(300);
     await measure();
 
-    // One control unclaimed, two claimed. Asserting the count catches the failure mode
+    // One language control and one action unclaimed; one language control and two actions
+    // claimed. Asserting the count catches the failure mode
     // where the state never advances and this quietly measures the same button twice.
     assert.equal(
       checked,
-      3,
-      `measured ${checked} controls, expected 3 across both states`,
+      5,
+      `measured ${checked} controls, expected 5 across both states`,
     );
     assert.deepEqual(small, [], `controls below 44px: ${small.join(", ")}`);
     await page.close();

@@ -29,11 +29,30 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+html[dir="rtl"] body {
+  font-family: Tahoma, Arial, var(--font-public-sans), sans-serif;
+}
+
 /* Times are this page's core content. Reflowing digits read as instability. */
 .tabular {
   font-family: var(--font-plex-mono), ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.language-toggle {
+  float: inline-end;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--ico-stone);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ico-ink);
+  font: inherit;
+  cursor: pointer;
 }
 
 .wordmark {

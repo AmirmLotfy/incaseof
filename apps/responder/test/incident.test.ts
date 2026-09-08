@@ -17,6 +17,12 @@ describe("relativeTime", () => {
     assert.equal(relativeTime("2026-08-26T21:01:00Z", NOW), "in 1 minute");
   });
 
+  it("renders Arabic relative time without an English fragment", () => {
+    const rendered = relativeTime("2026-08-26T21:12:00Z", NOW, "ar");
+    assert.match(rendered, /خلال/);
+    assert.doesNotMatch(rendered, /\bin\b|minutes?/i);
+  });
+
   it("does not flatten every long gap into 'about an hour'", () => {
     // The original bug: everything past 60 minutes read as "in about an hour", so a
     // contact seventeen hours away was described as imminent.
@@ -60,6 +66,11 @@ describe("eventLabel", () => {
     assert.equal(eventLabel("MOMENT_DUE"), "Check requested");
     assert.equal(eventLabel("STATE_CIRCLE_ESCALATION"), "You were contacted");
     assert.equal(eventLabel("CHANNEL_UNAVAILABLE"), "Call unavailable");
+  });
+
+  it("has Arabic labels for responder-visible events", () => {
+    assert.equal(eventLabel("MOMENT_DUE", "ar"), "طُلب تسجيل الاطمئنان");
+    assert.equal(eventLabel("CHANNEL_UNAVAILABLE", "ar"), "الاتصال غير متاح");
   });
 
   it("never shows a raw constant when the backend adds an event type", () => {

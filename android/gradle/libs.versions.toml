@@ -12,7 +12,7 @@
 #     outside DynamoDB, so deferring it costs correctness nothing. DataStore covers the
 #     small amount of local state until KSP on AGP 9 is demonstrably safe.
 [versions]
-agp = "9.3.1"
+agp = "9.4.0"
 kotlin = "2.4.10"
 composeBom = "2026.08.00"
 coreKtx = "1.19.0"

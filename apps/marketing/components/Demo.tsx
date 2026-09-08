@@ -68,6 +68,18 @@ function safeDemoTemplate(timezone: string): CompileResult {
   };
 }
 
+function responderLinkForCurrentHost(value: string): string {
+  if (typeof window === "undefined" || window.location.origin !== "https://amirmlotfy.github.io") {
+    return value;
+  }
+  const url = new URL(value);
+  if (url.origin === "https://incaof.com") {
+    url.protocol = window.location.protocol;
+    url.host = window.location.host;
+  }
+  return url.toString();
+}
+
 export function Demo() {
   const [baseUrl, setBaseUrl] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
@@ -258,7 +270,7 @@ export function Demo() {
               <p className="eyebrow">Real accelerated Moment</p>
               <h3>{moment.planLabel}</h3>
               <p>{moment.alertState ?? moment.status} · {new Date(moment.dueAt).toLocaleTimeString()}</p>
-              {responderUrl && <a className="cta app-button" href={responderUrl} target="_blank" rel="noreferrer">Open responder link</a>}
+              {responderUrl && <a className="cta app-button" href={responderLinkForCurrentHost(responderUrl)} target="_blank" rel="noreferrer">Open responder link</a>}
             </div>
           )}
           {error && <p role="alert" className="app-error">{error}</p>}

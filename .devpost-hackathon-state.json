@@ -12,18 +12,22 @@
     "start-hackathon",
     "review-hackathon-rules",
     "resources",
-    "prepare-submission"
+    "prepare-submission",
+    "submit-project"
   ],
-  "current_stage": "submit-project",
-  "next_command": "submit-project",
+  "current_stage": "complete",
+  "next_command": null,
   "submission": {
-    "status": "ready-for-final-confirmation",
+    "status": "submitted",
     "draft_file": "devpost-submission.md",
     "remaining_required_input": null,
     "video_url": "https://youtu.be/hDcBwr9dFsY",
     "builder_id_supplied": true,
     "release_commit": "78649c70dad1550e5dc716dd69fbad00ef41e1c0",
-    "release_tag": "hackathon-submission-2026-09-09"
+    "release_tag": "hackathon-submission-2026-09-09",
+    "submitted_at": "2026-09-08T22:34:32Z",
+    "project_url": "https://devpost.com/software/in-case-of-ygk5uj",
+    "confirmation": "Project submitted!"
   },
   "recovered_at": "2026-09-08T08:28:48Z",
   "recovery_note": "Reconstructed from the authenticated Devpost project, live official requirements, and repository release evidence after the prior session was lost."

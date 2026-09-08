@@ -454,9 +454,17 @@
   "videoMusic": "Original project-authored procedural score; no third-party recording or sample",
   "videoPicture": "Full-frame live public browser recording, live Android emulator recordings, project architecture and project-authored graphics; no generated character or stock footage used",
   "acceptance": {
-    "hackathon": "ACCEPTED_FOR_SUBMISSION",
+    "hackathon": "SUBMITTED",
     "production": "NOT_ACCEPTED",
     "acceptedAt": "2026-09-08T22:26:23Z",
     "basis": "All 19 local implementation gates, screenshot evidence, published video package, canonical URLs, signed Android release evidence, and resolved deployed deterministic drill passed. Production handset, carrier SMS, and live AgentCore model evidence remain explicitly outside hackathon acceptance."
+  },
+  "devpostSubmission": {
+    "status": "SUBMITTED",
+    "submittedAt": "2026-09-08T22:34:32Z",
+    "projectUrl": "https://devpost.com/software/in-case-of-ygk5uj",
+    "hackathon": "Agents for Humans Hackathon",
+    "confirmationObserved": "Project submitted!",
+    "editableUntil": "2026-09-14T20:00:00-04:00"
   }
 }

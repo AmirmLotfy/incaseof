@@ -25,6 +25,48 @@ interface TimelineEvent {
 }
 
 type Stage = "unconfigured" | "idle" | "preview" | "draft" | "running" | "alert" | "failed";
+type PreviewSource = "agentcore" | "template";
+
+function safeDemoTemplate(timezone: string): CompileResult {
+  const compiledPlan = {
+    type: "ROUTINE",
+    label: "Mona’s evening check-in",
+    timezone,
+    trigger: { kind: "RECURRING", timeOfDay: "21:00" },
+    grace: { seconds: 0 },
+    steps: [
+      { sequence: 1, offsetSeconds: 0, action: "PUSH_SUBJECT" },
+      { sequence: 2, offsetSeconds: 600, action: "PUSH_SUBJECT" },
+      { sequence: 3, offsetSeconds: 1200, action: "SMS_SUBJECT" },
+      { sequence: 4, offsetSeconds: 1500, action: "MESSAGE_RESPONDER", targetRole: "PRIMARY" },
+      { sequence: 5, offsetSeconds: 2700, action: "MESSAGE_RESPONDER", targetRole: "BACKUP" },
+    ],
+    stopConditions: ["SUBJECT_EXPLICIT_CONFIRMATION", "RESPONDER_VERIFIED_CONTACT"],
+    contextPolicy: {
+      location: "NEVER",
+      battery: "AFTER_SUBJECT_CALL_FAILED",
+      lastConnection: "CIRCLE_ESCALATION",
+    },
+    leaseSeconds: 600,
+  };
+  return {
+    compiledPlan,
+    plan: {
+      label: compiledPlan.label,
+      type: compiledPlan.type,
+      timezone,
+      graceSeconds: compiledPlan.grace.seconds,
+      steps: compiledPlan.steps.map((step) => ({
+        sequence: step.sequence,
+        offsetSeconds: step.offsetSeconds,
+        action: step.action,
+        targetRole: "targetRole" in step ? (step.targetRole ?? null) : null,
+      })),
+    },
+    warnings: ["AgentCore was unavailable. This preview uses the validated Routine template."],
+    trace: {},
+  };
+}
 
 export function Demo() {
   const [baseUrl, setBaseUrl] = useState<string | null>(null);
@@ -32,6 +74,7 @@ export function Demo() {
   const [session, setSession] = useState<DemoSession | null>(null);
   const [stage, setStage] = useState<Stage>("idle");
   const [preview, setPreview] = useState<CompileResult | null>(null);
+  const [previewSource, setPreviewSource] = useState<PreviewSource>("agentcore");
   const [plan, setPlan] = useState<CreatedPlan | null>(null);
   const [moment, setMoment] = useState<MomentSummary | null>(null);
   const [events, setEvents] = useState<TimelineEvent[]>([]);
@@ -101,8 +144,17 @@ export function Demo() {
         nextSession.sessionToken,
       );
       setPreview(compiled);
+      setPreviewSource("agentcore");
       setStage("preview");
     });
+  }
+
+  function useSafeTemplate() {
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    setPreview(safeDemoTemplate(timezone));
+    setPreviewSource("template");
+    setError("");
+    setStage("preview");
   }
 
   async function saveDraft() {
@@ -173,9 +225,20 @@ export function Demo() {
               Compile the plan
             </button>
           )}
+          {stage === "failed" && session && !preview && (
+            <div className="app-preview">
+              <p className="eyebrow">AgentCore unavailable · deterministic fallback</p>
+              <p>The AI preview could not run. Continue with the same schema-validated Routine template used by the product fallback.</p>
+              <button className="cta app-button" onClick={useSafeTemplate}>
+                Use safe Routine template
+              </button>
+            </div>
+          )}
           {preview && (
             <div className="app-preview">
-              <p className="eyebrow">AgentCore preview · not active</p>
+              <p className="eyebrow">
+                {previewSource === "agentcore" ? "AgentCore preview" : "Validated Routine template"} · not active
+              </p>
               <h3>{preview.plan.label}</h3>
               <p>{preview.plan.type} · {preview.plan.timezone}</p>
               <ol className="app-steps">
@@ -215,7 +278,13 @@ export function Demo() {
               ))}
             </ol>
           )}
-          {preview && <TraceInspector trace={preview.trace} />}
+          {preview && previewSource === "agentcore" && <TraceInspector trace={preview.trace} />}
+          {preview && previewSource === "template" && (
+            <div className="demo-trace">
+              <p className="eyebrow">Developer Trace</p>
+              <p>No model trace exists for this deterministic fallback. The plan still passes the same server-side schema and policy validation when saved.</p>
+            </div>
+          )}
         </aside>
       </div>
     </div>

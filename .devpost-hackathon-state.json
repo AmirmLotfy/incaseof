@@ -27,7 +27,11 @@
     "release_tag": "hackathon-submission-2026-09-09",
     "submitted_at": "2026-09-08T22:34:32Z",
     "project_url": "https://devpost.com/software/in-case-of-ygk5uj",
-    "confirmation": "Project submitted!"
+    "confirmation": "Project submitted!",
+    "screenshot_gallery_count": 12,
+    "screenshot_gallery_captions_added": true,
+    "screenshot_gallery_publicly_verified": true,
+    "screenshot_gallery_updated_at": "2026-09-08T23:07:11Z"
   },
   "recovered_at": "2026-09-08T08:28:48Z",
   "recovery_note": "Reconstructed from the authenticated Devpost project, live official requirements, and repository release evidence after the prior session was lost."

@@ -47,22 +47,25 @@
       "androidNotificationId": 1001,
       "physicalDeviceVerified": false
     },
-    "edgeHostingStatus": "GITHUB_PAGES_TLS_PROVISIONING_AWS_CLOUDFRONT_BLOCKED_ACCOUNT_VERIFICATION",
+    "edgeHostingStatus": "GITHUB_PAGES_CANONICAL_HTTPS_LIVE_AWS_CLOUDFRONT_BLOCKED_ACCOUNT_VERIFICATION",
     "staticHostingFallback": {
       "sourceCommit": "07026753c334ac7d808c4f3ebdf2cc1870a3f263",
-      "pagesCommit": "2d8ad79e4a0a64cd3ae5803d424df80d4025c5d7",
+      "pagesCommit": "fa4d7cfd927b2e4d3c5b0e2d28c902dee6399265",
       "pagesBuildStatus": "BUILT",
       "customDomain": "incaof.com",
       "route53ChangeId": "C00432451DB0DX4C8LSG7",
       "route53Status": "INSYNC",
-      "httpsEnforced": false,
-      "publicVerificationPassed": false,
+      "httpsEnforced": true,
+      "publicVerificationPassed": true,
+      "githubDomainVerified": true,
+      "githubDomainVerifiedAt": "2026-09-08T05:05:00Z",
+      "githubVerificationRoute53ChangeId": "C00288122934L2G6SJOOW",
       "immediateHttpsFallback": "https://amirmlotfy.github.io/",
       "immediateHttpsFallbackCommit": "e770493059c9661ffc20bf4d2f17287c838cb502",
       "immediateHttpsFallbackVerified": true,
       "awsEdgeRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/34178964642",
       "awsEdgeResult": "ROLLED_BACK_ACCOUNT_VERIFICATION",
-      "note": "The scoped AWS edge created its certificate, WAF, buckets and CloudFront dependencies; AWS rejected distribution creation because the account must be verified. GitHub Pages is the hackathon static fallback while its custom-domain certificate provisions."
+      "note": "GitHub Pages serves the hackathon site on incaof.com with a valid certificate for the apex and www names, and HTTPS enforcement is enabled. The scoped AWS edge created its certificate, WAF, buckets and CloudFront dependencies; AWS rejected only distribution creation because the account must be verified."
     },
     "accountVerificationCase": {
       "caseId": "178838741100092",
@@ -186,12 +189,12 @@
     }
   },
   "urls": {
-    "marketing": "https://amirmlotfy.github.io/",
-    "webApp": "https://amirmlotfy.github.io/app/",
-    "demo": "https://amirmlotfy.github.io/demo/",
+    "marketing": "https://incaof.com/",
+    "webApp": "https://incaof.com/app/",
+    "demo": "https://incaof.com/demo/",
     "directApi": "https://84t16g8eoe.execute-api.us-east-1.amazonaws.com",
     "canonicalApi": "https://api.incaof.com",
-    "apk": "https://amirmlotfy.github.io/downloads/in-case-of.apk"
+    "apk": "https://incaof.com/downloads/in-case-of.apk"
   },
   "android": {
     "applicationId": "com.incaof.app",

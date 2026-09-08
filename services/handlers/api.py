@@ -354,7 +354,7 @@ def _ensure_demo_circle(ctx: bootstrap.Context, person: PersonId) -> Circle:
             priority=priority,
             status=MemberStatus.ACCEPTED,
             display_name=name,
-            relationship="Judge demo fixture",
+            relationship="Synthetic demo responder",
         )
         for role, priority, name in (
             (ResponderRole.PRIMARY, 1, "Maya"),

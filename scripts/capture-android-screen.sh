@@ -41,7 +41,7 @@ adb=("$adb_bin" -s "$serial")
   exit 1
 }
 
-foreground=$("${adb[@]}" shell dumpsys window windows | rg 'mCurrentFocus|mFocusedApp' || true)
+foreground=$("${adb[@]}" shell dumpsys window | rg 'mCurrentFocus|mFocusedApp' || true)
 rg -q 'com\.incaof\.app' <<<"$foreground" || {
   echo "Bring the signed In Case Of release app to the foreground before capture." >&2
   exit 1

@@ -40,15 +40,23 @@ jobs:
           ./scripts/build-agentcore-runtime.sh
       - name: Verify release gates
         run: ./scripts/preflight.sh
-      - name: Deploy demo infrastructure
+      - name: Deploy demo infrastructure and public edge
         working-directory: infra/cdk
-        run: >-
-          npx cdk deploy IcoStack-demo
-          --require-approval never
-          -c env=demo
-          -c hostedZoneId=${{ vars.ICO_HOSTED_ZONE_ID }}
-          -c hostedZoneName=incaof.com
-          -c pushPlatformArn=${{ vars.ICO_FCM_PLATFORM_ARN }}
+        run: |
+          api_regional_name="$(aws apigatewayv2 get-domain-name --domain-name api.incaof.com --query DomainNameConfigurations[0].ApiGatewayDomainName --output text)"
+          api_hosted_zone="$(aws apigatewayv2 get-domain-name --domain-name api.incaof.com --query DomainNameConfigurations[0].HostedZoneId --output text)"
+          npx cdk deploy IcoStack-demo \
+            --require-approval never \
+            -c env=demo \
+            -c preserveDeployedAgentCoreRuntime=true \
+            -c 'preservedAgentCoreArtifactBucketTemplate=cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1' \
+            -c preservedAgentCoreArtifactKey=d1aafd64894e6f1d4142c58e31bf0218f8880503d2b73237b793543f3b744adf.zip \
+            -c preservedAgentCoreModelId=us.anthropic.claude-sonnet-4-6 \
+            -c hostedZoneId=${{ vars.ICO_HOSTED_ZONE_ID }} \
+            -c hostedZoneName=incaof.com \
+            -c existingApiDomainRegionalName="$api_regional_name" \
+            -c existingApiDomainHostedZoneId="$api_hosted_zone" \
+            -c pushPlatformArn=${{ vars.ICO_FCM_PLATFORM_ARN }}
       - name: Point the canonical API mapping at this demo stack
         env:
           ICO_STACK_NAME: IcoStack-demo

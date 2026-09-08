@@ -9,7 +9,6 @@ import wave
 from array import array
 from pathlib import Path
 
-
 SAMPLE_RATE = 24_000
 CHORD_SECONDS = 12.0
 CHORDS = (
@@ -59,9 +58,13 @@ def render(path: Path, duration: float) -> None:
             pluck_age = t % 3.0
             pluck_env = math.exp(-3.4 * pluck_age)
             pluck_freq = PLUCKS[pluck_slot % len(PLUCKS)]
-            pluck = 0.032 * pluck_env * (
-                math.sin(2.0 * math.pi * pluck_freq * t)
-                + 0.35 * math.sin(2.0 * math.pi * pluck_freq * 2.0 * t)
+            pluck = (
+                0.032
+                * pluck_env
+                * (
+                    math.sin(2.0 * math.pi * pluck_freq * t)
+                    + 0.35 * math.sin(2.0 * math.pi * pluck_freq * 2.0 * t)
+                )
             )
 
             pulse = 0.0

@@ -69,9 +69,10 @@
     },
     "accountVerificationCase": {
       "caseId": "178838741100092",
-      "status": "UNASSIGNED",
-      "lastCheckedAt": "2026-09-04T15:00:53Z",
-      "replyPreparedNotSent": true
+      "status": "REPLIED_AWAITING_AWS",
+      "lastCheckedAt": "2026-09-08T05:56:00Z",
+      "lastReplyAt": "2026-09-08T05:56:00Z",
+      "replyPreparedNotSent": false
     },
     "agentCoreQuotaRequests": {
       "activeSessionWorkloads": {
@@ -81,7 +82,10 @@
       "versionsPerAgent": {
         "requestId": "b38dff125c3e4b1493e58c7fca4ed88bEgBdMI37",
         "caseId": "178851871600399",
-        "status": "CASE_OPENED"
+        "status": "CASE_OPENED_REPLY_SENT_AWAITING_AWS",
+        "currentAppliedValue": 0,
+        "clarifiedDesiredValue": 1,
+        "lastReplyAt": "2026-09-08T05:51:00Z"
       }
     },
     "previousDeploymentFailure": {

@@ -6,9 +6,18 @@ In Case Of closes uncertainty; it does not decide whether someone is in danger.
 
 ## Active implementation checkpoint — 2026-09-08
 
-The Egypt/US production plan is authorized: public Google Play, Arabic/English,
-push/SMS, a $100 monthly operating target, and funded admission limits. Hackathon
-and production acceptance remain separate. Neither release is accepted.
+Hackathon completion is the active release target. The Egypt/US production plan remains
+recorded for later work. Hackathon and production acceptance remain separate, and the
+hackathon release is not yet accepted.
+
+**Public static fallback deployed; custom-domain TLS is provisioning.** Commit `0702675`
+corrects the scoped edge policy and reuses the existing API mapping. Protected run
+`34178964642` proved ACM certificate, WAF, private buckets and CloudFront configuration,
+then AWS rejected only distribution creation with its account-verification requirement and
+rolled the stack back. Marketing, `/app`, `/demo`, account deletion and the signed APK are
+now published from immutable `gh-pages` commit `a8a63d3` with `incaof.com` configured as
+the custom domain. Route 53 change `C00432451DB0DX4C8LSG7` is `INSYNC`; GitHub Pages is
+built, while its HTTPS certificate remains pending.
 
 **Safety repair deployed and live verified.** The recovery review reproduced two provider calls for
 one replayed SQS body, contact after consent withdrawal, a lost-action window before SQS
@@ -127,8 +136,8 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 | FCM | Live verified on emulator | Isolated Firebase project/app, least-privilege service account in Secrets Manager, enabled SNS platform app, API registration, one enabled endpoint and one delivered API 37 notification with the real `I'M OKAY` action | One physical-device receipt |
 | Android debug | Locally verified | `assembleDebug`, unit tests, Android lint and ktlint pass; account deletion sends a tested DELETE body and has typed-confirmation state tests; 202-key English/Arabic catalogs cover all launch flows, product vocabulary, messages and relative time; all 3 connected accessibility tests pass on API 26 and API 37; the in-app judge session is route-isolated and token-tested | Authenticated deletion/device exercise, rendered Arabic RTL and mixed-number review, deploy and exercise the judge flow, physical-phone checks |
 | Android release | Built and emulator verified | Signed `com.incaof.app` v0.2.0 APK; API 26-37; v2/v3 verification; no local repository/localhost marker; clean install and launch on API 26/API 37; Android 13+ permission request verified | One physical-phone install and notification pass; rebuild for the canonical API after edge hosting exists |
-| Marketing/web/responder | Locally verified | Next.js 16 static exports, typecheck, lint, build, 19 browser/accessibility cases; authenticated web, public deletion and responder flows support Arabic RTL at 320px; configured web-app mutations and explicit responder terminal state | Translate marketing/demo narrative; CloudFront URLs, TLS/security headers and Lighthouse evidence |
-| Hosting | API live; edge blocked | Demo API, Cognito, DynamoDB, Scheduler, Step Functions, SQS, AgentCore and KMS are deployed. The registrar delegates `incaof.com` to the Route 53 zone; `api.incaof.com` has valid TLS, targets the demo API and returns the public product-boundary descriptor. CloudFront creation is blocked by AWS account verification | Deploy the edge resources; publish exports; verify apex/`www` DNS, TLS and headers globally |
+| Marketing/web/responder | Public marketing fallback built; responder local | Next.js 16 static exports, typecheck, lint, build, 19 browser/accessibility cases; authenticated web, public deletion and responder flows support Arabic RTL at 320px; marketing, `/app`, `/demo` and APK are published to GitHub Pages commit `a8a63d3` | Wait for custom-domain TLS, verify public routes, publish the responder shell, and capture judge-facing evidence |
+| Hosting | API live; static fallback provisioning | Demo API, Cognito, DynamoDB, Scheduler, Step Functions, SQS, AgentCore and KMS are deployed. `api.incaof.com` has valid TLS and returns the public descriptor. The scoped AWS edge reached distribution creation before account verification blocked it. GitHub Pages is built and Route 53 is `INSYNC` for the fallback | Verify the GitHub Pages certificate and global HTTPS; AWS CloudFront remains externally blocked |
 | Observability | Provisioned and locally verified | `ico-demo-health` dashboard and eight alarms exist; all eight alarms report OK as of 2026-09-04 | Dashboard screenshot plus evidence during a complete drill |
 | Architecture artifact | Locally verified | Nova-labelled 2400x1600 PNG, SVG source and visually checked one-page PDF | Upload preview on Devpost |
 | Project image and screenshots | Deferred until live demo | Final compositor must use real captures | Complete deployed capture set; no synthetic UI |
@@ -148,7 +157,7 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 - AWS core: `IcoStack-demo` is stable at `UPDATE_COMPLETE`; the API exposes all 61 explicit routes and uses one source-scoped invocation permission. The existing AgentCore Runtime remains deliberately preserved because the account's applied `Versions per Agent` quota is zero.
 - AWS quota evidence: active AgentCore sessions were restored via approved request `451f1b8fde074b51bcb3aacaa2042ba8vNxnmcUj`; version request `b38dff125c3e4b1493e58c7fca4ed88bEgBdMI37` is `CASE_OPENED`.
 - AWS account-verification evidence: support case `178838741100092` remains `UNASSIGNED`; a factual update is prepared but has not been sent without action-time confirmation.
-- Public source evidence: reliability checkpoint `5f48122` is pushed to `codex/hackathon-final` with fully green run `34177296272` across Python, web, Android, guardrails and infrastructure. Android localization commit `95ef600`, signed responder localization `971b683`, and authenticated web/public deletion localization `67afcd5` are preserved in the same branch.
+- Public source evidence: edge recovery checkpoint `0702675` is pushed to `codex/hackathon-final`; reliability checkpoint `5f48122` has fully green run `34177296272` across Python, web, Android, guardrails and infrastructure. Android localization commit `95ef600`, signed responder localization `971b683`, and authenticated web/public deletion localization `67afcd5` are preserved in the same branch.
 - Deployment identity: protected-environment runs `34170361557` and `34170551661` passed required review, exchanged GitHub OIDC for short-lived `ico-github-demo-deploy` credentials using the exact immutable repository subject, published exact assets, updated `IcoStack-demo` through the service-family-scoped `ico-demo-cfn-exec` role and verified the canonical API mapping. No long-lived AWS key or shared AdministratorAccess executor was used. The AgentCore Runtime was preserved because the account quota remains zero. The canonical descriptor remains HTTP 200; unauthenticated profile, readiness, all three phone-lifecycle routes and both deletion routes return HTTP 401.
 - Live deterministic Drill: after that scoped-role OIDC deployment, the direct API verifier created synthetic plan `8870c8dc-3c80-40ec-a189-c64afa5ab84a`, accelerated Moment `36c1810a-380f-5d27-8273-8a62c64f367e`, and resolved Alert `84d3d2cd-1c6a-4abc-ac7e-a517f6f6cc37`. Thirteen deployed audit events include four distinct ACTION_QUEUED/ACTION_ACCEPTED pairs, Circle escalation, responder claim and `RESPONDER_VERIFIED`; all four outbox rows are terminal ACCEPTED and worker references are restricted to `safe-sink:`. After the in-progress lease wait elapsed, the Standard workflow re-read the terminal Alert and finished `SUCCEEDED`. The AgentCore compile was not part of this proof and still returns the designed 503 fallback.
 - Release negative test: `assembleRelease` refuses to run without explicit backend and signing inputs.
@@ -158,7 +167,7 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 1. Complete AWS account verification. CloudFront and every tested Bedrock model currently return account-level blocks.
 2. Wait for AgentCore `Versions per Agent` case `178851871600399`, then deploy the corrected Nova runtime and 60-second idle lifecycle.
 3. Add the currently blocked Nova/AgentCore compile leg to the now-proven live workflow, queue, responder lease and resolution path; record runtime, trace and execution identifiers.
-4. Deploy edge hosting, publish both static clients, create apex/`www` records, and verify marketing, app, demo, consent and responder URLs globally. The canonical API descriptor is already live.
+4. Wait for GitHub Pages custom-domain TLS, verify marketing, app, demo and APK globally, then publish and verify the responder shell. The canonical API descriptor is already live.
 5. Finish one physical-phone FCM/install pass and rebuild the signed release for the canonical API after edge hosting exists.
 6. Obtain registered Egypt and US origination identities, add an Arabic-capable verification message path, and verify OTP plus delivery receipts on permitted physical handsets.
 7. Exercise account deletion with a disposable authenticated account; deploy and verify the durable capacity gate in isolated staging after a cost-backed positive slot limit is approved.

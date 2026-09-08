@@ -47,7 +47,20 @@
       "androidNotificationId": 1001,
       "physicalDeviceVerified": false
     },
-    "edgeHostingStatus": "BLOCKED_ACCOUNT_VERIFICATION",
+    "edgeHostingStatus": "GITHUB_PAGES_TLS_PROVISIONING_AWS_CLOUDFRONT_BLOCKED_ACCOUNT_VERIFICATION",
+    "staticHostingFallback": {
+      "sourceCommit": "07026753c334ac7d808c4f3ebdf2cc1870a3f263",
+      "pagesCommit": "a8a63d3f307107db202dd7e0af7f9db59e5fe7bb",
+      "pagesBuildStatus": "BUILT",
+      "customDomain": "incaof.com",
+      "route53ChangeId": "C00432451DB0DX4C8LSG7",
+      "route53Status": "INSYNC",
+      "httpsEnforced": false,
+      "publicVerificationPassed": false,
+      "awsEdgeRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/34178964642",
+      "awsEdgeResult": "ROLLED_BACK_ACCOUNT_VERIFICATION",
+      "note": "The scoped AWS edge created its certificate, WAF, buckets and CloudFront dependencies; AWS rejected distribution creation because the account must be verified. GitHub Pages is the hackathon static fallback while its custom-domain certificate provisions."
+    },
     "accountVerificationCase": {
       "caseId": "178838741100092",
       "status": "UNASSIGNED",

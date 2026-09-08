@@ -185,13 +185,16 @@ class ApiIcoRepository(
 
     override suspend fun testPlan(planId: String): Result<Unit> =
         runCatching {
-            api
-                .testPlan(
-                    planId,
-                    java.util.UUID
-                        .randomUUID()
-                        .toString(),
-                ).requireBody()
+            val started =
+                api
+                    .testPlan(
+                        planId,
+                        java.util.UUID
+                            .randomUUID()
+                            .toString(),
+                    ).requireBody()
+            require(started.status == "DRILL_STARTED") { "unexpected drill response" }
+            requireNotNull(started.moment) { "drill response did not include its Moment" }
             return@runCatching
         }
 

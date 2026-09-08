@@ -36,6 +36,16 @@ object TimeFormat {
         }
     }
 
+    /** Locale-aware calendar label after relative-day wording has been handled by the UI. */
+    fun calendarDay(
+        instant: Instant,
+        zone: ZoneId = ZoneId.systemDefault(),
+        today: LocalDate = LocalDate.now(zone),
+    ): String {
+        val date = instant.atZone(zone).toLocalDate()
+        return if (date in today..today.plusDays(6)) dayName.format(date) else dayAndMonth.format(date)
+    }
+
     fun dayAndTime(instant: Instant, zone: ZoneId = ZoneId.systemDefault()): String =
         "${day(instant, zone)} · ${time(instant, zone)}"
 

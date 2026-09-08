@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.incaof.app.data.IcoRepository
 import com.incaof.app.domain.Plan
-import com.incaof.app.domain.Vocabulary
+import com.incaof.app.ui.UiMessage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,7 +27,7 @@ class DrillViewModel(
             repository
                 .testPlan(plan.id)
                 .onFailure { error ->
-                    _state.value = DrillUiState.Failed(error.message ?: "Failed to start drill")
+                    _state.value = DrillUiState.Failed(UiMessage.GENERIC)
                     return@launch
                 }
 
@@ -41,7 +41,7 @@ class DrillViewModel(
 
             val moment = repository.nextMoment().getOrNull()
             if (moment == null) {
-                updateStatus("Waiting for the deployed Moment…")
+                updateStatus(DrillStatus.WAITING_MOMENT)
                 return@repeat
             }
 
@@ -52,8 +52,9 @@ class DrillViewModel(
                 timeline.mapIndexed { index, event ->
                     DrillStep(
                         id = "${event.at}-$index",
-                        title = Vocabulary.timelineEvent(event.event),
-                        detail = "${event.actor} · ${event.at}",
+                        event = event.event,
+                        actor = event.actor,
+                        at = event.at.toString(),
                     )
                 }
 
@@ -64,30 +65,31 @@ class DrillViewModel(
                     steps = steps,
                     telemetry =
                         DrillTelemetry(
-                            alertId = moment.alertId ?: "Not opened",
+                            alertId = moment.alertId,
                             alertState = stateName,
-                            timeScale = if (moment.isDrill) "${moment.timeScale}x" else "Normal",
-                            eventCount = timeline.size.toString(),
-                            lastActor = timeline.lastOrNull()?.actor ?: "None",
-                            leaseExpiresAt = alert?.leaseExpiresAt?.toString() ?: "None",
+                            timeScale = moment.timeScale,
+                            isDrill = moment.isDrill,
+                            eventCount = timeline.size,
+                            lastActor = timeline.lastOrNull()?.actor,
+                            leaseExpiresAt = alert?.leaseExpiresAt?.toString(),
                         ),
-                    statusMessage =
+                    status =
                         when {
-                            complete -> "The backend recorded a terminal Alert state."
-                            moment.alertId == null -> "Waiting for EventBridge Scheduler to open the Alert…"
-                            else -> "Following the deployed Alert timeline…"
+                            complete -> DrillStatus.TERMINAL
+                            moment.alertId == null -> DrillStatus.WAITING_SCHEDULER
+                            else -> DrillStatus.FOLLOWING
                         },
                     isComplete = complete,
                 )
             if (complete) return
         }
 
-        updateStatus("The Drill is still open. Reopen this screen to continue checking live state.")
+        updateStatus(DrillStatus.STILL_OPEN)
     }
 
-    private fun updateStatus(message: String) {
+    private fun updateStatus(status: DrillStatus) {
         val current = _state.value
-        if (current is DrillUiState.Active) _state.value = current.copy(statusMessage = message)
+        if (current is DrillUiState.Active) _state.value = current.copy(status = status)
     }
 
     private fun momentStatus(alertId: String?): String = if (alertId == null) "SCHEDULED" else "OPEN"

@@ -29,6 +29,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -58,6 +59,7 @@ import com.incaof.app.feature.plans.PlansScreen
 import com.incaof.app.feature.plans.PlansViewModel
 import com.incaof.app.ui.Destination
 import com.incaof.app.ui.IcoNavigationBar
+import com.incaof.app.ui.UiMessage
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -77,7 +79,7 @@ class MainActivity : ComponentActivity() {
                 val session by auth.session.collectAsStateWithLifecycle()
                 var demoFactory by remember { mutableStateOf<ViewModelFactory?>(null) }
                 var demoBusy by remember { mutableStateOf(false) }
-                var demoError by remember { mutableStateOf<String?>(null) }
+                var demoError by remember { mutableStateOf<UiMessage?>(null) }
                 val scope = rememberCoroutineScope()
                 val notificationPermission =
                     rememberLauncherForActivityResult(
@@ -132,7 +134,7 @@ class MainActivity : ComponentActivity() {
                                         container.startJudgeDemo().fold(
                                             onSuccess = { demoFactory = it },
                                             onFailure = {
-                                                demoError = "The judge demo is unavailable. Try again in a moment."
+                                                demoError = UiMessage.DEMO_UNAVAILABLE
                                             },
                                         )
                                         demoBusy = false
@@ -287,14 +289,20 @@ private fun JudgeDemoBanner(onExit: () -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Column(Modifier.weight(1f)) {
-                Text("JUDGE DEMO", style = MaterialTheme.typography.labelMedium, color = ico.ink)
                 Text(
-                    "Synthetic tenant · safe delivery sink",
+                    stringResource(R.string.judge_demo_label),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = ico.ink,
+                )
+                Text(
+                    stringResource(R.string.judge_demo_description),
                     style = MaterialTheme.typography.bodySmall,
                     color = ico.ink,
                 )
             }
-            TextButton(onClick = onExit) { Text("Exit demo", color = ico.ink) }
+            TextButton(onClick = onExit) {
+                Text(stringResource(R.string.judge_demo_exit), color = ico.ink)
+            }
         }
     }
 }

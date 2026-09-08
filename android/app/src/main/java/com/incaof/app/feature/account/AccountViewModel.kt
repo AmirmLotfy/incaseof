@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.incaof.app.data.AccountDeletion
 import com.incaof.app.data.IcoRepository
 import com.incaof.app.feature.home.userMessage
+import com.incaof.app.ui.UiMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -51,7 +52,7 @@ sealed interface AccountUiState {
     data class Ready(
         val confirmation: String = "",
         val busy: Boolean = false,
-        val error: String? = null,
+        val error: UiMessage? = null,
     ) : AccountUiState {
         val canDelete: Boolean get() = confirmation == AccountViewModel.REQUIRED_CONFIRMATION && !busy
     }

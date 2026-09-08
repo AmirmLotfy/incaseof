@@ -4,6 +4,7 @@ import com.incaof.app.data.ConfirmSource
 import com.incaof.app.data.RecordingRepository
 import com.incaof.app.domain.AlertState
 import com.incaof.app.domain.Moment
+import com.incaof.app.ui.UiMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -124,10 +125,7 @@ class HomeViewModelTest {
             runCurrent()
 
             val message = (vm.state.value as HomeUiState.Failed).message
-            assertTrue(
-                "an offline message must reassure that protection continues, got: $message",
-                message.contains("still running"),
-            )
+            assertEquals(UiMessage.OFFLINE, message)
         }
 
     @Test

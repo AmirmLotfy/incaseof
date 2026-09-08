@@ -45,7 +45,8 @@ class DrillViewModelTest {
             val state = vm.state.value as DrillUiState.Active
             assertEquals(testPlan.id, state.plan.id)
             assertEquals("SELF_CONTACT", state.telemetry.alertState)
-            assertEquals("0.02x", state.telemetry.timeScale)
+            assertEquals(0.02, state.telemetry.timeScale)
+            assertTrue(state.telemetry.isDrill)
             assertEquals(1, state.steps.size)
         }
 
@@ -61,6 +62,6 @@ class DrillViewModelTest {
             val state = vm.state.value as DrillUiState.Active
             assertTrue("backend alert is still open", !state.isComplete)
             assertEquals("SELF_CONTACT", state.telemetry.alertState)
-            assertEquals("Check requested", state.steps.single().title)
+            assertEquals("MOMENT_DUE", state.steps.single().event)
         }
 }

@@ -28,6 +28,7 @@ import com.incaof.app.ui.components.Notice
 import com.incaof.app.ui.components.PrimaryAction
 import com.incaof.app.ui.components.SecondaryAction
 import com.incaof.app.ui.components.StatusMarker
+import com.incaof.app.ui.localizedUiMessage
 
 @Composable
 fun AccountScreen(
@@ -94,7 +95,7 @@ private fun DeleteAccountForm(
     )
     state.error?.let {
         Spacer(Modifier.height(8.dp))
-        Notice(it, Modifier.semantics { liveRegion = LiveRegionMode.Assertive })
+        Notice(localizedUiMessage(it), Modifier.semantics { liveRegion = LiveRegionMode.Assertive })
     }
     Spacer(Modifier.height(16.dp))
     PrimaryAction(

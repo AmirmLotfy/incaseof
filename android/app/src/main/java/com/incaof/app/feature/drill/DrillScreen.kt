@@ -35,6 +35,8 @@ import com.incaof.app.ui.components.PrimaryAction
 import com.incaof.app.ui.components.SectionHeading
 import com.incaof.app.ui.components.StatusMarker
 import com.incaof.app.ui.components.TabularLabel
+import com.incaof.app.ui.localizedTimelineEvent
+import com.incaof.app.ui.localizedUiMessage
 
 @Composable
 fun DrillScreen(
@@ -48,7 +50,7 @@ fun DrillScreen(
                 modifier = modifier.fillMaxSize().padding(24.dp),
                 verticalArrangement = Arrangement.Center,
             ) {
-                Notice(state.message)
+                Notice(localizedUiMessage(state.message))
                 Spacer(Modifier.height(16.dp))
                 PrimaryAction(stringResource(R.string.drill_action_done), onFinish)
             }
@@ -67,6 +69,7 @@ private fun DrillContent(
     modifier: Modifier = Modifier,
 ) {
     val ico = LocalIcoColors.current
+    val timingDescription = stringResource(R.string.drill_timing_banner)
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -83,7 +86,7 @@ private fun DrillContent(
                         .background(ico.stone)
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                         .semantics {
-                            contentDescription = "Demo timing is controlled by the deployed environment."
+                            contentDescription = timingDescription
                         },
             ) {
                 Text(
@@ -105,21 +108,26 @@ private fun DrillContent(
             Spacer(Modifier.height(8.dp))
 
             StatusMarker(
-                label = if (state.isComplete) stringResource(R.string.drill_ready) else state.statusMessage,
+                label =
+                    if (state.isComplete) {
+                        stringResource(R.string.drill_ready)
+                    } else {
+                        drillStatusLabel(state.status)
+                    },
                 color = if (state.isComplete) ico.resolved else ico.signal,
                 modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
             )
 
             Spacer(Modifier.height(28.dp))
 
-            SectionHeading("BACKEND TIMELINE")
+            SectionHeading(stringResource(R.string.drill_backend_timeline))
             Spacer(Modifier.height(8.dp))
         }
 
         if (state.steps.isEmpty()) {
             item {
                 Text(
-                    "No deployed audit events have been returned yet.",
+                    stringResource(R.string.drill_no_events),
                     color = ico.graphite,
                     modifier = Modifier.padding(vertical = 14.dp),
                 )
@@ -152,12 +160,14 @@ private fun DrillContent(
 @Composable
 private fun DrillStepRow(step: DrillStep) {
     val ico = LocalIcoColors.current
+    val title = localizedTimelineEvent(step.event)
     val statusDesc =
         when {
-            step.completed -> "Completed."
-            step.inProgress -> "In progress."
-            else -> "Pending."
+            step.completed -> stringResource(R.string.drill_status_completed)
+            step.inProgress -> stringResource(R.string.drill_status_progress)
+            else -> stringResource(R.string.drill_status_pending)
         }
+    val stepDescription = stringResource(R.string.drill_step_description, title, statusDesc)
 
     Row(
         modifier =
@@ -165,7 +175,7 @@ private fun DrillStepRow(step: DrillStep) {
                 .fillMaxWidth()
                 .padding(vertical = 14.dp)
                 .semantics {
-                    contentDescription = "${step.title}. $statusDesc"
+                    contentDescription = stepDescription
                 },
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -193,13 +203,13 @@ private fun DrillStepRow(step: DrillStep) {
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = step.title,
+                text = title,
                 style = MaterialTheme.typography.bodyLarge,
                 color = if (step.completed || step.inProgress) ico.ink else ico.graphite,
             )
             Spacer(Modifier.height(2.dp))
             Text(
-                text = step.detail,
+                text = "${step.actor} · ${step.at}",
                 style = MaterialTheme.typography.bodySmall,
                 color = ico.graphite,
             )
@@ -229,14 +239,40 @@ private fun TelemetryCard(t: DrillTelemetry) {
                 .background(ico.surface)
                 .padding(16.dp),
     ) {
-        TelemetryRow("Alert State", t.alertState)
-        TelemetryRow("Alert ID", t.alertId)
-        TelemetryRow("Server time scale", t.timeScale)
-        TelemetryRow("Audit events", t.eventCount)
-        TelemetryRow("Last actor", t.lastActor)
-        TelemetryRow("Lease expires", t.leaseExpiresAt)
+        val none = stringResource(R.string.drill_none)
+        TelemetryRow(stringResource(R.string.drill_alert_state), t.alertState)
+        TelemetryRow(
+            stringResource(R.string.drill_alert_id),
+            t.alertId ?: stringResource(R.string.drill_not_opened),
+        )
+        TelemetryRow(
+            stringResource(R.string.drill_server_time_scale),
+            if (t.timeScale == null) {
+                stringResource(R.string.drill_awaiting_server)
+            } else if (t.isDrill) {
+                "${t.timeScale}x"
+            } else {
+                stringResource(R.string.drill_normal_time)
+            },
+        )
+        TelemetryRow(stringResource(R.string.drill_audit_events), t.eventCount.toString())
+        TelemetryRow(stringResource(R.string.drill_last_actor), t.lastActor ?: none)
+        TelemetryRow(stringResource(R.string.drill_lease_expires), t.leaseExpiresAt ?: none)
     }
 }
+
+@Composable
+private fun drillStatusLabel(status: DrillStatus): String =
+    stringResource(
+        when (status) {
+            DrillStatus.STARTING -> R.string.drill_status_starting
+            DrillStatus.WAITING_MOMENT -> R.string.drill_status_waiting_moment
+            DrillStatus.TERMINAL -> R.string.drill_status_terminal
+            DrillStatus.WAITING_SCHEDULER -> R.string.drill_status_waiting_scheduler
+            DrillStatus.FOLLOWING -> R.string.drill_status_following
+            DrillStatus.STILL_OPEN -> R.string.drill_status_still_open
+        },
+    )
 
 @Composable
 private fun TelemetryRow(label: String, value: String) {

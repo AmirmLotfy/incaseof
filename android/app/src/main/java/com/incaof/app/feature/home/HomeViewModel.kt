@@ -6,6 +6,7 @@ import com.incaof.app.data.ConfirmSource
 import com.incaof.app.data.IcoRepository
 import com.incaof.app.domain.Moment
 import com.incaof.app.domain.Plan
+import com.incaof.app.ui.UiMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -102,14 +103,14 @@ sealed interface HomeUiState {
         val activePlan: Plan?,
         val submitting: Boolean = false,
         val refreshing: Boolean = false,
-        val error: String? = null,
+        val error: UiMessage? = null,
     ) : HomeUiState {
         /** True when In Case of is waiting on this person right now. */
         val needsAction: Boolean get() = moment?.isWaitingOnMe == true
     }
 
     data class Failed(
-        val message: String,
+        val message: UiMessage,
     ) : HomeUiState
 }
 
@@ -119,13 +120,13 @@ sealed interface HomeUiState {
  * Never a stack trace, never a status code, and never speculation about what went wrong
  * elsewhere. What the person needs is what to do next.
  */
-internal fun Throwable.userMessage(): String =
+internal fun Throwable.userMessage(): UiMessage =
     when (this) {
         is java.net.UnknownHostException, is java.net.SocketTimeoutException -> {
-            "Couldn't reach In Case of. Your plan is still running."
+            UiMessage.OFFLINE
         }
 
         else -> {
-            "Something went wrong. Try again."
+            UiMessage.GENERIC
         }
     }

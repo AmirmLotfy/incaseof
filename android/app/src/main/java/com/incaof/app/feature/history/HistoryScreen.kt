@@ -31,9 +31,13 @@ import com.incaof.app.core.time.TimeFormat
 import com.incaof.app.data.IcoRepository
 import com.incaof.app.domain.ResolvedMoment
 import com.incaof.app.feature.home.userMessage
+import com.incaof.app.ui.UiMessage
 import com.incaof.app.ui.components.Notice
 import com.incaof.app.ui.components.StatusMarker
 import com.incaof.app.ui.components.TabularLabel
+import com.incaof.app.ui.localizedDay
+import com.incaof.app.ui.localizedDayAndTime
+import com.incaof.app.ui.localizedUiMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -69,7 +73,7 @@ sealed interface HistoryUiState {
     ) : HistoryUiState
 
     data class Failed(
-        val message: String,
+        val message: UiMessage,
     ) : HistoryUiState
 }
 
@@ -95,7 +99,7 @@ fun HistoryScreen(state: HistoryUiState, modifier: Modifier = Modifier) {
         }
 
         is HistoryUiState.Failed -> {
-            Notice(state.message, modifier.padding(24.dp))
+            Notice(localizedUiMessage(state.message), modifier.padding(24.dp))
         }
 
         is HistoryUiState.Content -> {
@@ -119,17 +123,18 @@ fun HistoryScreen(state: HistoryUiState, modifier: Modifier = Modifier) {
 @Composable
 private fun HistoryRow(entry: ResolvedMoment) {
     val ico = LocalIcoColors.current
+    val resolvedAt = localizedDayAndTime(entry.resolvedAt)
+    val description =
+        stringResource(R.string.history_row_description, entry.planLabel, resolvedAt, entry.method)
     Column(
         Modifier
             .fillMaxWidth()
             .padding(vertical = 16.dp)
             .semantics {
-                contentDescription =
-                    "${entry.planLabel}, resolved ${TimeFormat.dayAndTime(entry.resolvedAt)}, " +
-                    entry.method
+                contentDescription = description
             },
     ) {
-        TabularLabel(TimeFormat.day(entry.resolvedAt).uppercase())
+        TabularLabel(localizedDay(entry.resolvedAt).uppercase())
         Spacer(Modifier.height(8.dp))
         Text(entry.planLabel, style = MaterialTheme.typography.titleMedium, color = ico.ink)
         Spacer(Modifier.height(4.dp))

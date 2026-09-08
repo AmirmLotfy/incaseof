@@ -39,12 +39,14 @@ import com.incaof.app.core.design.LocalIcoColors
 import com.incaof.app.data.IcoRepository
 import com.incaof.app.domain.CircleMember
 import com.incaof.app.domain.ResponderRole
-import com.incaof.app.domain.Vocabulary
 import com.incaof.app.feature.home.userMessage
+import com.incaof.app.ui.UiMessage
 import com.incaof.app.ui.components.Notice
 import com.incaof.app.ui.components.PrimaryAction
 import com.incaof.app.ui.components.StatusMarker
 import com.incaof.app.ui.components.TabularLabel
+import com.incaof.app.ui.localizedRole
+import com.incaof.app.ui.localizedUiMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -76,7 +78,7 @@ class CircleViewModel(
     fun invite(displayName: String, relationship: String, role: ResponderRole) {
         val name = displayName.trim()
         if (name.isEmpty()) {
-            _invite.value = CircleInviteUiState(error = "Enter the person’s name.")
+            _invite.value = CircleInviteUiState(message = CircleInviteMessage.ENTER_NAME)
             return
         }
         viewModelScope.launch {
@@ -85,9 +87,7 @@ class CircleViewModel(
                 onSuccess = { inviteUrl ->
                     _invite.value =
                         CircleInviteUiState(
-                            notice =
-                                "Invitation created. Share the scoped link; " +
-                                    "they must accept before any plan can rely on them.",
+                            message = CircleInviteMessage.CREATED,
                             inviteUrl = inviteUrl,
                         )
                     refresh()
@@ -100,10 +100,15 @@ class CircleViewModel(
 
 data class CircleInviteUiState(
     val busy: Boolean = false,
-    val notice: String? = null,
-    val error: String? = null,
+    val message: CircleInviteMessage? = null,
+    val error: UiMessage? = null,
     val inviteUrl: String? = null,
 )
+
+enum class CircleInviteMessage {
+    ENTER_NAME,
+    CREATED,
+}
 
 sealed interface CircleUiState {
     data object Loading : CircleUiState
@@ -113,7 +118,7 @@ sealed interface CircleUiState {
     ) : CircleUiState
 
     data class Failed(
-        val message: String,
+        val message: UiMessage,
     ) : CircleUiState
 }
 
@@ -143,7 +148,7 @@ fun CircleScreen(
         }
 
         is CircleUiState.Failed -> {
-            Notice(state.message, modifier.padding(24.dp))
+            Notice(localizedUiMessage(state.message), modifier.padding(24.dp))
         }
 
         is CircleUiState.Content -> {
@@ -174,17 +179,17 @@ private fun InviteMember(
     var name by remember { mutableStateOf("") }
     var relationship by remember { mutableStateOf("") }
     var role by remember { mutableStateOf(ResponderRole.PRIMARY) }
-    Text("Invite someone", style = MaterialTheme.typography.titleLarge)
+    Text(stringResource(R.string.circle_invite), style = MaterialTheme.typography.titleLarge)
     Spacer(Modifier.height(8.dp))
     Text(
-        "They receive a scoped consent link. Their contact details are never exposed to the agent.",
+        stringResource(R.string.circle_invite_intro),
         color = LocalIcoColors.current.graphite,
     )
     Spacer(Modifier.height(12.dp))
     OutlinedTextField(
         value = name,
         onValueChange = { name = it },
-        label = { Text("Name") },
+        label = { Text(stringResource(R.string.circle_name)) },
         enabled = !state.busy,
         modifier = Modifier.fillMaxWidth(),
     )
@@ -192,21 +197,33 @@ private fun InviteMember(
     OutlinedTextField(
         value = relationship,
         onValueChange = { relationship = it },
-        label = { Text("Relationship (optional)") },
+        label = { Text(stringResource(R.string.circle_relationship_optional)) },
         enabled = !state.busy,
         modifier = Modifier.fillMaxWidth(),
     )
     Spacer(Modifier.height(8.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         ResponderRole.entries.forEach { option ->
+            val roleLabel = localizedRole(option)
             TextButton(onClick = { role = option }, enabled = !state.busy) {
-                Text(if (role == option) "● ${Vocabulary.role(option)}" else Vocabulary.role(option))
+                Text(if (role == option) "● $roleLabel" else roleLabel)
             }
         }
     }
-    state.error?.let { Notice(it) }
-    state.notice?.let { Notice(it) }
+    state.error?.let { Notice(localizedUiMessage(it)) }
+    state.message?.let {
+        Notice(
+            stringResource(
+                when (it) {
+                    CircleInviteMessage.ENTER_NAME -> R.string.circle_enter_name
+                    CircleInviteMessage.CREATED -> R.string.circle_invitation_created
+                },
+            ),
+        )
+    }
     state.inviteUrl?.let { inviteUrl ->
+        val shareMessage = stringResource(R.string.circle_share_message, inviteUrl)
+        val chooserTitle = stringResource(R.string.circle_share_consent)
         TextButton(
             onClick = {
                 context.startActivity(
@@ -215,20 +232,23 @@ private fun InviteMember(
                             type = "text/plain"
                             putExtra(
                                 Intent.EXTRA_TEXT,
-                                "I’d like you to join my In Case Of Circle. Review and accept here: $inviteUrl",
+                                shareMessage,
                             )
                         },
-                        "Share consent link",
+                        chooserTitle,
                     ),
                 )
             },
         ) {
-            Text("Share consent link")
+            Text(stringResource(R.string.circle_share_consent))
         }
     }
     Spacer(Modifier.height(8.dp))
     PrimaryAction(
-        label = if (state.busy) "Creating invitation…" else "Create invitation",
+        label =
+            stringResource(
+                if (state.busy) R.string.circle_creating_invitation else R.string.circle_create_invitation,
+            ),
         onClick = { onInvite(name, relationship, role) },
         enabled = !state.busy,
     )
@@ -249,19 +269,17 @@ private fun MemberRow(member: CircleMember) {
         } else {
             stringResource(R.string.not_verified)
         }
+    val roleLabel = localizedRole(member.role)
+    val phoneStatus = stringResource(R.string.circle_phone_status, verification)
+    val memberDescription =
+        listOfNotNull(member.displayName, member.relationship, roleLabel, phoneStatus).joinToString(", ")
 
     Column(
         Modifier
             .fillMaxWidth()
             .padding(vertical = 16.dp)
             .semantics {
-                contentDescription =
-                    buildString {
-                        append(member.displayName)
-                        member.relationship?.let { append(", $it") }
-                        append(", ${Vocabulary.role(member.role)}")
-                        append(", $acceptance, phone $verification")
-                    }
+                contentDescription = "$memberDescription, $acceptance"
             },
     ) {
         Text(member.displayName, style = MaterialTheme.typography.titleMedium, color = ico.ink)
@@ -271,7 +289,7 @@ private fun MemberRow(member: CircleMember) {
         }
         Spacer(Modifier.height(8.dp))
         Text(
-            Vocabulary.role(member.role),
+            roleLabel,
             style = MaterialTheme.typography.labelSmall,
             color = ico.graphite,
         )
@@ -282,7 +300,7 @@ private fun MemberRow(member: CircleMember) {
         )
         Spacer(Modifier.height(4.dp))
         StatusMarker(
-            label = "Phone $verification",
+            label = phoneStatus,
             color = if (member.phoneVerified) ico.primary else ico.warning,
         )
     }

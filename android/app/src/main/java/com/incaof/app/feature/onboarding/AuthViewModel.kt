@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.incaof.app.core.auth.AuthRepository
 import com.incaof.app.core.auth.AuthState
+import com.incaof.app.ui.UiMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,8 +15,8 @@ class AuthViewModel(
 ) : ViewModel() {
     val session: StateFlow<AuthState> = auth.session
 
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error.asStateFlow()
+    private val _error = MutableStateFlow<UiMessage?>(null)
+    val error: StateFlow<UiMessage?> = _error.asStateFlow()
 
     private val _busy = MutableStateFlow(false)
     val busy: StateFlow<Boolean> = _busy.asStateFlow()
@@ -31,37 +32,37 @@ class AuthViewModel(
             auth.signIn(email, password).onFailure {
                 // Never echo the provider's message. It can distinguish "no such user" from
                 // "wrong password", which confirms whether an account exists.
-                _error.value = "Couldn't sign in. Check your email and password."
+                _error.value = UiMessage.AUTH_SIGN_IN
             }
             _busy.value = false
         }
     }
 
     fun signUp(email: String, password: String) {
-        perform("Couldn’t create the account. Check the details and try again.") {
+        perform(UiMessage.AUTH_SIGN_UP) {
             auth.signUp(email, password)
         }
     }
 
     fun confirmSignUp(email: String, code: String) {
-        perform("That confirmation code didn’t work. Request a new one and try again.") {
+        perform(UiMessage.AUTH_CONFIRMATION) {
             auth.confirmSignUp(email, code)
         }
     }
 
     fun requestPasswordReset(email: String) {
-        perform("Couldn’t request a reset. Check the email and try again.") {
+        perform(UiMessage.AUTH_RESET_REQUEST) {
             auth.requestPasswordReset(email)
         }
     }
 
     fun confirmPasswordReset(email: String, code: String, newPassword: String) {
-        perform("That reset could not be completed. Check the code and password.") {
+        perform(UiMessage.AUTH_RESET_CONFIRM) {
             auth.confirmPasswordReset(email, code, newPassword)
         }
     }
 
-    private fun perform(message: String, operation: suspend () -> Result<Unit>) {
+    private fun perform(message: UiMessage, operation: suspend () -> Result<Unit>) {
         viewModelScope.launch {
             _busy.value = true
             _error.value = null

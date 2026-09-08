@@ -1,6 +1,7 @@
 package com.incaof.app.feature.account
 
 import com.incaof.app.data.RecordingRepository
+import com.incaof.app.ui.UiMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -62,6 +63,6 @@ class AccountViewModelTest {
             val ready = vm.state.value as AccountUiState.Ready
             assertFalse(ready.busy)
             assertTrue(ready.canDelete)
-            assertTrue(ready.error?.contains("still running") == true)
+            assertEquals(UiMessage.OFFLINE, ready.error)
         }
 }

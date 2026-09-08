@@ -6,6 +6,7 @@ import com.incaof.app.data.CompiledPlanDraft
 import com.incaof.app.data.IcoRepository
 import com.incaof.app.domain.Plan
 import com.incaof.app.feature.home.userMessage
+import com.incaof.app.ui.UiMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -61,7 +62,7 @@ class PlansViewModel(
     fun compile(description: String) {
         val utterance = description.trim()
         if (utterance.isEmpty()) {
-            _composer.value = _composer.value.copy(error = "Describe what you expect and when.")
+            _composer.value = _composer.value.copy(error = UiMessage.PLAN_DESCRIPTION_REQUIRED)
             return
         }
         viewModelScope.launch {
@@ -109,7 +110,7 @@ class PlansViewModel(
             request().fold(
                 onSuccess = {
                     _selected.value = it
-                    _action.value = PlanActionUiState(notice = "Plan updated.")
+                    _action.value = PlanActionUiState(notice = UiMessage.PLAN_UPDATED)
                     refresh()
                 },
                 onFailure = { _action.value = PlanActionUiState(error = it.userMessage()) },
@@ -122,13 +123,13 @@ data class PlanComposerUiState(
     val visible: Boolean = false,
     val busy: Boolean = false,
     val draft: CompiledPlanDraft? = null,
-    val error: String? = null,
+    val error: UiMessage? = null,
 )
 
 data class PlanActionUiState(
     val busy: Boolean = false,
-    val notice: String? = null,
-    val error: String? = null,
+    val notice: UiMessage? = null,
+    val error: UiMessage? = null,
 )
 
 sealed interface PlansUiState {
@@ -139,6 +140,6 @@ sealed interface PlansUiState {
     ) : PlansUiState
 
     data class Failed(
-        val message: String,
+        val message: UiMessage,
     ) : PlansUiState
 }

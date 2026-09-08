@@ -37,7 +37,9 @@ import com.incaof.app.R
 import com.incaof.app.core.auth.AuthState
 import com.incaof.app.core.design.InCaseOfTheme
 import com.incaof.app.core.design.LocalIcoColors
+import com.incaof.app.ui.UiMessage
 import com.incaof.app.ui.components.PrimaryAction
+import com.incaof.app.ui.localizedUiMessage
 
 private enum class AuthMode {
     SIGN_IN,
@@ -57,7 +59,7 @@ fun SignInScreen(
     onRequestReset: (String) -> Unit,
     onConfirmReset: (String, String, String) -> Unit,
     onTryJudgeDemo: () -> Unit,
-    error: String?,
+    error: UiMessage?,
     busy: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -67,6 +69,7 @@ fun SignInScreen(
     // Passwords are intentionally not saveable: they never enter a saved-state bundle.
     var password by remember { mutableStateOf("") }
     val ico = LocalIcoColors.current
+    val brandDescription = stringResource(R.string.auth_brand_description)
 
     LaunchedEffect(state) {
         if (state is AuthState.NeedsConfirmation) {
@@ -82,7 +85,7 @@ fun SignInScreen(
         Row(
             modifier =
                 Modifier.clearAndSetSemantics {
-                    contentDescription = "ICO"
+                    contentDescription = brandDescription
                 },
         ) {
             Text("I", style = MaterialTheme.typography.headlineLarge, color = ico.ink)
@@ -100,10 +103,10 @@ fun SignInScreen(
         Text(
             when (mode) {
                 AuthMode.SIGN_IN -> stringResource(R.string.tagline)
-                AuthMode.SIGN_UP -> "Create your private plan space"
-                AuthMode.CONFIRM_SIGN_UP -> "Confirm the code sent to your email"
-                AuthMode.RESET_REQUEST -> "Request a password reset code"
-                AuthMode.RESET_CONFIRM -> "Choose a new password"
+                AuthMode.SIGN_UP -> stringResource(R.string.auth_create_space)
+                AuthMode.CONFIRM_SIGN_UP -> stringResource(R.string.auth_confirm_email)
+                AuthMode.RESET_REQUEST -> stringResource(R.string.auth_request_reset)
+                AuthMode.RESET_CONFIRM -> stringResource(R.string.auth_choose_password)
             },
             style = MaterialTheme.typography.bodyLarge,
             color = ico.graphite,
@@ -130,7 +133,7 @@ fun SignInScreen(
                         if (mode ==
                             AuthMode.RESET_CONFIRM
                         ) {
-                            "New password"
+                            stringResource(R.string.auth_new_password)
                         } else {
                             stringResource(R.string.password)
                         },
@@ -148,7 +151,7 @@ fun SignInScreen(
             OutlinedTextField(
                 value = code,
                 onValueChange = { code = it.filter(Char::isDigit) },
-                label = { Text("Confirmation code") },
+                label = { Text(stringResource(R.string.auth_confirmation_code)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
                 modifier = Modifier.fillMaxWidth(),
@@ -158,7 +161,7 @@ fun SignInScreen(
         error?.let {
             Spacer(Modifier.height(12.dp))
             Text(
-                it,
+                localizedUiMessage(it),
                 style = MaterialTheme.typography.bodyLarge,
                 color = ico.critical,
                 modifier = Modifier.semantics { liveRegion = LiveRegionMode.Assertive },
@@ -169,11 +172,11 @@ fun SignInScreen(
         PrimaryAction(
             label =
                 when (mode) {
-                    AuthMode.SIGN_IN -> "Sign in"
-                    AuthMode.SIGN_UP -> "Create account"
-                    AuthMode.CONFIRM_SIGN_UP -> "Confirm account"
-                    AuthMode.RESET_REQUEST -> "Send reset code"
-                    AuthMode.RESET_CONFIRM -> "Set new password"
+                    AuthMode.SIGN_IN -> stringResource(R.string.sign_in)
+                    AuthMode.SIGN_UP -> stringResource(R.string.auth_create_account)
+                    AuthMode.CONFIRM_SIGN_UP -> stringResource(R.string.auth_confirm_account)
+                    AuthMode.RESET_REQUEST -> stringResource(R.string.auth_send_reset_code)
+                    AuthMode.RESET_CONFIRM -> stringResource(R.string.auth_set_new_password)
                 },
             onClick = {
                 val cleanEmail = email.trim()
@@ -212,16 +215,30 @@ fun SignInScreen(
 
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             TextButton(onClick = { mode = if (mode == AuthMode.SIGN_UP) AuthMode.SIGN_IN else AuthMode.SIGN_UP }) {
-                Text(if (mode == AuthMode.SIGN_UP) "I already have an account" else "Create account")
+                Text(
+                    stringResource(
+                        if (mode == AuthMode.SIGN_UP) {
+                            R.string.auth_have_account
+                        } else {
+                            R.string.auth_create_account
+                        },
+                    ),
+                )
             }
-            TextButton(onClick = { mode = AuthMode.RESET_REQUEST }) { Text("Forgot password?") }
+            TextButton(onClick = { mode = AuthMode.RESET_REQUEST }) {
+                Text(stringResource(R.string.auth_forgot_password))
+            }
         }
         Spacer(Modifier.height(12.dp))
         TextButton(onClick = onTryJudgeDemo, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
-            Text(if (busy) "Opening safe demo…" else "Try judge demo")
+            Text(
+                stringResource(
+                    if (busy) R.string.auth_opening_demo else R.string.auth_try_demo,
+                ),
+            )
         }
         Text(
-            "Runs an isolated synthetic demo in this app. It never contacts real people.",
+            stringResource(R.string.auth_demo_explanation),
             style = MaterialTheme.typography.bodySmall,
             color = ico.graphite,
         )

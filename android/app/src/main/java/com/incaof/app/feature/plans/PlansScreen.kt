@@ -33,10 +33,8 @@ import androidx.compose.ui.unit.dp
 import com.incaof.app.R
 import com.incaof.app.core.design.InCaseOfTheme
 import com.incaof.app.core.design.LocalIcoColors
-import com.incaof.app.core.time.TimeFormat
 import com.incaof.app.domain.Plan
 import com.incaof.app.domain.PlanType
-import com.incaof.app.domain.Vocabulary
 import com.incaof.app.ui.components.LadderRung
 import com.incaof.app.ui.components.Notice
 import com.incaof.app.ui.components.PrimaryAction
@@ -44,6 +42,12 @@ import com.incaof.app.ui.components.SecondaryAction
 import com.incaof.app.ui.components.SectionHeading
 import com.incaof.app.ui.components.StatusMarker
 import com.incaof.app.ui.components.TabularLabel
+import com.incaof.app.ui.localizedAction
+import com.incaof.app.ui.localizedOffset
+import com.incaof.app.ui.localizedPlanType
+import com.incaof.app.ui.localizedRelease
+import com.incaof.app.ui.localizedRole
+import com.incaof.app.ui.localizedUiMessage
 
 @Composable
 fun PlansScreen(
@@ -62,7 +66,7 @@ fun PlansScreen(
         }
 
         is PlansUiState.Failed -> {
-            Notice(state.message, modifier.padding(24.dp))
+            Notice(localizedUiMessage(state.message), modifier.padding(24.dp))
         }
 
         is PlansUiState.Content -> {
@@ -73,11 +77,11 @@ fun PlansScreen(
                         .PaddingValues(24.dp),
             ) {
                 item {
-                    PrimaryAction("Create a plan", onCreate)
+                    PrimaryAction(stringResource(R.string.plan_create), onCreate)
                     Spacer(Modifier.height(24.dp))
                     if (state.plans.isEmpty()) {
                         Text(
-                            "No plans yet. Describe an expected moment to create a draft.",
+                            stringResource(R.string.plan_empty),
                             color = LocalIcoColors.current.graphite,
                         )
                         Spacer(Modifier.height(16.dp))
@@ -110,13 +114,13 @@ fun PlanComposerScreen(
     ) {
         item {
             Text(
-                "Create a plan",
+                stringResource(R.string.plan_create),
                 style = MaterialTheme.typography.headlineMedium,
                 modifier = Modifier.semantics { heading() },
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                "Describe the expected moment and what should happen if it passes. You will review every step before saving.",
+                stringResource(R.string.plan_create_intro),
                 color = LocalIcoColors.current.graphite,
             )
             Spacer(Modifier.height(24.dp))
@@ -124,31 +128,31 @@ fun PlanComposerScreen(
                 value = description,
                 onValueChange = { description = it },
                 enabled = !state.busy && preview == null,
-                label = { Text("What should ICO notice?") },
-                placeholder = { Text("Every evening at 9, ask me to check in…") },
+                label = { Text(stringResource(R.string.plan_description_label)) },
+                placeholder = { Text(stringResource(R.string.plan_description_placeholder)) },
                 minLines = 4,
                 modifier = Modifier.fillMaxWidth(),
             )
             state.error?.let {
                 Spacer(Modifier.height(12.dp))
-                Notice(it)
+                Notice(localizedUiMessage(it))
             }
             Spacer(Modifier.height(16.dp))
             if (state.busy) {
                 CircularProgressIndicator()
             } else if (preview == null) {
-                PrimaryAction("Compile preview", onClick = { onCompile(description) })
+                PrimaryAction(stringResource(R.string.plan_compile_preview), onClick = { onCompile(description) })
             }
         }
 
         if (preview != null) {
             item {
                 Spacer(Modifier.height(28.dp))
-                SectionHeading("Review the plan")
+                SectionHeading(stringResource(R.string.plan_review))
                 Spacer(Modifier.height(12.dp))
                 Text(preview.label, style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.height(4.dp))
-                TabularLabel("${Vocabulary.planType(preview.type)} · ${preview.cadence}")
+                TabularLabel("${localizedPlanType(preview.type)} · ${preview.cadence}")
                 if (state.draft.warnings.isNotEmpty()) {
                     Spacer(Modifier.height(16.dp))
                     Notice(state.draft.warnings.joinToString("\n"))
@@ -158,29 +162,33 @@ fun PlanComposerScreen(
                 Spacer(Modifier.height(8.dp))
             }
             items(preview.steps, key = { it.sequence }) { step ->
+                val actionLabel = localizedAction(step.action)
+                val roleLabel = step.targetRole?.let { localizedRole(it) }
                 LadderRung(
-                    time = TimeFormat.offset(step.offsetSeconds),
+                    time = localizedOffset(step.offsetSeconds),
                     action =
                         buildString {
-                            append(Vocabulary.action(step.action))
-                            step.targetRole?.let { append(" · ${Vocabulary.role(it)}") }
+                            append(actionLabel)
+                            roleLabel?.let { append(" · $it") }
                         },
                 )
             }
             item {
                 Spacer(Modifier.height(28.dp))
                 Text(
-                    "Saving creates a draft. ICO will not monitor it until consent is complete and you activate it.",
+                    stringResource(R.string.plan_save_explanation),
                     color = LocalIcoColors.current.graphite,
                 )
                 Spacer(Modifier.height(16.dp))
-                PrimaryAction("Save draft", onSave)
+                PrimaryAction(stringResource(R.string.plan_save_draft), onSave)
             }
         }
 
         item {
             Spacer(Modifier.height(8.dp))
-            TextButton(onClick = onCancel, enabled = !state.busy) { Text("Cancel") }
+            TextButton(onClick = onCancel, enabled = !state.busy) {
+                Text(stringResource(R.string.plan_cancel))
+            }
         }
     }
 }
@@ -194,8 +202,16 @@ private fun PlanRow(plan: Plan, onClick: () -> Unit) {
         } else if (plan.paused) {
             stringResource(R.string.plan_paused)
         } else {
-            "Draft"
+            stringResource(R.string.plan_draft)
         }
+    val rowDescription =
+        stringResource(
+            R.string.plan_row_description,
+            plan.label,
+            plan.cadence,
+            plan.timeOfDay,
+            statusLabel,
+        )
 
     Column(
         Modifier
@@ -204,8 +220,7 @@ private fun PlanRow(plan: Plan, onClick: () -> Unit) {
             .clickable(onClick = onClick)
             .padding(vertical = 16.dp)
             .semantics {
-                contentDescription =
-                    "${plan.label}, ${plan.cadence} at ${plan.timeOfDay}, $statusLabel"
+                contentDescription = rowDescription
             },
     ) {
         Text(plan.label, style = MaterialTheme.typography.titleMedium, color = ico.ink)
@@ -254,22 +269,26 @@ fun PlanDetailScreen(
                 modifier = Modifier.semantics { heading() },
             )
             Spacer(Modifier.height(4.dp))
-            TabularLabel("${Vocabulary.planType(plan.type)} · ${plan.cadence} · ${plan.timeOfDay}")
+            TabularLabel("${localizedPlanType(plan.type)} · ${plan.cadence} · ${plan.timeOfDay}")
             Spacer(Modifier.height(32.dp))
             SectionHeading(stringResource(R.string.what_happens))
             Spacer(Modifier.height(8.dp))
         }
 
         items(plan.steps, key = { it.sequence }) { step ->
+            val actionLabel = localizedAction(step.action)
+            val roleLabel =
+                step.targetRole?.let { role ->
+                    plan.circle.firstOrNull { it.role == role }?.displayName ?: localizedRole(role)
+                }
             LadderRung(
-                time = TimeFormat.offset(step.offsetSeconds),
+                time = localizedOffset(step.offsetSeconds),
                 action =
                     buildString {
-                        append(Vocabulary.action(step.action))
-                        step.targetRole?.let { role ->
-                            val member = plan.circle.firstOrNull { it.role == role }
+                        append(actionLabel)
+                        roleLabel?.let {
                             append(" ")
-                            append(member?.displayName ?: Vocabulary.role(role))
+                            append(it)
                         }
                     },
             )
@@ -282,7 +301,7 @@ fun PlanDetailScreen(
         }
 
         items(plan.contextPolicy) { release ->
-            LadderRung(time = "", action = "${release.signal} — ${Vocabulary.release(release.level)}")
+            LadderRung(time = "", action = "${release.signal} — ${localizedRelease(release.level)}")
         }
 
         item {
@@ -294,24 +313,32 @@ fun PlanDetailScreen(
         items(plan.circle, key = { it.id }) { member ->
             LadderRung(
                 time = "",
-                action = "${member.displayName} — ${Vocabulary.role(member.role)}",
+                action = "${member.displayName} — ${localizedRole(member.role)}",
             )
         }
 
         item {
             Spacer(Modifier.height(32.dp))
             action.error?.let {
-                Notice(it)
+                Notice(localizedUiMessage(it))
                 Spacer(Modifier.height(12.dp))
             }
             action.notice?.let {
-                Notice(it)
+                Notice(localizedUiMessage(it))
                 Spacer(Modifier.height(12.dp))
             }
             when {
-                !plan.active -> PrimaryAction("Activate plan", onActivate, enabled = !action.busy)
-                plan.paused -> PrimaryAction("Resume plan", onResume, enabled = !action.busy)
-                else -> SecondaryAction("Pause plan", onPause)
+                !plan.active -> {
+                    PrimaryAction(stringResource(R.string.plan_activate), onActivate, enabled = !action.busy)
+                }
+
+                plan.paused -> {
+                    PrimaryAction(stringResource(R.string.plan_resume), onResume, enabled = !action.busy)
+                }
+
+                else -> {
+                    SecondaryAction(stringResource(R.string.plan_pause), onPause)
+                }
             }
             Spacer(Modifier.height(12.dp))
             PrimaryAction(stringResource(R.string.test_plan), onTest)

@@ -174,8 +174,7 @@ a public video of at most five minutes, and the participant's AWS Builder ID. Ag
 a live demo, and builder.aws posts can improve scoring but are optional. Physical-device and real SMS
 evidence remain production acceptance work rather than hackathon eligibility gates.
 
-1. Merge the green draft PR, tag the exact accepted commit, and finalize `submission/release-evidence.json`.
-2. Submit the completed authenticated Devpost draft.
+1. Submit the completed authenticated Devpost draft.
 
 AWS account verification and AgentCore quota case `178851871600399` remain active score-improvement
 work. If AWS restores access before judging, deploy the corrected Nova runtime and capture the model

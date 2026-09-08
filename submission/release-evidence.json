@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "status": "NOT_ACCEPTED",
+  "status": "ACCEPTED",
   "sourceCommitAtStart": "6ef1e7119ffc34cd3f20fb4cd27db4a0e56aa13b",
-  "acceptedCommit": null,
-  "tag": null,
-  "verifiedAt": "2026-09-08T10:00:55Z",
+  "acceptedCommit": "78649c70dad1550e5dc716dd69fbad00ef41e1c0",
+  "tag": "hackathon-submission-2026-09-09",
+  "verifiedAt": "2026-09-08T22:26:23Z",
   "aws": {
     "accountIdRedacted": true,
     "deploymentPrincipal": "protected GitHub OIDC role ico-github-demo-deploy with project-specific CloudFormation executor ico-demo-cfn-exec; no long-lived AWS access key",
@@ -317,8 +317,8 @@
     {
       "name": "unified-preflight",
       "status": "PASSED",
-      "verifiedAt": "2026-09-08T01:37:00Z",
-      "details": "All 19 local gates passed at 5f4812279a4b8e2b54219a8f21390610da127631; exact Lambda and AgentCore artifacts; 467 Python tests; 50 CDK assertions; 61 API routes in parity; 19 Playwright browser/accessibility cases; Android assemble, unit, lint and ktlint"
+      "verifiedAt": "2026-09-08T22:26:23Z",
+      "details": "All 19 local gates passed at 78649c70dad1550e5dc716dd69fbad00ef41e1c0; 467 Python tests; 52 CDK assertions; 61 API routes in parity; 19 Playwright browser/accessibility cases; Android assemble, unit, lint and ktlint; exact Lambda and AgentCore artifact builds"
     },
     {
       "name": "github-actions",
@@ -337,6 +337,12 @@
       "status": "PASSED_SIGNED_RELEASE_LIVE_BACKEND_API37",
       "verifiedAt": "2026-09-08T05:15:00Z",
       "details": "Protected run 34188760450 produced the signed release after the R8 serializer repair. The exact artifact was installed on API 37, entered an isolated synthetic session, compiled the explicit deterministic fallback, saved a draft, started the deployed Drill, and rendered Scheduler, workflow, queue and worker audit events."
+    },
+    {
+      "name": "published-submission-media",
+      "status": "PASSED",
+      "verifiedAt": "2026-09-08T22:26:23Z",
+      "details": "Public 2:17 YouTube video hDcBwr9dFsY; Marcus/Qwen narration; original score; 15 timed English captions published; custom thumbnail; YouTube copyright and Community Guidelines checks reported no issues; local media provenance and hashes passed"
     }
   ],
   "sourceControl": {
@@ -446,5 +452,11 @@
     ]
   },
   "videoMusic": "Original project-authored procedural score; no third-party recording or sample",
-  "videoPicture": "Full-frame live public browser recording, live Android emulator recordings, project architecture and project-authored graphics; no generated character or stock footage used"
+  "videoPicture": "Full-frame live public browser recording, live Android emulator recordings, project architecture and project-authored graphics; no generated character or stock footage used",
+  "acceptance": {
+    "hackathon": "ACCEPTED_FOR_SUBMISSION",
+    "production": "NOT_ACCEPTED",
+    "acceptedAt": "2026-09-08T22:26:23Z",
+    "basis": "All 19 local implementation gates, screenshot evidence, published video package, canonical URLs, signed Android release evidence, and resolved deployed deterministic drill passed. Production handset, carrier SMS, and live AgentCore model evidence remain explicitly outside hackathon acceptance."
+  }
 }

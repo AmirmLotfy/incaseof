@@ -21,7 +21,9 @@
     "draft_file": "devpost-submission.md",
     "remaining_required_input": null,
     "video_url": "https://youtu.be/hDcBwr9dFsY",
-    "builder_id_supplied": true
+    "builder_id_supplied": true,
+    "release_commit": "78649c70dad1550e5dc716dd69fbad00ef41e1c0",
+    "release_tag": "hackathon-submission-2026-09-09"
   },
   "recovered_at": "2026-09-08T08:28:48Z",
   "recovery_note": "Reconstructed from the authenticated Devpost project, live official requirements, and repository release evidence after the prior session was lost."

@@ -22,7 +22,7 @@ from services.domain.phone_verification import PhoneVerification, PhoneVerificat
 from services.domain.plan import ActionType, Plan, PlanType, Trigger, TriggerKind
 from services.handlers import api, bootstrap
 from services.tests.domain.conftest import make_version
-from services.tests.slice.conftest import Slice
+from services.tests.slice.conftest import EVENING_PLAN, MONA, Slice
 
 EG_TEST_NUMBER = "+20" + "10" + "00000000"
 
@@ -493,6 +493,187 @@ def test_one_time_completion_releases_capacity_and_deactivates_the_plan(
     assert finished is not None and finished.active_version_id is None
     assert capacity.usage(person).account_reserved == 0
     assert capacity.usage(person).global_reserved == 0
+
+
+def test_one_time_cancellation_releases_capacity_and_deactivates_the_plan(
+    a_slice: Slice, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    person = MONA
+    capacity = InMemoryPlanCapacityRepository()
+    a_slice.ctx = replace(a_slice.ctx, capacity=capacity)
+    one_time = {
+        **EVENING_PLAN,
+        "trigger": {"kind": "ONE_TIME", "dueAt": "2026-08-26T21:00:00+02:00"},
+    }
+    activation = a_slice.create_plan(one_time)
+    capacity.reserve(
+        person_id=person,
+        plan_id=activation.plan.plan_id,
+        account_limit=3,
+        global_limit=1,
+        at=a_slice.ctx.now(),
+    )
+    monkeypatch.setenv("ICO_ENV", "prod")
+
+    response = api._cancel_moment(
+        a_slice.ctx,
+        {"headers": {"Idempotency-Key": "cancel-one-time"}},
+        activation.moment.moment_id,
+        person,
+    )
+
+    finished = a_slice.ctx.plans.get_plan(activation.plan.plan_id)
+    assert response["statusCode"] == 200
+    assert finished is not None and finished.active_version_id is None
+    assert capacity.usage(person).account_reserved == 0
+    assert capacity.usage(person).global_reserved == 0
+
+
+def test_recurring_cancellation_keeps_capacity_and_creates_one_successor(
+    a_slice: Slice, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    person = MONA
+    capacity = InMemoryPlanCapacityRepository()
+    a_slice.ctx = replace(a_slice.ctx, capacity=capacity)
+    activation = a_slice.create_plan()
+    capacity.reserve(
+        person_id=person,
+        plan_id=activation.plan.plan_id,
+        account_limit=3,
+        global_limit=1,
+        at=a_slice.ctx.now(),
+    )
+    monkeypatch.setenv("ICO_ENV", "prod")
+    event = {"headers": {"Idempotency-Key": "cancel-recurring"}}
+
+    first = api._cancel_moment(a_slice.ctx, event, activation.moment.moment_id, person)
+    replay = api._cancel_moment(a_slice.ctx, event, activation.moment.moment_id, person)
+
+    outstanding = a_slice.ctx.moments.outstanding_for_subject(person)
+    current = a_slice.ctx.plans.get_plan(activation.plan.plan_id)
+    assert first["statusCode"] == 200
+    assert _body(replay)["replayed"] is True
+    assert len(outstanding) == 1
+    assert outstanding[0].due_at > activation.moment.due_at
+    assert current is not None and current.is_active
+    assert capacity.usage(person).global_reserved == 1
+
+
+def test_bounded_recurring_cancellation_releases_capacity_at_the_end(
+    a_slice: Slice, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    person = MONA
+    capacity = InMemoryPlanCapacityRepository()
+    a_slice.ctx = replace(a_slice.ctx, capacity=capacity)
+    bounded = {
+        **EVENING_PLAN,
+        "trigger": {
+            "kind": "RECURRING",
+            "timeOfDay": "21:00",
+            "untilAt": "2026-08-26T21:00:00+02:00",
+        },
+    }
+    activation = a_slice.create_plan(bounded)
+    capacity.reserve(
+        person_id=person,
+        plan_id=activation.plan.plan_id,
+        account_limit=3,
+        global_limit=1,
+        at=a_slice.ctx.now(),
+    )
+    monkeypatch.setenv("ICO_ENV", "prod")
+
+    api._cancel_moment(
+        a_slice.ctx,
+        {"headers": {"Idempotency-Key": "cancel-bounded"}},
+        activation.moment.moment_id,
+        person,
+    )
+
+    finished = a_slice.ctx.plans.get_plan(activation.plan.plan_id)
+    assert finished is not None and finished.active_version_id is None
+    assert a_slice.ctx.moments.outstanding_for_subject(person) == ()
+    assert capacity.usage(person).global_reserved == 0
+
+
+def test_cancellation_replay_recovers_after_scheduler_failure(a_slice: Slice) -> None:
+    class FailOnceScheduler:
+        def __init__(self) -> None:
+            self.failed = False
+            self.scheduled: list[str] = []
+
+        def schedule(self, moment: Any) -> str:
+            if not self.failed:
+                self.failed = True
+                raise RuntimeError("scheduler unavailable")
+            self.scheduled.append(str(moment.moment_id))
+            return f"moment-{moment.moment_id}"
+
+        def cancel(self, moment_id: Any) -> None:
+            del moment_id
+
+    activation = a_slice.create_plan()
+    scheduler = FailOnceScheduler()
+    a_slice.ctx = replace(a_slice.ctx, scheduler=scheduler)
+    event = {"headers": {"Idempotency-Key": "cancel-recovery"}}
+
+    with pytest.raises(RuntimeError, match="scheduler unavailable"):
+        api._cancel_moment(a_slice.ctx, event, activation.moment.moment_id, MONA)
+
+    cancelled = a_slice.ctx.moments.get(activation.moment.moment_id)
+    assert cancelled is not None and cancelled.status.value == "CANCELLED"
+    saved = a_slice.ctx.moments.outstanding_for_subject(MONA)
+    assert len(saved) == 1
+
+    replay = api._cancel_moment(a_slice.ctx, event, activation.moment.moment_id, MONA)
+
+    assert _body(replay)["replayed"] is True
+    recovered = a_slice.ctx.moments.outstanding_for_subject(MONA)
+    assert [moment.moment_id for moment in recovered] == [saved[0].moment_id]
+    assert scheduler.scheduled == [str(saved[0].moment_id)]
+
+
+def test_terminal_replay_finishes_capacity_release_after_partial_failure(
+    a_slice: Slice, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    class FailOnceCapacity(InMemoryPlanCapacityRepository):
+        def __init__(self) -> None:
+            super().__init__()
+            self.failed = False
+
+        def release(self, **kwargs: Any) -> None:
+            if not self.failed:
+                self.failed = True
+                raise RuntimeError("capacity unavailable")
+            super().release(**kwargs)
+
+    capacity = FailOnceCapacity()
+    a_slice.ctx = replace(a_slice.ctx, capacity=capacity)
+    one_time = {
+        **EVENING_PLAN,
+        "trigger": {"kind": "ONE_TIME", "dueAt": "2026-08-26T21:00:00+02:00"},
+    }
+    activation = a_slice.create_plan(one_time)
+    capacity.reserve(
+        person_id=MONA,
+        plan_id=activation.plan.plan_id,
+        account_limit=3,
+        global_limit=1,
+        at=a_slice.ctx.now(),
+    )
+    monkeypatch.setenv("ICO_ENV", "prod")
+    resolved = type("ResolvedAlert", (), {"moment_id": activation.moment.moment_id})()
+
+    with pytest.raises(RuntimeError, match="capacity unavailable"):
+        api._finish_moment(a_slice.ctx, resolved)
+
+    inactive = a_slice.ctx.plans.get_plan(activation.plan.plan_id)
+    assert inactive is not None and inactive.active_version_id is None
+    assert capacity.usage(MONA).global_reserved == 1
+
+    api._finish_moment(a_slice.ctx, resolved)
+
+    assert capacity.usage(MONA).global_reserved == 0
 
 
 def test_phone_verification_requires_provider_before_storing_any_number(

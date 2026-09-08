@@ -14,7 +14,6 @@ import json
 import logging
 import os
 from typing import Any
-from uuid import NAMESPACE_URL, uuid5
 
 import boto3
 
@@ -126,8 +125,9 @@ def _queue_next_occurrence(ctx: bootstrap.Context, moment_id: MomentId) -> Any:
 
     A one-time plan has no next Moment, which is the plan finishing rather than an error.
     A failure here must not take down the Alert that just opened: the person in front of us
-    matters more than tomorrow's check, and the reconciliation sweeper catches a Moment
-    that was never scheduled.
+    matters more than tomorrow's check. Resolution or cancellation retries the same
+    deterministic successor, and a successor saved before scheduler failure is visible to
+    the reconciliation sweeper.
     """
     try:
         # Imported inside the guard on purpose. An import error is precisely the failure
@@ -147,9 +147,6 @@ def _queue_next_occurrence(ctx: bootstrap.Context, moment_id: MomentId) -> Any:
             ctx,
             version,
             after=moment.due_at,
-            new_id=lambda: str(
-                uuid5(NAMESPACE_URL, f"ico:following:{moment_id}:{version.version_id}")
-            ),
         )
     except Exception:
         log.warning("could not queue the next occurrence for %s", moment_id, exc_info=True)

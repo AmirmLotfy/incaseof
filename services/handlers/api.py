@@ -537,22 +537,44 @@ def _alert_view(alert: Any) -> dict[str, Any]:
 
 
 def _finish_moment(ctx: bootstrap.Context, alert: Any) -> None:
-    """Close the timer and materialize the next recurring Moment exactly once."""
+    """Close the timer and finish plan advancement, including after a partial retry."""
     moment = ctx.moments.get(alert.moment_id)
-    if moment is None or moment.status not in {MomentStatus.SCHEDULED, MomentStatus.DUE}:
+    if moment is None:
         return
-    ctx.moments.save(replace(moment, status=MomentStatus.RESOLVED))
-    if ctx.scheduler is not None:
-        ctx.scheduler.cancel(moment.moment_id)
+    if moment.status in {MomentStatus.SCHEDULED, MomentStatus.DUE}:
+        ctx.moments.save(replace(moment, status=MomentStatus.RESOLVED))
+        if ctx.scheduler is not None:
+            ctx.scheduler.cancel(moment.moment_id)
     if moment.is_drill:
         return
     version = ctx.plans.get_version(moment.version_id)
-    plan = ctx.plans.get_plan(version.plan_id) if version else None
-    if version and plan and plan.is_active and plan.active_version_id == version.version_id:
-        following = planning.schedule_following_moment(ctx, version, after=ctx.now())
-        if following is None:
-            ctx.plans.save_plan(replace(plan, active_version_id=None, paused=False))
-            _release_capacity(ctx, plan)
+    if version is not None:
+        _advance_plan_after_terminal_moment(ctx, moment, version)
+
+
+def _advance_plan_after_terminal_moment(
+    ctx: bootstrap.Context,
+    moment: ExpectedMoment,
+    version: PlanVersion,
+) -> None:
+    """Advance or close a plan without duplicating work across terminal paths."""
+    plan = ctx.plans.get_plan(version.plan_id)
+    if plan is None or plan.active_version_id not in {None, version.version_id}:
+        return
+    if plan.paused:
+        _release_capacity(ctx, plan)
+        return
+    if plan.active_version_id is None:
+        # A previous attempt may have saved the inactive plan and failed before releasing
+        # its reservation. Release is idempotent, so completing that split operation here
+        # is safe.
+        _release_capacity(ctx, plan)
+        return
+
+    following = planning.schedule_following_moment(ctx, version, after=moment.due_at)
+    if following is None:
+        ctx.plans.save_plan(replace(plan, active_version_id=None, paused=False))
+        _release_capacity(ctx, plan)
 
 
 def _invitation_repository(ctx: bootstrap.Context) -> Any:
@@ -1488,6 +1510,8 @@ def _cancel_moment(
     _idempotency_key(event)
     moment, _, version = _owned_moment(ctx, moment_id, person)
     if moment.status is MomentStatus.CANCELLED:
+        if not moment.is_drill:
+            _advance_plan_after_terminal_moment(ctx, moment, version)
         return _response(200, {**_moment_view(ctx, moment, version), "replayed": True})
     alert = ctx.alerts.alert_for_moment(moment_id)
     if alert is not None:
@@ -1504,6 +1528,8 @@ def _cancel_moment(
     ctx.moments.save(cancelled, subject_person_id=person)
     if ctx.scheduler is not None:
         ctx.scheduler.cancel(moment_id)
+    if not moment.is_drill:
+        _advance_plan_after_terminal_moment(ctx, moment, version)
     return _response(200, _moment_view(ctx, cancelled, version))
 
 

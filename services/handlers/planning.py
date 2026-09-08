@@ -16,6 +16,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from datetime import datetime
 from typing import Any
+from uuid import NAMESPACE_URL, uuid5
 
 from services.domain.clock import REAL_TIME, TimeScale
 from services.domain.compiler import CompilationResult, compile_plan
@@ -132,20 +133,33 @@ def schedule_following_moment(
     version: PlanVersion,
     *,
     after: datetime,
-    new_id: IdFactory = uuid_factory,
+    new_id: IdFactory | None = None,
 ) -> ExpectedMoment | None:
     """Queue the next occurrence of a recurring Plan.
 
-    Called once a Moment resolves. A one-time Plan simply has no next Moment, which is not
-    an error -- it is the plan finishing.
+    Called when a Moment opens or reaches a terminal state. A one-time Plan simply has no
+    next Moment, which is not an error -- it is the plan finishing.
     """
     if version.trigger.kind is not TriggerKind.RECURRING:
         return None
     plan = ctx.plans.get_plan(version.plan_id)
     if plan is None or not plan.is_active or plan.active_version_id != version.version_id:
         return None
-    if next_due_at(version.trigger, version.timezone, after) is None:
+    due_at = next_due_at(version.trigger, version.timezone, after)
+    if due_at is None:
         return None
+    if new_id is None:
+        # Every path that advances this version to this exact occurrence must converge on
+        # one Moment. The due handler, a resolution retry and a cancellation retry may all
+        # arrive independently under at-least-once delivery.
+        deterministic_id = str(
+            uuid5(NAMESPACE_URL, f"ico:following:{version.version_id}:{due_at.isoformat()}")
+        )
+
+        def deterministic_id_factory() -> str:
+            return deterministic_id
+
+        new_id = deterministic_id_factory
     moment = _next_moment(version, now=after, new_id=new_id, scale=ctx.scale)
     ctx.moments.save(moment, subject_person_id=plan.subject_person_id)
     if ctx.scheduler is not None:

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "platform": "https://builder.aws.com",
+  "authorAlias": "amirmolotfy",
+  "articles": [
+    {
+      "source": "submission/blog/01-monitors-the-plan.md",
+      "cover": "submission/blog/assets/01-monitor-the-plan-cover.png",
+      "title": "Agents for Humans: Why ICO Monitors the Plan, Not the Person",
+      "description": "How In Case Of turns one explicit expectation into a consented escalation plan without continuous surveillance.",
+      "topics": ["agentic-ai", "ai-agents", "privacy", "serverless", "aws-lambda"]
+    },
+    {
+      "source": "submission/blog/02-governed-agentcore.md",
+      "cover": "submission/blog/assets/02-governed-agent-cover.png",
+      "title": "Agents for Humans: Building a Governed Strands Agent on Bedrock AgentCore",
+      "description": "A Strands agent on Bedrock AgentCore with role-only tools, Cedar policy, and deterministic safety state.",
+      "topics": ["amazon-bedrock-agentcore", "amazon-bedrock", "agentic-ai", "ai-agents", "security"]
+    },
+    {
+      "source": "submission/blog/03-idempotent-workflow.md",
+      "cover": "submission/blog/assets/03-idempotent-workflow-cover.png",
+      "title": "Agents for Humans: Engineering an Idempotent Contingency Workflow on AWS",
+      "description": "How DynamoDB transactions, SQS, Step Functions, stable action identities, and checking leases make retries safe.",
+      "topics": ["aws-lambda", "aws-step-functions", "amazon-dynamodb", "amazon-sqs", "serverless"]
+    }
+  ]
+}

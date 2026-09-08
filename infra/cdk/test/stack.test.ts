@@ -238,6 +238,28 @@ describe("identity", () => {
   });
 });
 
+describe("API browser origins", () => {
+  it("lets the isolated demo run from its temporary public fallback", () => {
+    synth("demo").hasResourceProperties("AWS::ApiGatewayV2::Api", {
+      CorsConfiguration: {
+        AllowOrigins: Match.arrayWith([
+          "https://incaof.com",
+          "https://www.incaof.com",
+          "https://amirmlotfy.github.io",
+        ]),
+      },
+    });
+  });
+
+  it("does not add the temporary fallback to production", () => {
+    const productionApis = synth("prod").findResources("AWS::ApiGatewayV2::Api");
+    const origins = Object.values(productionApis).flatMap(
+      (api) => api.Properties?.CorsConfiguration?.AllowOrigins ?? [],
+    );
+    assert.ok(!origins.includes("https://amirmlotfy.github.io"));
+  });
+});
+
 describe("hosting", () => {
   it("keeps both static origins private behind CloudFront and WAF", () => {
     const template = synth("demo");

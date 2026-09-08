@@ -158,9 +158,17 @@ export class Api extends Construct {
           "x-ico-source",
         ],
         allowOrigins:
-          props.environment.name === "prod" || props.environment.name === "demo"
+          props.environment.name === "prod"
             ? ["https://incaof.com", "https://www.incaof.com"]
-            : ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002"],
+            : props.environment.name === "demo"
+              ? [
+                  "https://incaof.com",
+                  "https://www.incaof.com",
+                  // Temporary public fallback while GitHub Pages issues the custom-domain
+                  // certificate. Keep this origin scoped to the isolated demo environment.
+                  "https://amirmlotfy.github.io",
+                ]
+              : ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002"],
         maxAge: Duration.hours(1),
       },
     });

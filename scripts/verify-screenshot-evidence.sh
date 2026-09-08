@@ -26,11 +26,11 @@ web_provenance="$directory/web-provenance.json"
 need_file "$web_provenance"
 if [[ -s "$web_provenance" ]]; then
   jq -e '
-    .mode == "final" and
+    (.mode == "final" or .mode == "submission") and
     (.baseUrl | test("^https://(www\\.)?incaof\\.com$")) and
     (.captures | type == "array" and length == 8) and
     all(.captures[]; .filename and .sha256 and (.sourceUrl | test("^https://(www\\.)?incaof\\.com/")))
-  ' "$web_provenance" >/dev/null 2>&1 || fail "web provenance is not a canonical final capture record"
+  ' "$web_provenance" >/dev/null 2>&1 || fail "web provenance is not a canonical submission capture record"
   if rg -q '/(r|i)/(?!\[redacted\])' "$web_provenance" --pcre2; then
     fail "web provenance contains an unredacted signed-link path"
   fi

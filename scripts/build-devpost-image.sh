@@ -4,8 +4,8 @@ cd "$(dirname "$0")/.."
 
 manifest=submission/release-evidence.json
 mode="${ICO_PROJECT_IMAGE_MODE:-final}"
-if [[ "$mode" != "final" && "$mode" != "review" ]]; then
-  echo "ICO_PROJECT_IMAGE_MODE must be final or review." >&2
+if [[ "$mode" != "final" && "$mode" != "submission" && "$mode" != "review" ]]; then
+  echo "ICO_PROJECT_IMAGE_MODE must be final, submission or review." >&2
   exit 2
 fi
 if [[ ! -f "$manifest" ]]; then
@@ -26,8 +26,8 @@ if [[ "$mode" == "final" ]]; then
     exit 1
   }
 else
-  jq -e '.artifacts.webCaptureMode == "REHEARSAL_CANONICAL_DETERMINISTIC_FALLBACK"' "$manifest" >/dev/null || {
-    echo "Review art requires the canonical deterministic-fallback capture record." >&2
+  jq -e '.artifacts.webCaptureMode | test("^(SUBMISSION|REHEARSAL)_CANONICAL_DETERMINISTIC_FALLBACK$")' "$manifest" >/dev/null || {
+    echo "Submission/review art requires the canonical deterministic-fallback capture record." >&2
     exit 1
   }
 fi

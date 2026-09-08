@@ -24,14 +24,10 @@ check_jq '.acceptedCommit | type == "string" and length == 40' "accepted commit 
 check_jq '.tag | type == "string" and length > 0' "accepted release tag is missing"
 check_jq '.builderIdSupplied == true' "AWS Builder ID is not recorded"
 check_jq '.videoUrl | type == "string" and test("^https://(www\\.)?(youtube\\.com|youtu\\.be|vimeo\\.com)/")' "public YouTube/Vimeo URL is missing"
-check_jq '.blogUrls | type == "array" and length >= 1 and all(.[]; test("^https://builder\\.aws/"))' "at least one public builder.aws post is missing"
-check_jq '.canary.runtimeReadyForRequest == true' "AgentCore runtime canary is not ready"
-check_jq '.canary.runtimeInvocationId | type == "string" and length > 0' "AgentCore invocation ID is missing"
-check_jq '.canary.traceId | type == "string" and length > 0' "redacted model trace ID is missing"
 check_jq '.liveDeterministicDrill.terminalState == "RESOLVED"' "live deterministic Drill did not resolve"
 check_jq '.liveDeterministicDrill.auditEvents | index("RESPONDER_VERIFIED") != null' "live Drill lacks explicit responder resolution"
-check_jq '.android.physicalDevice == "PASSED"' "physical Android device verification is missing"
 check_jq '.artifacts.projectImage | type == "string" and length > 0' "Devpost project image is not recorded"
+check_jq 'any(.gates[]; .name == "unified-preflight" and .status == "PASSED")' "unified Strands implementation preflight is not recorded as passed"
 
 accepted_commit=$(jq -r '.acceptedCommit // empty' "$manifest")
 if [[ -n "$accepted_commit" ]] && ! git merge-base --is-ancestor "$accepted_commit" HEAD 2>/dev/null; then

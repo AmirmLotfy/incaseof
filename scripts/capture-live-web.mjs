@@ -23,15 +23,20 @@ function publicSourceUrl(rawUrl) {
   return url.toString();
 }
 
-requireCondition(mode === "final" || mode === "rehearsal", "ICO_CAPTURE_MODE must be final or rehearsal");
+requireCondition(
+  mode === "final" || mode === "submission" || mode === "rehearsal",
+  "ICO_CAPTURE_MODE must be final, submission or rehearsal",
+);
 requireCondition(baseUrl, "Set ICO_CAPTURE_BASE_URL or record urls.marketing in the release manifest");
 const parsedBase = new URL(baseUrl);
-if (mode === "final") {
-  requireCondition(parsedBase.protocol === "https:", "final captures require HTTPS");
+if (mode === "final" || mode === "submission") {
+  requireCondition(parsedBase.protocol === "https:", `${mode} captures require HTTPS`);
   requireCondition(
     parsedBase.hostname === "incaof.com" || parsedBase.hostname === "www.incaof.com",
-    "final captures require the canonical incaof.com host",
+    `${mode} captures require the canonical incaof.com host`,
   );
+}
+if (mode === "final") {
   requireCondition(
     manifest.canary?.runtimeReadyForRequest === true,
     "final captures require a successful AgentCore runtime canary",
@@ -87,7 +92,7 @@ try {
   const safeTemplate = page.getByRole("button", { name: "Use safe Routine template" });
   await agentPreview.or(safeTemplate).waitFor({ timeout: 45_000 });
   if (await safeTemplate.isVisible()) {
-    requireCondition(mode === "rehearsal", "the final live compiler returned an error");
+    requireCondition(mode !== "final", "the final live compiler returned an error");
     await safeTemplate.click();
     await page.getByText("Validated Routine template", { exact: false }).waitFor();
   } else {

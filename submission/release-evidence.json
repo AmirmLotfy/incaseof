@@ -142,7 +142,11 @@
       "startRouteDeployed": true,
       "confirmRouteDeployed": true,
       "revokeRouteDeployed": true,
-      "unauthenticatedRouteStatuses": [401, 401, 401],
+      "unauthenticatedRouteStatuses": [
+        401,
+        401,
+        401
+      ],
       "providerConfigured": false,
       "providerDeliveryVerified": false,
       "candidateStorageEncrypted": true,
@@ -158,7 +162,10 @@
       "deploymentRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/34167842407",
       "requestRouteDeployed": true,
       "statusRouteDeployed": true,
-      "unauthenticatedRouteStatuses": [401, 401],
+      "unauthenticatedRouteStatuses": [
+        401,
+        401
+      ],
       "canonicalApiDescriptorStatus": 200,
       "authenticatedDisposableAccountExercise": false,
       "workerCleanupLiveVerified": false,
@@ -212,7 +219,10 @@
     "buildRun": "https://github.com/AmirmLotfy/incaseof/actions/runs/34188760450",
     "signedReleaseDrillVerified": true,
     "signingCertificateSha256": "f12d1890545e420f5a2e10fa1475f21c2fa5463028f57fc3643daa1bc42bbd62",
-    "signatureSchemes": ["v2", "v3"],
+    "signatureSchemes": [
+      "v2",
+      "v3"
+    ],
     "localFallbackMarkersPresent": false,
     "api26": "PASSED_SIGNED_INSTALL_LAUNCH_AND_3_OF_3_CONNECTED_TESTS",
     "api37": "PASSED_SIGNED_INSTALL_LAUNCH_3_OF_3_CONNECTED_TESTS_AND_LIVE_FCM",
@@ -294,7 +304,12 @@
     ],
     "durableOutboxRows": 4,
     "durableOutboxUniqueKeys": 4,
-    "durableOutboxTerminalStatuses": ["ACCEPTED", "ACCEPTED", "ACCEPTED", "ACCEPTED"],
+    "durableOutboxTerminalStatuses": [
+      "ACCEPTED",
+      "ACCEPTED",
+      "ACCEPTED",
+      "ACCEPTED"
+    ],
     "modelCompileIncluded": false,
     "note": "scripts/verify-live-demo-drill.sh passed against the deployed direct API after scoped-role OIDC run 33991694814. The deployed Scheduler, Step Functions, SQS worker, durable outbox, signed responder authorization, checking lease and explicit-resolution path completed, and the Standard workflow later observed the terminal Alert and finished SUCCEEDED. Plan compilation remains on the separately recorded 503 fallback."
   },
@@ -365,5 +380,22 @@
   "notes": [
     "This is a truthful partial evidence manifest, not an acceptance record.",
     "Do not publish canonical demo or production-ready claims until every null and blocker required by the submission gate is resolved."
-  ]
+  ],
+  "hackathonRules": {
+    "source": "https://agentsforhumans.devpost.com/rules",
+    "verifiedAt": "2026-09-08T06:20:00Z",
+    "mandatoryEligibility": [
+      "New AI agent built with Strands Agents",
+      "Public source repository with README and MIT or Apache 2.0 license",
+      "Architecture diagram",
+      "Public YouTube or Vimeo demo and pitch video no longer than five minutes",
+      "AWS Builder ID supplied in the submission"
+    ],
+    "optionalScoreImprovements": [
+      "AgentCore deployment",
+      "Live demo URL",
+      "builder.aws posts"
+    ],
+    "note": "AgentCore access, builder.aws publication and physical-phone evidence are not hackathon eligibility gates. The canonical fallback remains disclosed; AgentCore restoration would improve technical scoring."
+  }
 }

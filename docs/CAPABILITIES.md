@@ -122,7 +122,7 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 
 | Capability | State | Current evidence | Release evidence still required |
 |---|---|---|---|
-| Natural-language plan preview | Locally verified; live blocked | Typed AgentCore adapter/runtime tests; deterministic revalidation; deployed v1 process exposed and fixed an artifact-only import defect | Deploy the corrected Nova artifact after the AgentCore version quota is restored, then record a bounded canary |
+| Natural-language plan preview | Submission-capable fallback; live model blocked | Typed AgentCore adapter/runtime tests; deterministic revalidation; the canonical judge flow exposes and labels the deterministic safe-template fallback when AgentCore is unavailable | Optional score improvement: deploy the corrected Nova artifact after the AgentCore version quota is restored, then record a bounded canary |
 | Model and credentials | Implemented; live blocked | Source is locked to AWS-native `us.amazon.nova-2-lite-v1:0`; IAM/SigV4; no model API key in clients. A direct Nova canary currently returns account-level `Operation not allowed`. Claude was rejected after Bedrock returned an unsupported-country restriction for this account | AWS account verification, invocation ID, model ID, latency, token usage and redacted trace |
 | Agent authorization | Provisioned; locally verified | Runtime, Gateway, role-only Lambda target and Cedar Policy Engine exist in `us-east-1`; Gateway is ENFORCE; CDK assertions pass | Permitted and denied live Gateway calls after account verification |
 | Account profile and readiness | Deployed to demo; auth boundary live verified | Authenticated profile/readiness routes, Dynamo adapter, EG/US and ar/en validation, IANA timezone validation, endpoint-safe responses, exact-plan channel gates, and atomic account/global reservations; production admissions and funded capacity start closed | Authenticated live profile/readiness exercise, cost-backed positive capacity, verified phone lifecycle, then staging/production deployment |
@@ -144,9 +144,9 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 | Hosting | API and canonical static site live | Demo API, Cognito, DynamoDB, Scheduler, Step Functions, SQS, AgentCore and KMS are deployed. `api.incaof.com` has valid TLS and returns the public descriptor. GitHub Pages serves the public site at `https://incaof.com` with enforced HTTPS. The scoped AWS edge reached distribution creation before account verification blocked it | AWS CloudFront remains externally blocked; it is not required for the hackathon site |
 | Observability | Provisioned and locally verified | `ico-demo-health` dashboard and eight alarms exist; all eight alarms report OK as of 2026-09-04 | Dashboard screenshot plus evidence during a complete drill |
 | Architecture artifact | Locally verified | Nova-labelled 2400x1600 PNG, SVG source and visually checked one-page PDF | Upload preview on Devpost |
-| Project image and screenshots | Canonical review package complete | Twelve real browser/Android captures cover the public site, validated deterministic preview, deployed audit timeline, signed responder claim/lease/resolution and signed Android release Drill. Signed paths are redacted in provenance. A 1800×1200 review image is composed from those captures | Repeat the preview/trace captures after AgentCore is available and rebuild in final mode |
-| Demo video | 4:35 review master produced | A 1920×1080 H.264/AAC master, local narration, synchronized SRT/VTT files, 1280×720 thumbnail, editable FFmpeg timeline and capture-hash provenance are complete. The narration and visible UI disclose the AgentCore quota block and deterministic fallback | Replace the fallback preview after AgentCore is restored, mark accepted provenance, complete end-to-end playback review and upload publicly |
-| Bonus posts | Three complete drafts | Markdown drafts cover product principle, governed AgentCore and idempotent workflow | Publish on builder.aws and record URLs |
+| Project image and screenshots | Canonical submission package complete | Twelve real browser/Android captures cover the public site, validated deterministic preview, deployed audit timeline, signed responder claim/lease/resolution and signed Android release Drill. Signed paths are redacted in provenance. A 1800×1200 image is composed from those captures | Optional score improvement: repeat the preview/trace captures after AgentCore is available |
+| Demo video | 4:35 submission master produced | A 1920×1080 H.264/AAC master, local narration, synchronized SRT/VTT files, 1280×720 thumbnail, editable FFmpeg timeline and capture-hash provenance are complete. The narration and visible UI truthfully disclose the AgentCore quota block and deterministic fallback | Complete end-to-end playback review and upload publicly to YouTube or Vimeo |
+| Bonus posts | Three complete drafts | Markdown drafts cover product principle, governed AgentCore and idempotent workflow | Optional bonus: publish on builder.aws and record URLs |
 
 ## Current automated evidence
 
@@ -157,7 +157,7 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 - Web: marketing and responder lint, typecheck and production static builds; 19 Playwright browser/accessibility cases, including Arabic RTL authenticated, deletion and responder flows at 320px.
 - Android: unit tests, release lint, ktlint, R8, package/signature inspection and fail-closed configuration checks pass. All 3 connected accessibility tests pass on both API 26 and API 37.
 - Android release identity: protected run `34188760450` built `com.incaof.app` v0.2.0 (`versionCode=2`) from commit `a3e0d0c`, SHA-256 `4119a4993a44e38a11bdb37e2523f527d4364f84b524933e1ff3b63ec1054258`, signing certificate SHA-256 `f12d1890545e420f5a2e10fa1475f21c2fa5463028f57fc3643daa1bc42bbd62`. The installed signed release started the deployed Drill and rendered live Scheduler, workflow, queue and worker audit events on API 37.
-- Submission media: twelve canonical/browser and signed-Android captures, 1800×1200 project image, 4:35 1920×1080 review master, WAV narration, SRT/VTT captions, 1280×720 thumbnail, editable timeline and complete capture hashes are present. Media status remains `REVIEW_CANONICAL_DETERMINISTIC_FALLBACK` until the live AgentCore preview replaces the disclosed fallback.
+- Submission media: twelve canonical/browser and signed-Android captures, 1800×1200 project image, 4:35 1920×1080 master, WAV narration, SRT/VTT captions, 1280×720 thumbnail, editable timeline and complete capture hashes are present. The canonical deterministic fallback is explicitly disclosed in the UI and narration.
 - Push delivery: API 37 created enabled endpoint `a36c1e9a-6dc4-32ba-b174-cbb37b76b64a`; SNS accepted message `c10723f5-9d2b-578c-91d1-40e145dc9104`; Android posted notification `1001` on channel `moments` with the `I'M OKAY` action. Protected credentials and the FCM token remain outside Git and logs.
 - AWS core: `IcoStack-demo` is stable at `UPDATE_COMPLETE`; the API exposes all 61 explicit routes and uses one source-scoped invocation permission. The existing AgentCore Runtime remains deliberately preserved because the account's applied `Versions per Agent` quota is zero.
 - AWS quota evidence: active AgentCore sessions were restored via approved request `451f1b8fde074b51bcb3aacaa2042ba8vNxnmcUj`. AWS asked why automated version request `b38dff125c3e4b1493e58c7fca4ed88bEgBdMI37` requested 1,001 versions; case `178851871600399` was answered on 2026-09-08 clarifying that the applied value is zero and the demo needs only the minimum non-zero value of one. It is awaiting AWS.
@@ -167,19 +167,21 @@ Passing local tests is not evidence of deployment, provider delivery, device ins
 - Live deterministic Drill: after that scoped-role OIDC deployment, the direct API verifier created synthetic plan `8870c8dc-3c80-40ec-a189-c64afa5ab84a`, accelerated Moment `36c1810a-380f-5d27-8273-8a62c64f367e`, and resolved Alert `84d3d2cd-1c6a-4abc-ac7e-a517f6f6cc37`. Thirteen deployed audit events include four distinct ACTION_QUEUED/ACTION_ACCEPTED pairs, Circle escalation, responder claim and `RESPONDER_VERIFIED`; all four outbox rows are terminal ACCEPTED and worker references are restricted to `safe-sink:`. After the in-progress lease wait elapsed, the Standard workflow re-read the terminal Alert and finished `SUCCEEDED`. The AgentCore compile was not part of this proof and still returns the designed 503 fallback.
 - Release negative test: `assembleRelease` refuses to run without explicit backend and signing inputs.
 
-## Hard blockers before a ready claim
+## Hackathon submission blockers
 
-1. Complete AWS account verification. CloudFront and every tested Bedrock model currently return account-level blocks.
-2. Wait for AgentCore `Versions per Agent` case `178851871600399`, then deploy the corrected Nova runtime and 60-second idle lifecycle.
-3. Add the currently blocked Nova/AgentCore compile leg to the now-proven live workflow, queue, responder lease and resolution path; record runtime, trace and execution identifiers.
-4. Capture the final marketing, app, demo, APK, consent and responder evidence on the now-live canonical HTTPS host.
-5. Finish one physical-phone FCM/install pass.
-6. Obtain registered Egypt and US origination identities, add an Arabic-capable verification message path, and verify OTP plus delivery receipts on permitted physical handsets.
-7. Exercise account deletion with a disposable authenticated account; deploy and verify the durable capacity gate in isolated staging after a cost-backed positive slot limit is approved.
-8. Finish Arabic marketing/demo copy and rendered physical-device RTL, mixed-number, TalkBack and large-text verification.
-9. Repeat the canonical preview/trace capture after AgentCore is restored, rebuild the project image/video in final mode, and complete a full playback review; the deterministic fallback and all other live capture surfaces are complete.
-10. Upload the sub-five-minute video and publish the builder.aws posts. The user supplies the AWS Builder ID and completes any account-only publication prompts.
-11. Merge the green draft PR only after the live acceptance gate passes, then tag that exact accepted commit and finalize `submission/release-evidence.json`.
+The official rules require a working Strands-based project, public source, architecture diagram,
+a public video of at most five minutes, and the participant's AWS Builder ID. AgentCore deployment,
+a live demo, and builder.aws posts can improve scoring but are optional. Physical-device and real SMS
+evidence remain production acceptance work rather than hackathon eligibility gates.
+
+1. Re-capture the canonical judge flow in submission mode and seal the final image/video provenance.
+2. Upload the sub-five-minute video to YouTube or Vimeo and record its public URL.
+3. Record the participant's AWS Builder ID.
+4. Merge the green draft PR, tag the exact accepted commit, and finalize `submission/release-evidence.json`.
+
+AWS account verification and AgentCore quota case `178851871600399` remain active score-improvement
+work. If AWS restores access before judging, deploy the corrected Nova runtime and capture the model
+invocation and trace identifiers without changing the deterministic workflow guarantee.
 
 ## Explicitly deferred
 

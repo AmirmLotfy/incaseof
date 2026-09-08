@@ -78,16 +78,13 @@ jobs:
           ICO_API_DOMAIN: api.incaof.com
         run: ./scripts/configure-api-domain.sh
       - name: Set up Java for the signed Android artifact
-        if: github.event.label.name == 'deploy-hackathon-edge'
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
       - name: Set up Android SDK
-        if: github.event.label.name == 'deploy-hackathon-edge'
         uses: android-actions/setup-android@v4
       - name: Build and verify signed Android demo
-        if: github.event.label.name == 'deploy-hackathon-edge'
         env:
           ICO_ANDROID_KEYSTORE_B64: ${{ secrets.ICO_ANDROID_KEYSTORE_B64 }}
           ICO_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ICO_ANDROID_KEYSTORE_PASSWORD }}
@@ -125,7 +122,6 @@ jobs:
           ICO_PUBLIC_API_URL: https://api.incaof.com
         run: ./scripts/deploy-web.sh
       - name: Retain signed APK for release evidence
-        if: github.event.label.name == 'deploy-hackathon-edge'
         uses: actions/upload-artifact@v7
         with:
           name: in-case-of-android-demo

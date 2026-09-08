@@ -39,7 +39,9 @@ function safeDemoTemplate(timezone: string): CompileResult {
       { sequence: 2, offsetSeconds: 600, action: "PUSH_SUBJECT" },
       { sequence: 3, offsetSeconds: 1200, action: "SMS_SUBJECT" },
       { sequence: 4, offsetSeconds: 1500, action: "MESSAGE_RESPONDER", targetRole: "PRIMARY" },
-      { sequence: 5, offsetSeconds: 2700, action: "MESSAGE_RESPONDER", targetRole: "BACKUP" },
+      // Keep the accelerated primary-responder window open for about a minute so a judge
+      // can read the incident room before acting. Production timing remains unchanged.
+      { sequence: 5, offsetSeconds: 4500, action: "MESSAGE_RESPONDER", targetRole: "BACKUP" },
     ],
     stopConditions: ["SUBJECT_EXPLICIT_CONFIRMATION", "RESPONDER_VERIFIED_CONTACT"],
     contextPolicy: {

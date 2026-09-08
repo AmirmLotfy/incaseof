@@ -78,7 +78,7 @@ jobs:
           ICO_API_DOMAIN: api.incaof.com
         run: ./scripts/configure-api-domain.sh
       - name: Set up Java for the signed Android artifact
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 17

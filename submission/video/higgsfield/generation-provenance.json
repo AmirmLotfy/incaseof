@@ -1,0 +1,138 @@
+{
+  "provider": "Higgsfield",
+  "workspaceType": "private",
+  "workspacePlan": "max",
+  "creditsBefore": 612.27,
+  "creditsAfter": 430.67,
+  "chargedCreditsTotal": 181.6,
+  "assets": [
+    {
+      "localId": "hf-scene-01-still",
+      "type": "image",
+      "path": "submission/video/higgsfield/scene-01-independent-life.png",
+      "prompt": "Cinematic photorealistic editorial frame for a premium human-centered technology film. A fictional Egyptian woman in her early thirties lives independently and is calmly preparing tea in a modern Cairo apartment at blue hour. She is safe, relaxed, and absorbed in ordinary life. Warm practical lamp light, deep charcoal shadows, one restrained burnt-orange accent in the room, natural skin texture, subtle film grain, wide negative space for editorial cropping, 35mm lens at eye level, honest documentary mood, no crisis, no fear, no surveillance imagery, no readable text, no logos, no distorted hands, no phone screen facing camera.",
+      "model": "recraft_v4_1",
+      "jobId": "417b74a0-4cb2-43c4-aafd-67576b3710a7",
+      "resultId": "417b74a0-4cb2-43c4-aafd-67576b3710a7",
+      "chargedCredits": 8.0,
+      "sha256": "27883bbbd08188bb67046f5f7f27f585316abc6a3abf82ce4a2f707484ad3a20",
+      "rightsNotes": "Original project-specific Higgsfield generation; fictional subjects; reviewed before inclusion.",
+      "providerResultUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_35MJ2aWMmEoqYSm4FasjQsplt4C/hf_20260908_062236_417b74a0-4cb2-43c4-aafd-67576b3710a7.png"
+    },
+    {
+      "localId": "hf-scene-01-motion",
+      "type": "video",
+      "path": "submission/video/higgsfield/scene-01-independent-life.mp4",
+      "prompt": "A slow, almost imperceptible cinematic push-in. The woman calmly pours tea; steam drifts from the cup, her breathing and hands move naturally, lamp light flickers subtly. Preserve identity, wardrobe, apartment, lighting and composition from the reference. Realistic human motion, stable face and hands, premium documentary film texture. No dialogue, no camera shake, no new objects, no text, no logos.",
+      "model": "seedance_2_5",
+      "jobId": "fe8a84f8-0d69-4a96-9d70-e7bfe4fc23a5",
+      "resultId": "fe8a84f8-0d69-4a96-9d70-e7bfe4fc23a5",
+      "chargedCredits": 45.0,
+      "sha256": "ec65643d254f9e36ed4907206a1004af38f0e8a601b13eadeebbda814a17c51b",
+      "rightsNotes": "Original project-specific Higgsfield generation; fictional subjects; reviewed before inclusion.",
+      "providerResultUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_35MJ2aWMmEoqYSm4FasjQsplt4C/hf_20260908_062445_fe8a84f8-0d69-4a96-9d70-e7bfe4fc23a5.mp4"
+    },
+    {
+      "localId": "hf-scene-02-still",
+      "type": "image",
+      "path": "submission/video/higgsfield/scene-02-responder.png",
+      "prompt": "Cinematic photorealistic editorial frame for the same premium human-centered technology film. A fictional Egyptian woman in her mid thirties, a trusted friend, pauses in a warmly lit kitchen after noticing a quiet phone vibration. She looks attentive and calm, ready to help, never panicked. The phone is visible in her hand but its screen faces away and contains no readable interface. Evening interior, honest human expression, natural skin texture, subtle film grain, 50mm lens, balanced negative space, charcoal shadows with one restrained burnt-orange practical light, no crisis imagery, no emergency uniforms, no readable text, no logos, no distorted hands.",
+      "model": "recraft_v4_1",
+      "jobId": "8d29ee61-3744-48cb-9540-0fadb05d71c2",
+      "resultId": "8d29ee61-3744-48cb-9540-0fadb05d71c2",
+      "chargedCredits": 8.0,
+      "sha256": "019f4fa1d218d0f2c4e789fa79c10dd42130992c87a7d250e8e653bbad6dea70",
+      "rightsNotes": "Original project-specific Higgsfield generation; fictional subjects; reviewed before inclusion.",
+      "providerResultUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_35MJ2aWMmEoqYSm4FasjQsplt4C/hf_20260908_062828_8d29ee61-3744-48cb-9540-0fadb05d71c2.png"
+    },
+    {
+      "localId": "hf-scene-02-motion",
+      "type": "video",
+      "path": "submission/video/higgsfield/scene-02-responder.mp4",
+      "prompt": "A restrained cinematic close-up. The phone gives one subtle vibration; the woman lifts her gaze from the screen with calm attention and takes a quiet breath, ready to act. Preserve her identity, hand anatomy, phone shape, lighting and framing. Slow lateral camera drift, realistic micro-expressions, premium documentary texture. No dialogue, no panic, no text appearing on screen, no logos, no extra fingers, no camera shake.",
+      "model": "seedance_2_5",
+      "jobId": "5ca2ea05-e4cf-4486-a48b-b999f0141aa7",
+      "resultId": "5ca2ea05-e4cf-4486-a48b-b999f0141aa7",
+      "chargedCredits": 45.0,
+      "sha256": "e67e41fac48d59bad1ae18ee51df5098b2d907602b089d6896c387ac08174858",
+      "rightsNotes": "Original project-specific Higgsfield generation; fictional subjects; reviewed before inclusion.",
+      "providerResultUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_35MJ2aWMmEoqYSm4FasjQsplt4C/hf_20260908_062935_5ca2ea05-e4cf-4486-a48b-b999f0141aa7.mp4"
+    },
+    {
+      "localId": "hf-scene-03-still",
+      "type": "image",
+      "path": "submission/video/higgsfield/scene-03-loop-closed.png",
+      "prompt": "Cinematic photorealistic closing frame for a premium human-centered technology film. Two fictional Egyptian women sit together at a small apartment table after reconnecting, sharing tea and an easy relieved smile. The moment is quiet and ordinary, friendship rather than rescue. Frame them in a wide side profile with natural distance, intact hands resting around simple cups, warm dawn-like practical light replacing the earlier blue shadows, subtle film grain, 35mm lens, restrained charcoal and burnt-orange palette, generous negative space, no phone emphasized, no crisis, no medical scene, no readable text, no logos, no distorted anatomy.",
+      "model": "recraft_v4_1",
+      "jobId": "84cd0728-e319-45da-9019-33a48ecb2adb",
+      "resultId": "84cd0728-e319-45da-9019-33a48ecb2adb",
+      "chargedCredits": 8.0,
+      "sha256": "3e0cac3ef795b8bd44ea765d8ca38e1f90128166ea2bf605020e9d072d5a06b1",
+      "rightsNotes": "Original project-specific Higgsfield generation; fictional subjects; reviewed before inclusion.",
+      "providerResultUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_35MJ2aWMmEoqYSm4FasjQsplt4C/hf_20260908_063257_84cd0728-e319-45da-9019-33a48ecb2adb.png"
+    },
+    {
+      "localId": "hf-scene-03-motion",
+      "type": "video",
+      "path": "submission/video/higgsfield/scene-03-loop-closed.mp4",
+      "prompt": "A quiet cinematic closing moment. The two women exchange a small relieved smile, breathe naturally, and gently settle their cups on the table. Warm morning light grows almost imperceptibly while the camera makes a slow, steady pull back. Preserve both identities, hands, cups, wardrobe, room and composition. Natural micro-expressions, subtle film grain, human friendship rather than rescue. No dialogue, no hugging, no new objects, no text, no logos, no distorted anatomy, no camera shake.",
+      "model": "seedance_2_5",
+      "jobId": "a17c6519-7e8b-4657-a69d-a61bdad4dd54",
+      "resultId": "a17c6519-7e8b-4657-a69d-a61bdad4dd54",
+      "chargedCredits": 45.0,
+      "sha256": "37d7b18b8cf9bc87af1e00ecd2bcff8a364f928299afa4a7de79649805d9adb0",
+      "rightsNotes": "Original project-specific Higgsfield generation; fictional subjects; reviewed before inclusion.",
+      "providerResultUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_35MJ2aWMmEoqYSm4FasjQsplt4C/hf_20260908_063559_a17c6519-7e8b-4657-a69d-a61bdad4dd54.mp4"
+    }
+  ],
+  "audioJobIds": [
+    "4351dd80-3633-4a61-8c2c-d45fd5f0c64e",
+    "4008559f-3d94-40f9-a4e9-9913f6559e6e",
+    "b9fa1700-f139-4b06-99d1-6333516f915d"
+  ],
+  "audio": [
+    {
+      "part": "voice-01",
+      "path": "submission/video/higgsfield/voice-01.wav",
+      "model": "seed_audio",
+      "voice": "Maeve",
+      "voiceId": "64cf4f1a-61c8-5938-9aea-83d12b2e1d13",
+      "jobId": "4351dd80-3633-4a61-8c2c-d45fd5f0c64e",
+      "chargedCredits": 10.8,
+      "sha256": "6d3c6d2b6e52bafa20e60a627db9f64749ffb255de169f982764405237ec7ad5",
+      "providerResultUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_35MJ2aWMmEoqYSm4FasjQsplt4C/hf_20260908_063925_4351dd80-3633-4a61-8c2c-d45fd5f0c64e.wav"
+    },
+    {
+      "part": "voice-02a",
+      "path": "submission/video/higgsfield/voice-02a.wav",
+      "model": "seed_audio",
+      "voice": "Maeve",
+      "voiceId": "64cf4f1a-61c8-5938-9aea-83d12b2e1d13",
+      "jobId": "4008559f-3d94-40f9-a4e9-9913f6559e6e",
+      "chargedCredits": 6.8,
+      "sha256": "10bf046e8953af4b82a16a0dc2a75c3d5d7c829a8087a94a006c676932ca2d0d",
+      "providerResultUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_35MJ2aWMmEoqYSm4FasjQsplt4C/hf_20260908_064438_4008559f-3d94-40f9-a4e9-9913f6559e6e.wav"
+    },
+    {
+      "part": "voice-02b",
+      "path": "submission/video/higgsfield/voice-02b.wav",
+      "model": "seed_audio",
+      "voice": "Maeve",
+      "voiceId": "64cf4f1a-61c8-5938-9aea-83d12b2e1d13",
+      "jobId": "b9fa1700-f139-4b06-99d1-6333516f915d",
+      "chargedCredits": 5.0,
+      "sha256": "f67f519a57c1be8a625b9f3d5a7faecac7dd4d37e17b245aa4fdf16a7f535b19",
+      "providerResultUrl": "https://d8j0ntlcm91z4.cloudfront.net/user_35MJ2aWMmEoqYSm4FasjQsplt4C/hf_20260908_065353_b9fa1700-f139-4b06-99d1-6333516f915d.wav"
+    }
+  ],
+  "rejectedAttempts": [
+    {
+      "jobId": "58600d0f-6f79-437c-bf2f-09202756914e",
+      "type": "audio",
+      "model": "seed_audio",
+      "status": "failed",
+      "chargedCredits": 0.0,
+      "reason": "Backend returned terminal failure without media; source was split and ASCII punctuation used for successful replacements."
+    }
+  ]
+}

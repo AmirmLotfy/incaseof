@@ -70,6 +70,26 @@ if [[ -s "$provenance" ]]; then
     fi
   done
 
+  music_path=$(jq -r '.music.path // empty' "$provenance")
+  music_hash=$(jq -r '.music.sha256 // empty' "$provenance")
+  music_provider=$(jq -r '.music.provider // empty' "$provenance")
+  if [[ -s "$music_path" ]]; then
+    actual_music=$(shasum -a 256 "$music_path" | awk '{print $1}')
+    [[ "$actual_music" == "$music_hash" ]] || fail "music hash does not match provenance"
+  else
+    fail "original score is missing"
+  fi
+  [[ "$music_provider" == "Project-authored procedural synthesis" ]] || \
+    fail "music provenance does not identify the original project score"
+
+  narration_provider=$(jq -r '.narration.provider // empty' "$provenance")
+  narration_voice=$(jq -r '.narration.voice // empty' "$provenance")
+  narration_job_count=$(jq -r '.narration.providerJobIds | length' "$provenance" 2>/dev/null)
+  [[ "$narration_provider" == "Higgsfield Seed Audio 1.0" ]] || \
+    fail "narration provenance does not identify Higgsfield Seed Audio"
+  [[ -n "$narration_voice" ]] || fail "narration voice is missing from provenance"
+  [[ "$narration_job_count" -eq 3 ]] || fail "narration does not record all three provider jobs"
+
   timeline=$(jq -r '.timeline.path // empty' "$provenance")
   timeline_hash=$(jq -r '.timeline.sha256 // empty' "$provenance")
   if [[ -s "$timeline" ]]; then
@@ -90,6 +110,8 @@ if [[ -s "$provenance" ]]; then
   done < <(jq -r '.productCaptures[]? | [.path, .sha256] | @tsv' "$provenance")
   jq -e '.generatedAssets | type == "array" and all(.[]; .localId and .prompt and .model and .jobId and .resultId and (.chargedCredits | type == "number") and .sha256 and .rightsNotes)' \
     "$provenance" >/dev/null 2>&1 || fail "a generated asset lacks provider, cost, hash or rights evidence"
+  [[ $(jq -r '.generatedAssets | length' "$provenance") -eq 6 ]] || \
+    fail "provenance does not record all six Higgsfield visual assets"
 fi
 
 if [[ ${#failures[@]} -gt 0 ]]; then

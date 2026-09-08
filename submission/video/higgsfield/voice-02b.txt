@@ -1,0 +1,7 @@
+The same synthetic flow runs on the public web and in the signed Android release. The APK shown here came from a protected GitHub workflow and ran this deployed Drill across Scheduler, workflow, queue, worker, responder lease, and explicit resolution.
+
+AWS account verification currently blocks the live Nova and AgentCore invocation, so the demo says that plainly and uses a validated deterministic template. There is no fabricated model trace. The safety workflow continues because it was never entrusted to the model.
+
+In Case Of asks for no continuous location, camera, or microphone access. Most days, it stays quiet. On the unusual day, it gives the right people a calm, auditable way to close uncertainty.
+
+In Case Of. Someone notices.

@@ -28,8 +28,8 @@ In Case Of closes uncertainty; it does not decide whether someone is in danger.
 
 **Public code-repository URL:** https://github.com/AmirmLotfy/incaseof
 
-**Project image:** `submission/devpost/in-case-of-project-1800x1200.png` — generated from the
-canonical live capture set.
+**Project image:** `submission/devpost/in-case-of-project-1800x1200.png` — composed from a reviewed
+Higgsfield story frame and the real signed-Android drill capture.
 
 **Architecture upload:** `submission/architecture/in-case-of-architecture.png` (required);
 the editable SVG and one-page PDF are beside it.

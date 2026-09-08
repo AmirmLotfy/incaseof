@@ -4,6 +4,7 @@ cd "$(dirname "$0")/.."
 
 manifest=submission/release-evidence.json
 mode="${ICO_PROJECT_IMAGE_MODE:-final}"
+style="${ICO_PROJECT_IMAGE_STYLE:-evidence}"
 if [[ "$mode" != "final" && "$mode" != "submission" && "$mode" != "review" ]]; then
   echo "ICO_PROJECT_IMAGE_MODE must be final, submission or review." >&2
   exit 2
@@ -63,6 +64,27 @@ done
 mkdir -p submission/devpost
 work=$(mktemp -d /tmp/ico-devpost.XXXXXX)
 trap 'rm -rf "$work"' EXIT
+
+if [[ "$style" == "cinematic" ]]; then
+  cinematic="submission/video/higgsfield/scene-01-independent-life.png"
+  [[ -s "$cinematic" ]] || { echo "Missing reviewed Higgsfield hero frame: $cinematic" >&2; exit 1; }
+  magick "$cinematic" -auto-orient -resize '1800x1200^' -gravity center -extent 1800x1200 \
+    -fill 'rgba(23,26,24,0.32)' -draw 'rectangle 0,0 1800,1200' \
+    -fill 'rgba(23,26,24,0.96)' -draw 'rectangle 0,0 760,1200' \
+    \( apps/marketing/public/images/ico-logo.png -resize 112x112 \) -gravity northwest -geometry +82+86 -composite \
+    -fill '#E85B2A' -font Arial-Bold -pointsize 36 -gravity northwest -annotate +82+270 'IN CASE OF' \
+    -fill '#F6F5F0' -font Arial-Bold -pointsize 78 -annotate +82+380 'SOMEONE' -annotate +82+470 'NOTICES.' \
+    -fill '#C9CEC9' -font Arial -pointsize 32 -annotate +84+555 'A governed AWS agent' -annotate +84+605 'for human judgment.' \
+    -fill '#F6F5F0' -font Arial -pointsize 26 -annotate +84+740 'The plan is monitored.' -annotate +84+784 'The person is not.' \
+    -fill '#E85B2A' -font Arial-Bold -pointsize 31 -annotate +84+1080 'incaof.com/demo' \
+    \( submission/screenshots/android-drill.png -auto-orient -resize '430x850>' -bordercolor '#F6F5F0' -border 4 \
+       \( +clone -background black -shadow 32x10+0+14 \) +swap -background none -layers merge +repage \) \
+    -gravity east -geometry +90+0 -composite submission/devpost/in-case-of-project-1800x1200.png
+  dimensions=$(magick identify -format '%wx%h' submission/devpost/in-case-of-project-1800x1200.png)
+  [[ "$dimensions" == "1800x1200" ]] || { echo "Unexpected output size: $dimensions" >&2; exit 1; }
+  echo "Created cinematic submission/devpost/in-case-of-project-1800x1200.png from reviewed Higgsfield art and real Android evidence ($mode)."
+  exit 0
+fi
 
 for index in 0 1 2 3; do
   magick "${sources[$index]}" -auto-orient -resize '780x760^' -gravity center \

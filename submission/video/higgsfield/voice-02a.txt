@@ -1,0 +1,7 @@
+"I’m checking" creates a short lease. It tells everyone that a human is acting, but it does not close the Alert. If Maya disappears, escalation can continue. Only an explicit outcome, "I reached Mona; she is okay", resolves the check.
+
+Acknowledged is never mistaken for resolved.
+
+That distinction shapes the entire system. Every Alert is pinned to the exact plan Mona approved. Every action has a durable identity. Concurrent or replayed queue messages cannot repeat a confirmed provider call. Consent and recipient membership are checked again immediately before delivery. If a provider may have accepted a message before timing out, the result enters reconciliation. The system does not blindly resend, and it does not invent success.
+
+The agent is governed structurally. Its tools accept abstract roles, never raw phone numbers, emails, or arbitrary URLs. Cedar begins from default deny. The target repeats tenant, consent, membership, channel, plan-version, Alert-state, and lease checks before any side effect.

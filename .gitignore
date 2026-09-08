@@ -68,6 +68,9 @@ coverage/
 # Keep the checked-in production controls/templates; validate the local delivery package
 # with scripts/verify-video-package.sh before uploading it manually.
 submission/video/final/
+submission/video/higgsfield/*.png
+submission/video/higgsfield/*.mp4
+submission/video/higgsfield/*.wav
 
 # ---- Vendored agent skills ----
 # Installed with `npx skills add referodesign/refero_skill --skill refero-design`.

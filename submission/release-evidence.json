@@ -351,12 +351,12 @@
     "architecturePngSha256": "176687736f479c1efa93a24fa7d95c6761bb1a4c31e6497bf66e75cf6729d43d",
     "architecturePdfSha256": "62c9e46ed0f81a79127754df65ba21fa02f3b2c82cd6ebdaa47680cdb443e72b",
     "projectImage": "submission/devpost/in-case-of-project-1800x1200.png",
-    "projectImageStatus": "SUBMISSION_CANONICAL_DETERMINISTIC_FALLBACK",
-    "projectImageSha256": "873d817f32f779812e418f74498a5a02532239cee2852babd869636845029999",
+    "projectImageStatus": "FINAL_CINEMATIC_HIGGSFIELD_CANONICAL_DETERMINISTIC_FALLBACK",
+    "projectImageSha256": "aa960373708d24ca0920d9f05d832c8e4a3ca162a42bbddba155cbf685562fe4",
     "videoReviewMaster": "submission/video/final/ico-demo-master-1080p.mp4",
-    "videoReviewStatus": "FINAL_CANONICAL_DETERMINISTIC_FALLBACK",
-    "videoReviewMasterSha256": "f32e2ba8cbe1cfca2fbb4de40b744fda58db0f1dca40028b6a3aca782a843030",
-    "videoThumbnailSha256": "102acae05a7ee6da09ac3d953ace326222d23da68a4457e2c62df48b488b77ed",
+    "videoReviewStatus": "FINAL_CINEMATIC_HIGGSFIELD_CANONICAL_DETERMINISTIC_FALLBACK",
+    "videoReviewMasterSha256": "f116f1be809b4558a9e512a5ac6421693cc34e3448156f5399f854509efe3cbe",
+    "videoThumbnailSha256": "b1f52f5b1ac9b8cb8821b173d1003b377f2f1806090e063a518db807e067700b",
     "webCaptureProvenance": "submission/screenshots/web-provenance.json",
     "webCaptureMode": "SUBMISSION_CANONICAL_DETERMINISTIC_FALLBACK",
     "screenshots": [
@@ -373,8 +373,12 @@
       "submission/screenshots/android-circle.png",
       "submission/screenshots/android-drill.png"
     ],
-    "videoDurationSeconds": 275.0,
-    "videoResolution": "1920x1080"
+    "videoDurationSeconds": 266.0,
+    "videoResolution": "1920x1080",
+    "videoNarrationProvider": "Higgsfield Seed Audio 1.0 / Maeve preset",
+    "videoGeneratedAssetCount": 6,
+    "videoHiggsfieldCreditsCharged": 181.6,
+    "videoMusic": "Original project-authored procedural score"
   },
   "videoUrl": null,
   "blogUrls": [],

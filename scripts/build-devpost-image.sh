@@ -3,18 +3,33 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 manifest=submission/release-evidence.json
+mode="${ICO_PROJECT_IMAGE_MODE:-final}"
+if [[ "$mode" != "final" && "$mode" != "review" ]]; then
+  echo "ICO_PROJECT_IMAGE_MODE must be final or review." >&2
+  exit 2
+fi
 if [[ ! -f "$manifest" ]]; then
   echo "Missing $manifest." >&2
   exit 1
 fi
 if ! jq -e '
-  (.canary.runtimeReadyForRequest == true) and
   (.liveDeterministicDrill.terminalState == "RESOLVED") and
   ([.urls.marketing, .urls.demo, .urls.canonicalApi] |
     all(type == "string" and startswith("https://")))
 ' "$manifest" >/dev/null; then
-  echo "Live model, Drill and canonical URL evidence must pass before composing final art." >&2
+  echo "Resolved Drill and canonical URL evidence must pass before composing project art." >&2
   exit 1
+fi
+if [[ "$mode" == "final" ]]; then
+  jq -e '.canary.runtimeReadyForRequest == true' "$manifest" >/dev/null || {
+    echo "Final project art requires a successful AgentCore runtime canary." >&2
+    exit 1
+  }
+else
+  jq -e '.artifacts.webCaptureMode == "REHEARSAL_CANONICAL_DETERMINISTIC_FALLBACK"' "$manifest" >/dev/null || {
+    echo "Review art requires the canonical deterministic-fallback capture record." >&2
+    exit 1
+  }
 fi
 
 for key in marketing demo canonicalApi; do
@@ -26,7 +41,7 @@ for key in marketing demo canonicalApi; do
 done
 
 sources=(
-  submission/screenshots/marketing-desktop.png
+  submission/screenshots/audit-timeline.png
   submission/screenshots/web-plan-preview.png
   submission/screenshots/android-drill.png
   submission/screenshots/responder-resolved.png
@@ -55,7 +70,7 @@ for index in 0 1 2 3; do
 done
 
 magick -size 1800x1200 xc:'#F6F5F0' \
-  \( apps/marketing/app/icon.svg -resize 88x88 \) -geometry +100+54 -composite \
+  \( apps/marketing/public/images/ico-logo.png -resize 88x88 \) -geometry +100+54 -composite \
   -fill '#171A18' -font Arial-Bold -pointsize 76 -draw "text 214,120 'In Case Of — ICO'" \
   -fill '#646B66' -font Arial -pointsize 32 -draw "text 214,170 'Someone notices. The plan is monitored, not the person.'" \
   "$work/0.png" -geometry 780x760+100+245 -composite \
@@ -68,4 +83,4 @@ magick -size 1800x1200 xc:'#F6F5F0' \
 
 dimensions=$(magick identify -format '%wx%h' submission/devpost/in-case-of-project-1800x1200.png)
 [[ "$dimensions" == "1800x1200" ]] || { echo "Unexpected output size: $dimensions" >&2; exit 1; }
-echo "Created submission/devpost/in-case-of-project-1800x1200.png from real captures."
+echo "Created submission/devpost/in-case-of-project-1800x1200.png from real captures ($mode)."

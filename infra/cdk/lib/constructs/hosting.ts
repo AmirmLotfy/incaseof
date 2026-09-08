@@ -190,8 +190,8 @@ function handler(event) {
             domainName: "api.incaof.com",
             certificate,
           });
-      new apigw.ApiMapping(this, "ApiMapping", { api: props.httpApi, domainName: apiDomain });
       if (!reusingApiDomain) {
+        new apigw.ApiMapping(this, "ApiMapping", { api: props.httpApi, domainName: apiDomain });
         new route53.ARecord(this, "ApiAlias", {
           zone,
           recordName: "api",

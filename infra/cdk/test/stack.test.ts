@@ -261,11 +261,11 @@ describe("hosting", () => {
     });
   });
 
-  it("maps the canonical website and API records in Route 53", () => {
+  it("maps the canonical website and reuses the existing API mapping", () => {
     const template = synth("demo");
     template.resourceCountIs("AWS::CertificateManager::Certificate", 1);
     template.resourceCountIs("AWS::ApiGatewayV2::DomainName", 0);
-    template.resourceCountIs("AWS::ApiGatewayV2::ApiMapping", 1);
+    template.resourceCountIs("AWS::ApiGatewayV2::ApiMapping", 0);
     template.resourceCountIs("AWS::Route53::RecordSet", 2);
   });
 

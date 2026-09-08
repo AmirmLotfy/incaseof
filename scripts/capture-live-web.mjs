@@ -79,12 +79,24 @@ try {
   await openChecked(page, `${baseUrl}/demo`);
   await page.getByText("Live AWS demo.", { exact: false }).waitFor();
   await page.getByRole("button", { name: "Compile the plan" }).click();
-  await page.getByText("AgentCore preview", { exact: false }).waitFor({ timeout: 45_000 });
-  requireCondition((await page.getByRole("alert").count()) === 0, "the live compiler returned an error");
+  const agentPreview = page.getByText("AgentCore preview", { exact: false });
+  const safeTemplate = page.getByRole("button", { name: "Use safe Routine template" });
+  await agentPreview.or(safeTemplate).waitFor({ timeout: 45_000 });
+  if (await safeTemplate.isVisible()) {
+    requireCondition(mode === "rehearsal", "the final live compiler returned an error");
+    await safeTemplate.click();
+    await page.getByText("Validated Routine template", { exact: false }).waitFor();
+  } else {
+    requireCondition((await page.getByRole("alert").count()) === 0, "the live compiler returned an error");
+  }
   await screenshot(page, "web-plan-preview.png");
 
-  await page.getByText("Developer Trace", { exact: true }).click();
-  await page.getByText("Redacted evidence returned", { exact: false }).waitFor();
+  if (await agentPreview.isVisible()) {
+    await page.getByText("Developer Trace", { exact: true }).click();
+    await page.getByText("Redacted evidence returned", { exact: false }).waitFor();
+  } else {
+    await page.getByText("No model trace exists for this deterministic fallback", { exact: false }).waitFor();
+  }
   await screenshot(page, "developer-trace-redacted.png");
 
   await page.getByRole("button", { name: "Save this draft" }).click();

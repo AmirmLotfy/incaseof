@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>In Case Of</title>
+  </head>
+  <body>
+    <p>Opening In Case Of…</p>
+    <script>
+      (async function () {
+        var section = window.location.pathname.split("/").filter(Boolean)[0];
+        if (section !== "r" && section !== "i") {
+          window.location.replace("/404/");
+          return;
+        }
+        var response = await fetch("/" + section + "/__token/index.html", { cache: "no-store" });
+        if (!response.ok) {
+          window.location.replace("/404/");
+          return;
+        }
+        var html = await response.text();
+        document.open();
+        document.write(html);
+        document.close();
+      })().catch(function () { window.location.replace("/404/"); });
+    </script>
+  </body>
+</html>

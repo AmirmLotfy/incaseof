@@ -199,10 +199,16 @@ export function Demo() {
   async function poll() {
     try {
       const next = await request<MomentSummary>("/v1/demo/moments/next");
-      setMoment(next);
-      if (!next.alertId) return;
+      if (!next.alertId) {
+        setMoment(next);
+        return;
+      }
       const timeline = await request<{ events: TimelineEvent[] }>(`/v1/demo/alerts/${next.alertId}/timeline`);
       setEvents(timeline.events);
+      const terminal = timeline.events.some((entry) =>
+        ["SUBJECT_CONFIRMED", "RESPONDER_VERIFIED"].includes(entry.event),
+      );
+      setMoment(terminal ? { ...next, status: "RESOLVED", alertState: "RESOLVED" } : next);
       setStage("alert");
       try {
         const link = await request<{ responderUrl: string }>(`/v1/demo/alerts/${next.alertId}/responder-link`);

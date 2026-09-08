@@ -89,12 +89,10 @@ try {
   await page.getByText("Live AWS demo.", { exact: false }).waitFor();
   await page.getByRole("button", { name: "Compile the plan" }).click();
   const agentPreview = page.getByText("AgentCore preview", { exact: false });
-  const safeTemplate = page.getByRole("button", { name: "Use safe Routine template" });
-  await agentPreview.or(safeTemplate).waitFor({ timeout: 45_000 });
-  if (await safeTemplate.isVisible()) {
+  const fallbackPreview = page.getByText("Validated Routine template", { exact: false });
+  await agentPreview.or(fallbackPreview).waitFor({ timeout: 45_000 });
+  if (await fallbackPreview.isVisible()) {
     requireCondition(mode !== "final", "the final live compiler returned an error");
-    await safeTemplate.click();
-    await page.getByText("Validated Routine template", { exact: false }).waitFor();
   } else {
     requireCondition((await page.getByRole("alert").count()) === 0, "the live compiler returned an error");
   }

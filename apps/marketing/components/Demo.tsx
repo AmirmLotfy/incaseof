@@ -146,29 +146,29 @@ export function Demo() {
     await run(async () => {
       const nextSession = await request<DemoSession>("/v1/demo/session", { method: "POST" }, null);
       setSession(nextSession);
-      const compiled = await request<CompileResult>(
-        "/v1/demo/plans/compile",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            utterance: "Mona should check in every evening at 9 PM. Remind her, then ask Maya, then Omar.",
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          }),
-        },
-        nextSession.sessionToken,
-      );
-      setPreview(compiled);
-      setPreviewSource("agentcore");
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      try {
+        const compiled = await request<CompileResult>(
+          "/v1/demo/plans/compile",
+          {
+            method: "POST",
+            body: JSON.stringify({
+              utterance: "Mona should check in every evening at 9 PM. Remind her, then ask Maya, then Omar.",
+              timezone,
+            }),
+          },
+          nextSession.sessionToken,
+        );
+        setPreview(compiled);
+        setPreviewSource("agentcore");
+      } catch {
+        // A model outage must not turn a safe judge drill into a dead end. The fallback is
+        // disclosed in the preview and still passes the deployed schema and policy checks.
+        setPreview(safeDemoTemplate(timezone));
+        setPreviewSource("template");
+      }
       setStage("preview");
     });
-  }
-
-  function useSafeTemplate() {
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    setPreview(safeDemoTemplate(timezone));
-    setPreviewSource("template");
-    setError("");
-    setStage("preview");
   }
 
   async function saveDraft() {
@@ -245,20 +245,16 @@ export function Demo() {
               Compile the plan
             </button>
           )}
-          {stage === "failed" && session && !preview && (
-            <div className="app-preview">
-              <p className="eyebrow">AgentCore unavailable · deterministic fallback</p>
-              <p>The AI preview could not run. Continue with the same schema-validated Routine template used by the product fallback.</p>
-              <button className="cta app-button" onClick={useSafeTemplate}>
-                Use safe Routine template
-              </button>
-            </div>
-          )}
           {preview && (
             <div className="app-preview">
               <p className="eyebrow">
                 {previewSource === "agentcore" ? "AgentCore preview" : "Validated Routine template"} · not active
               </p>
+              {previewSource === "template" && (
+                <p className="app-muted">
+                  AgentCore is temporarily unavailable, so this disclosed deterministic preview keeps the drill moving.
+                </p>
+              )}
               <h3>{preview.plan.label}</h3>
               <p>{preview.plan.type} · {preview.plan.timezone}</p>
               <ol className="app-steps">

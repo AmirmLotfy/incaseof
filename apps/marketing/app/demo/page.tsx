@@ -34,8 +34,9 @@ export default function DemoPage() {
 
       <p style={{ color: "var(--ico-graphite)", fontSize: "0.9375rem" }}>
         Demo sessions use synthetic people, short-lived credentials and no private contact
-        endpoints. The deployment still uses the real compiler, DynamoDB repositories,
-        EventBridge Scheduler, Step Functions workflow and responder authorization path.
+        endpoints. The deployment uses the live compiler when AgentCore is available and a
+        disclosed, schema-validated template when it is not. Drafts still enter the deployed
+        DynamoDB, EventBridge Scheduler, Step Functions and responder authorization path.
       </p>
     </main>
   );

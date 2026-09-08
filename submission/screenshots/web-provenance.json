@@ -1,0 +1,49 @@
+{
+  "capturedAt": "2026-09-08T05:25:22.538Z",
+  "mode": "rehearsal",
+  "baseUrl": "https://incaof.com",
+  "sourceCommit": "919f5ae1577e3b163e914293061cf2989d9c65fb",
+  "captures": [
+    {
+      "filename": "marketing-desktop.png",
+      "sha256": "50bbcbec6a6ea5c689ea53a727f776c8df3d8c54101be3bb391936da0abc415d",
+      "sourceUrl": "https://incaof.com/"
+    },
+    {
+      "filename": "marketing-mobile.png",
+      "sha256": "fa0876e39dad1d7e7d31e7e3318380a0d61d19d6976e2c35c268fe004a5bf10d",
+      "sourceUrl": "https://incaof.com/"
+    },
+    {
+      "filename": "web-plan-preview.png",
+      "sha256": "cd783a36931229716953a513a30690fa2448537a54848c96e38bb25a871dac12",
+      "sourceUrl": "https://incaof.com/demo/"
+    },
+    {
+      "filename": "developer-trace-redacted.png",
+      "sha256": "cd783a36931229716953a513a30690fa2448537a54848c96e38bb25a871dac12",
+      "sourceUrl": "https://incaof.com/demo/"
+    },
+    {
+      "filename": "audit-timeline.png",
+      "sha256": "399f1bc78d49290aaea08a9b99245bac680e22b02c4e843f9ffe3c4b3fbff315",
+      "sourceUrl": "https://incaof.com/demo/"
+    },
+    {
+      "filename": "responder-claim.png",
+      "sha256": "91594bb646bfc3b0404112aca9babfdf057f5647b17d70f3b8772e8d083c46cd",
+      "sourceUrl": "https://incaof.com/r/[redacted]"
+    },
+    {
+      "filename": "responder-lease.png",
+      "sha256": "0b2989ebae09cf927a42318b4faa95ec16a1360774c5b331baea0e72165d0b46",
+      "sourceUrl": "https://incaof.com/r/[redacted]"
+    },
+    {
+      "filename": "responder-resolved.png",
+      "sha256": "4adfd44e1a07d14ffb9103f062f72f7de72ecefcbc867a23f6d253112f43bc33",
+      "sourceUrl": "https://incaof.com/r/[redacted]"
+    }
+  ],
+  "statement": "Browser captures came from rendered live pages. No request interception or fixture substitution was used."
+}

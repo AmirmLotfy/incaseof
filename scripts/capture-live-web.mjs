@@ -49,9 +49,13 @@ async function screenshot(page, filename) {
   captured.push({ filename, sha256, sourceUrl: publicSourceUrl(page.url()) });
 }
 
-async function openChecked(page, url) {
+async function openChecked(page, url, { allowedStatuses = [] } = {}) {
   const response = await page.goto(url, { waitUntil: "domcontentloaded" });
-  requireCondition(response?.ok(), `${url} returned ${response?.status() ?? "no response"}`);
+  const status = response?.status();
+  requireCondition(
+    response?.ok() || (status !== undefined && allowedStatuses.includes(status)),
+    `${publicSourceUrl(url)} returned ${status ?? "no response"}`,
+  );
 }
 
 try {
@@ -119,7 +123,9 @@ try {
   );
 
   const responder = await desktop.newPage();
-  await openChecked(responder, responderHref);
+  // GitHub Pages serves its custom 404 document with status 404. That document is the
+  // responder route shell and rewrites the signed path to the statically exported token page.
+  await openChecked(responder, responderHref, { allowedStatuses: [404] });
   await responder.getByRole("heading", { name: /hasn.t responded/i }).waitFor();
   await screenshot(responder, "responder-claim.png");
   await responder.getByRole("button", { name: /I.m checking/i }).click();

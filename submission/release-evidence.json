@@ -50,7 +50,7 @@
     "edgeHostingStatus": "GITHUB_PAGES_CANONICAL_HTTPS_LIVE_AWS_CLOUDFRONT_BLOCKED_ACCOUNT_VERIFICATION",
     "staticHostingFallback": {
       "sourceCommit": "07026753c334ac7d808c4f3ebdf2cc1870a3f263",
-      "pagesCommit": "a36293965d679ba5f0da28e61b75545062b1f4d2",
+      "pagesCommit": "a4e10405a432233a8351b5379eeef3c5a8559356",
       "pagesBuildStatus": "BUILT",
       "customDomain": "incaof.com",
       "route53ChangeId": "C00432451DB0DX4C8LSG7",
@@ -234,7 +234,7 @@
     "rtl320PixelBrowserVerified": true,
     "browserAccessibilityCasesPassed": 19,
     "marketingHomeAndDemoArabicComplete": false,
-    "deployedToEdge": false
+    "deployedToEdge": true
   },
   "canary": {
     "lastCheckedAt": "2026-09-05T12:08:54Z",
@@ -315,9 +315,9 @@
     },
     {
       "name": "android-in-app-demo",
-      "status": "BACKEND_LIVE_DEVICE_PENDING",
-      "verifiedAt": "2026-09-05T08:51:06Z",
-      "details": "Short-lived synthetic sessions and all 19 demo backend routes are live on the canonical API; separate Android demo identities and device-registration refusal pass tests, while a new installed-device exercise remains pending"
+      "status": "PASSED_SIGNED_RELEASE_LIVE_BACKEND_API37",
+      "verifiedAt": "2026-09-08T05:15:00Z",
+      "details": "Protected run 34188760450 produced the signed release after the R8 serializer repair. The exact artifact was installed on API 37, entered an isolated synthetic session, compiled the explicit deterministic fallback, saved a draft, started the deployed Drill, and rendered Scheduler, workflow, queue and worker audit events."
     }
   ],
   "sourceControl": {
@@ -332,11 +332,21 @@
     "architecturePngSha256": "176687736f479c1efa93a24fa7d95c6761bb1a4c31e6497bf66e75cf6729d43d",
     "architecturePdfSha256": "62c9e46ed0f81a79127754df65ba21fa02f3b2c82cd6ebdaa47680cdb443e72b",
     "projectImage": null,
+    "webCaptureProvenance": "submission/screenshots/web-provenance.json",
+    "webCaptureMode": "REHEARSAL_CANONICAL_DETERMINISTIC_FALLBACK",
     "screenshots": [
-      "android/captures/api26-release-home.png",
-      "android/captures/api37-release-home.png",
-      "android/captures/api37-release-authenticated-home.png",
-      "android/captures/api37-fcm-notification.png"
+      "submission/screenshots/marketing-desktop.png",
+      "submission/screenshots/marketing-mobile.png",
+      "submission/screenshots/web-plan-preview.png",
+      "submission/screenshots/developer-trace-redacted.png",
+      "submission/screenshots/audit-timeline.png",
+      "submission/screenshots/responder-claim.png",
+      "submission/screenshots/responder-lease.png",
+      "submission/screenshots/responder-resolved.png",
+      "submission/screenshots/android-home.png",
+      "submission/screenshots/android-create.png",
+      "submission/screenshots/android-circle.png",
+      "submission/screenshots/android-drill.png"
     ]
   },
   "videoUrl": null,

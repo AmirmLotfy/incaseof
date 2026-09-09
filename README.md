@@ -13,6 +13,23 @@ the uncertainty is resolved.
 
 ---
 
+## Judge package
+
+- **Live judge demo:** [incaof.com/demo](https://incaof.com/demo)
+- **2:17 demo and pitch:** [YouTube](https://youtu.be/hDcBwr9dFsY)
+- **Hackathon entry:** [In Case Of — ICO on Devpost](https://devpost.com/software/in-case-of-ygk5uj)
+- **Architecture:** [PNG](submission/architecture/in-case-of-architecture.png) · [PDF](submission/architecture/in-case-of-architecture.pdf)
+- **Signed Android build:** [Download APK](https://incaof.com/downloads/in-case-of.apk)
+- **Evidence and current limitations:** [Capability record](docs/CAPABILITIES.md)
+
+The public demo runs the real AWS schedule, Step Functions workflow, queue, delivery worker,
+responder lease and explicit resolution path in an isolated synthetic tenant. AWS account
+verification and an applied zero AgentCore-version quota currently block the corrected Nova model
+runtime, so the compile step visibly uses the schema-validated deterministic fallback. No model
+trace is fabricated.
+
+---
+
 ## The idea
 
 Millions of people spend meaningful periods alone. The usual options are **passive** — someone
@@ -104,7 +121,7 @@ docs/        product, architecture, domain, security and design contracts
 | [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | OIDC deployment and quota-blocked recovery procedure |
 | [`docs/DEMO.md`](docs/DEMO.md) | Demo time compression and submission |
 | [`docs/HACKATHON.md`](docs/HACKATHON.md) | Devpost submission narrative and track qualification |
-| [`docs/DEMO-VIDEO-SCRIPT.md`](docs/DEMO-VIDEO-SCRIPT.md) | 4:30 video pitch storyboard and narration |
+| [`docs/DEMO-VIDEO-SCRIPT.md`](docs/DEMO-VIDEO-SCRIPT.md) | Demo pitch source, storyboard and narration |
 | [`docs/design/DESIGN.md`](docs/design/DESIGN.md) | Design system, palette, accessibility floor |
 
 ---
@@ -179,7 +196,7 @@ uv run ruff check . && uv run mypy services
 ```
 
 ```bash
-npm install && npm run build --workspaces
+npm ci && npm run build --workspaces
 ```
 
 ```bash

@@ -313,6 +313,37 @@
     "modelCompileIncluded": false,
     "note": "scripts/verify-live-demo-drill.sh passed against the deployed direct API after scoped-role OIDC run 33991694814. The deployed Scheduler, Step Functions, SQS worker, durable outbox, signed responder authorization, checking lease and explicit-resolution path completed, and the Standard workflow later observed the terminal Alert and finished SUCCEEDED. Plan compilation remains on the separately recorded 503 fallback."
   },
+  "latestCanonicalApiDrill": {
+    "verifiedAt": "2026-09-09T01:11:55Z",
+    "canonicalApi": true,
+    "syntheticTenant": true,
+    "timeScale": 0.02,
+    "planId": "31b37e9e-c9b5-4776-9d64-94fe6f90dd2a",
+    "momentId": "dd99675a-fb41-5e10-a82a-dcbe403a7a20",
+    "alertId": "7f957125-ed08-466b-8f00-c314bf35847d",
+    "terminalState": "RESOLVED",
+    "auditEventCount": 11,
+    "auditEvents": [
+      "MOMENT_DUE",
+      "STATE_SELF_CONTACT",
+      "ACTION_QUEUED",
+      "ACTION_ACCEPTED",
+      "ACTION_QUEUED",
+      "ACTION_ACCEPTED",
+      "ACTION_QUEUED",
+      "ACTION_ACCEPTED",
+      "STATE_CIRCLE_ESCALATION",
+      "ALERT_CLAIMED",
+      "RESPONDER_VERIFIED"
+    ],
+    "safeSinkReferences": [
+      "safe-sink:7f957125-ed08-466b-8f00-c314bf35847d:PUSH",
+      "safe-sink:7f957125-ed08-466b-8f00-c314bf35847d:SMS"
+    ],
+    "tokensRedacted": true,
+    "modelCompileIncluded": false,
+    "note": "scripts/verify-live-demo-drill.sh passed against https://api.incaof.com and verified Scheduler materialization, the deployed workflow, queue and worker, responder claim, explicit resolution, the required audit events and safe-sink-only delivery."
+  },
   "gates": [
     {
       "name": "unified-preflight",
@@ -415,8 +446,12 @@
     "publishedAt": "2026-09-09",
     "allTitlesIncludeAgentsForHumans": true,
     "devpostBonusFieldUpdated": true,
-    "devpostBonusUrl": "https://builder.aws.com/content/3J4FhnOcqEUDh0mHloSFfBb6t8A/agents-for-humans-building-a-governed-strands-agent-on-bedrock-agentcore",
-    "devpostBonusFieldVerifiedAt": "2026-09-09T00:57:37Z"
+    "devpostBonusUrls": [
+      "https://builder.aws.com/content/3J4EYH8nKKfYMmXnNp3EyHffV7J",
+      "https://builder.aws.com/content/3J4FhnOcqEUDh0mHloSFfBb6t8A",
+      "https://builder.aws.com/content/3J4Gb3rMtGXCvXMqAh0Qx35vSAp"
+    ],
+    "devpostBonusFieldVerifiedAt": "2026-09-09T01:08:39Z"
   },
   "builderIdSupplied": true,
   "notes": [
@@ -483,8 +518,8 @@
     "screenshotGalleryCaptionsAdded": true,
     "screenshotGalleryPubliclyVerified": true,
     "screenshotGalleryUpdatedAt": "2026-09-08T23:07:11Z",
-    "bonusBlogUrlCount": 1,
-    "bonusBlogFieldUpdatedAt": "2026-09-09T00:57:37Z",
+    "bonusBlogUrlCount": 3,
+    "bonusBlogFieldUpdatedAt": "2026-09-09T01:08:39Z",
     "postUpdateStatusObserved": "SUBMITTED",
     "postUpdateStepsObserved": "5/5 steps done"
   }

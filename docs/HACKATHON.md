@@ -2,8 +2,8 @@
 
 In Case Of closes uncertainty; it does not decide whether someone is in danger.
 
-> Release gate: this copy may be pasted only after the live evidence fields in
-> `docs/CAPABILITIES.md` pass. Until then, URLs describe intended canonical destinations.
+> Submission record: the public entry is live on Devpost. Current evidence and limitations are
+> maintained in `docs/CAPABILITIES.md` and `submission/release-evidence.json`.
 
 ## General information
 
@@ -39,7 +39,11 @@ the editable SVG and one-page PDF are beside it.
 
 **Public demo-video URL:** https://youtu.be/hDcBwr9dFsY
 
-**Optional builder.aws post URLs:** `[OPTIONAL BONUS DRAFTS ARE READY]`
+**Optional builder.aws post URLs:**
+
+- https://builder.aws.com/content/3J4EYH8nKKfYMmXnNp3EyHffV7J
+- https://builder.aws.com/content/3J4FhnOcqEUDh0mHloSFfBb6t8A
+- https://builder.aws.com/content/3J4Gb3rMtGXCvXMqAh0Qx35vSAp
 
 ## About the project
 

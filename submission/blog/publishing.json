@@ -42,5 +42,9 @@
   ],
   "devpostBonusSubmitted": true,
   "devpostBonusUpdatedDate": "2026-09-09",
-  "devpostBonusUrl": "https://builder.aws.com/content/3J4FhnOcqEUDh0mHloSFfBb6t8A/agents-for-humans-building-a-governed-strands-agent-on-bedrock-agentcore"
+  "devpostBonusUrls": [
+    "https://builder.aws.com/content/3J4EYH8nKKfYMmXnNp3EyHffV7J",
+    "https://builder.aws.com/content/3J4FhnOcqEUDh0mHloSFfBb6t8A",
+    "https://builder.aws.com/content/3J4Gb3rMtGXCvXMqAh0Qx35vSAp"
+  ]
 }

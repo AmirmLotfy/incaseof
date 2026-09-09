@@ -90,7 +90,7 @@ Canonical captures and hashes are recorded in `submission/screenshots/README.md`
 
 - Public repository, Apache 2.0 license, README, architecture diagram, live demo, signed Android APK, project image, and sub-five-minute public video are ready.
 - The current branch has green Python, web, Android, infrastructure, and guardrail checks.
-- Devpost authentication and the existing **In Case Of** project draft are verified live.
+- The **In Case Of — ICO** entry is verified live as submitted to Agents for Humans.
 - The participant’s AWS Builder ID is supplied in the authenticated Devpost form.
 
 ## Known Limitations
@@ -99,7 +99,7 @@ Canonical captures and hashes are recorded in `submission/screenshots/README.md`
 - Physical-phone push and carrier SMS are outside hackathon acceptance and remain unverified.
 - Production admissions are closed; the public surface is an isolated judge demo.
 
-## TODO Official Form Fields
+## Official Form Fields
 
 - Submitter Type (`27729`): Individual
 - Country of Residence (`27730`): Egypt
@@ -109,7 +109,7 @@ Canonical captures and hashes are recorded in `submission/screenshots/README.md`
 - AWS Builder ID (`27735`): supplied in the authenticated Devpost form
 - Optional live demo (`27736`): https://incaof.com/demo
 - Testing instructions (`28191`): use the Testing Instructions section above
-- Optional builder.aws post (`27737`): omitted unless a public post is published before the deadline
+- Optional builder.aws post (`27737`): three verified short content URLs, covering all three public posts
 
 ## Devpost Assets
 

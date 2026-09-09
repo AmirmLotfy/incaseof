@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <rect width="1600" height="900" fill="#0D1411"/>
+  <circle cx="108" cy="94" r="24" fill="#F4F1E9"/><circle cx="121" cy="96" r="4" fill="#F15A29"/>
+  <text x="150" y="102" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#F4F1E9" letter-spacing="4">IN CASE OF · ICO</text>
+  <text x="84" y="246" font-family="Arial, sans-serif" font-size="72" font-weight="700" fill="#F4F1E9">RETRIES WITHOUT DUPLICATES</text>
+  <text x="88" y="314" font-family="Arial, sans-serif" font-size="34" fill="#AAB2AD">Durable intent. Stable identity. One confirmed effect.</text>
+  <rect x="84" y="420" width="390" height="220" rx="26" fill="#1B2A24" stroke="#2F7A65" stroke-width="3"/>
+  <text x="118" y="480" font-family="Arial" font-size="18" font-weight="700" fill="#76C8AA" letter-spacing="5">01 · INTENT</text>
+  <text x="118" y="548" font-family="Arial" font-size="36" font-weight="700" fill="#F4F1E9">Persist first</text>
+  <text x="118" y="592" font-family="Arial" font-size="24" fill="#AAB2AD">DynamoDB transaction</text>
+  <path d="M505 530H595M573 518L595 530 573 542" fill="none" stroke="#F4F1E9" stroke-width="5"/>
+  <rect x="605" y="420" width="390" height="220" rx="26" fill="#211C17" stroke="#F3B744" stroke-width="3"/>
+  <text x="639" y="480" font-family="Arial" font-size="18" font-weight="700" fill="#F3B744" letter-spacing="5">02 · QUEUE</text>
+  <text x="639" y="548" font-family="Arial" font-size="36" font-weight="700" fill="#F4F1E9">Retry safely</text>
+  <text x="639" y="592" font-family="Arial" font-size="24" fill="#AAB2AD">SQS + recovery relay</text>
+  <path d="M1026 530H1116M1094 518L1116 530 1094 542" fill="none" stroke="#F4F1E9" stroke-width="5"/>
+  <rect x="1126" y="420" width="390" height="220" rx="26" fill="#2A1A16" stroke="#F15A29" stroke-width="3"/>
+  <text x="1160" y="480" font-family="Arial" font-size="18" font-weight="700" fill="#FF8A66" letter-spacing="5">03 · EFFECT</text>
+  <text x="1160" y="548" font-family="Arial" font-size="36" font-weight="700" fill="#F4F1E9">Confirm once</text>
+  <text x="1160" y="592" font-family="Arial" font-size="24" fill="#AAB2AD">Provider outcome record</text>
+  <line x1="84" y1="718" x2="1516" y2="718" stroke="#314039" stroke-width="3"/>
+  <text x="84" y="785" font-family="Arial" font-size="26" font-weight="700" fill="#76C8AA">IDEMPOTENT BY DESIGN</text>
+  <text x="1516" y="835" text-anchor="end" font-family="Arial" font-size="24" font-weight="700" fill="#F3B744">AGENTS FOR HUMANS</text>
+</svg>

@@ -8,6 +8,9 @@
       "cover": "submission/blog/assets/01-monitor-the-plan-cover.png",
       "draftUrl": "https://builder.aws.com/create/content/3J4EYH8nKKfYMmXnNp3EyHffV7J?v=3J4EYGCeQVqDkloVk4rcLEWEnFI",
       "previewUrl": "https://builder.aws.com/preview/content/3J4EYH8nKKfYMmXnNp3EyHffV7J?v=3J4EYGCeQVqDkloVk4rcLEWEnFI",
+      "publicUrl": "https://builder.aws.com/content/3J4EYH8nKKfYMmXnNp3EyHffV7J/agents-for-humans-why-ico-monitors-the-plan-not-the-person",
+      "status": "published",
+      "publishedDate": "2026-09-09",
       "title": "Agents for Humans: Why ICO Monitors the Plan, Not the Person",
       "description": "How In Case Of turns one explicit expectation into a consented escalation plan without continuous surveillance.",
       "topics": ["agentic-ai", "ai-agents", "data-privacy", "serverless", "aws-lambda"]
@@ -17,6 +20,9 @@
       "cover": "submission/blog/assets/02-governed-agent-cover-safe.png",
       "draftUrl": "https://builder.aws.com/create/content/3J4FhnOcqEUDh0mHloSFfBb6t8A?v=3J4FhlkQPalSKN5BXKHaAl1S5dA",
       "previewUrl": "https://builder.aws.com/preview/content/3J4FhnOcqEUDh0mHloSFfBb6t8A?v=3J4FhlkQPalSKN5BXKHaAl1S5dA",
+      "publicUrl": "https://builder.aws.com/content/3J4FhnOcqEUDh0mHloSFfBb6t8A/agents-for-humans-building-a-governed-strands-agent-on-bedrock-agentcore",
+      "status": "published",
+      "publishedDate": "2026-09-09",
       "title": "Agents for Humans: Building a Governed Strands Agent on Bedrock AgentCore",
       "description": "A Strands agent on Bedrock AgentCore with role-only tools, Cedar policy, and deterministic safety state.",
       "topics": ["amazon-bedrock-agentcore", "amazon-bedrock", "agentic-ai", "ai-agents", "security"]
@@ -26,9 +32,14 @@
       "cover": "submission/blog/assets/03-idempotent-workflow-cover-safe.png",
       "draftUrl": "https://builder.aws.com/create/content/3J4Gb3rMtGXCvXMqAh0Qx35vSAp?v=3J4Gb5LPIyQMfd4YOUnniNbc9tp",
       "previewUrl": "https://builder.aws.com/preview/content/3J4Gb3rMtGXCvXMqAh0Qx35vSAp?v=3J4Gb5LPIyQMfd4YOUnniNbc9tp",
+      "publicUrl": "https://builder.aws.com/content/3J4Gb3rMtGXCvXMqAh0Qx35vSAp/agents-for-humans-engineering-an-idempotent-contingency-workflow-on-aws",
+      "status": "published",
+      "publishedDate": "2026-09-09",
       "title": "Agents for Humans: Engineering an Idempotent Contingency Workflow on AWS",
       "description": "How DynamoDB transactions, SQS, Step Functions, stable action identities, and checking leases make retries safe.",
       "topics": ["aws-lambda", "step-functions", "databases", "serverless", "event-driven"]
     }
-  ]
+  ],
+  "devpostBonusSubmitted": true,
+  "devpostBonusUpdatedDate": "2026-09-09"
 }

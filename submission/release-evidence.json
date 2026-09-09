@@ -415,7 +415,8 @@
     "publishedAt": "2026-09-09",
     "allTitlesIncludeAgentsForHumans": true,
     "devpostBonusFieldUpdated": true,
-    "devpostBonusFieldVerifiedAt": "2026-09-09T00:33:53Z"
+    "devpostBonusUrl": "https://builder.aws.com/content/3J4FhnOcqEUDh0mHloSFfBb6t8A/agents-for-humans-building-a-governed-strands-agent-on-bedrock-agentcore",
+    "devpostBonusFieldVerifiedAt": "2026-09-09T00:57:37Z"
   },
   "builderIdSupplied": true,
   "notes": [
@@ -482,8 +483,8 @@
     "screenshotGalleryCaptionsAdded": true,
     "screenshotGalleryPubliclyVerified": true,
     "screenshotGalleryUpdatedAt": "2026-09-08T23:07:11Z",
-    "bonusBlogUrlCount": 3,
-    "bonusBlogFieldUpdatedAt": "2026-09-09T00:33:53Z",
+    "bonusBlogUrlCount": 1,
+    "bonusBlogFieldUpdatedAt": "2026-09-09T00:57:37Z",
     "postUpdateStatusObserved": "SUBMITTED",
     "postUpdateStepsObserved": "5/5 steps done"
   }

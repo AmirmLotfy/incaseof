@@ -404,7 +404,19 @@
     "copyrightCheck": "NO_ISSUES_FOUND",
     "communityGuidelinesCheck": "NO_ISSUES_FOUND"
   },
-  "blogUrls": [],
+  "blogUrls": [
+    "https://builder.aws.com/content/3J4EYH8nKKfYMmXnNp3EyHffV7J/agents-for-humans-why-ico-monitors-the-plan-not-the-person",
+    "https://builder.aws.com/content/3J4FhnOcqEUDh0mHloSFfBb6t8A/agents-for-humans-building-a-governed-strands-agent-on-bedrock-agentcore",
+    "https://builder.aws.com/content/3J4Gb3rMtGXCvXMqAh0Qx35vSAp/agents-for-humans-engineering-an-idempotent-contingency-workflow-on-aws"
+  ],
+  "blogPublication": {
+    "platform": "AWS Builder Center",
+    "authorAlias": "amirmolotfy",
+    "publishedAt": "2026-09-09",
+    "allTitlesIncludeAgentsForHumans": true,
+    "devpostBonusFieldUpdated": true,
+    "devpostBonusFieldVerifiedAt": "2026-09-09T00:33:53Z"
+  },
   "builderIdSupplied": true,
   "notes": [
     "This is a truthful partial evidence manifest, not an acceptance record.",
@@ -469,6 +481,10 @@
     "screenshotGalleryCount": 12,
     "screenshotGalleryCaptionsAdded": true,
     "screenshotGalleryPubliclyVerified": true,
-    "screenshotGalleryUpdatedAt": "2026-09-08T23:07:11Z"
+    "screenshotGalleryUpdatedAt": "2026-09-08T23:07:11Z",
+    "bonusBlogUrlCount": 3,
+    "bonusBlogFieldUpdatedAt": "2026-09-09T00:33:53Z",
+    "postUpdateStatusObserved": "SUBMITTED",
+    "postUpdateStepsObserved": "5/5 steps done"
   }
 }

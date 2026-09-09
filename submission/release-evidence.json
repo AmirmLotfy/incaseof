@@ -9,7 +9,7 @@
     "accountIdRedacted": true,
     "deploymentPrincipal": "protected GitHub OIDC role ico-github-demo-deploy with project-specific CloudFormation executor ico-demo-cfn-exec; no long-lived AWS access key",
     "stackName": "IcoStack-demo",
-    "stackStatus": "UPDATE_COMPLETE",
+    "stackStatus": "UPDATE_ROLLBACK_COMPLETE",
     "region": "us-east-1",
     "githubOidc": {
       "roleName": "ico-github-demo-deploy",
@@ -72,7 +72,9 @@
       "status": "REPLIED_AWAITING_AWS",
       "lastCheckedAt": "2026-09-08T05:56:00Z",
       "lastReplyAt": "2026-09-08T05:56:00Z",
-      "replyPreparedNotSent": false
+      "replyPreparedNotSent": false,
+      "lastCheckAttemptAt": "2026-09-09T07:50:50Z",
+      "lastCheckResult": "SUPPORT_API_SUBSCRIPTION_REQUIRED_AND_CONSOLE_OPERATOR_LACKS_DESCRIBE_CASES"
     },
     "agentCoreQuotaRequests": {
       "activeSessionWorkloads": {
@@ -82,10 +84,11 @@
       "versionsPerAgent": {
         "requestId": "b38dff125c3e4b1493e58c7fca4ed88bEgBdMI37",
         "caseId": "178851871600399",
-        "status": "CASE_OPENED_REPLY_SENT_AWAITING_AWS",
+        "status": "CASE_OPENED",
         "currentAppliedValue": 0,
         "clarifiedDesiredValue": 1,
-        "lastReplyAt": "2026-09-08T05:51:00Z"
+        "lastReplyAt": "2026-09-08T05:51:00Z",
+        "lastCheckedAt": "2026-09-09T07:50:50Z"
       }
     },
     "previousDeploymentFailure": {
@@ -197,7 +200,8 @@
       "oneTimeCapacityReleasePassed": true,
       "boundedRecurrenceCapacityReleasePassed": true,
       "deployedToDemo": false
-    }
+    },
+    "lastCheckedAt": "2026-09-09T07:50:50Z"
   },
   "urls": {
     "marketing": "https://incaof.com/",
@@ -251,7 +255,7 @@
     "deployedToEdge": true
   },
   "canary": {
-    "lastCheckedAt": "2026-09-05T12:08:54Z",
+    "lastCheckedAt": "2026-09-09T07:50:50Z",
     "sourceModelId": "us.amazon.nova-2-lite-v1:0",
     "deployedModelId": "us.anthropic.claude-sonnet-4-6",
     "sourceMatchesDeployedModel": false,
@@ -266,7 +270,12 @@
       "Existing runtime v1 fails isolated startup because its artifact imports services.handlers; corrected source is not deployed until the version quota case is approved.",
       "Direct Nova 2 Lite inference returns Operation not allowed pending AWS account verification.",
       "Claude Sonnet 4.6 is not a viable fallback for this account: Bedrock returns an unsupported-country restriction."
-    ]
+    ],
+    "runtimeControlPlaneStatus": "READY",
+    "runtimeEndpointStatus": "READY",
+    "runtimeInvocationResult": "RUNTIME_INITIALIZATION_TIME_EXCEEDED",
+    "runtimeCloudWatchError": "ModuleNotFoundError: No module named 'services.handlers'",
+    "novaConverseResult": "VALIDATION_EXCEPTION_OPERATION_NOT_ALLOWED"
   },
   "liveDeterministicDrill": {
     "verifiedAt": "2026-09-05T21:03:56Z",

@@ -10,7 +10,7 @@ license = { text = "Apache-2.0" }
 # tomorrow; a transitive minor bump is not an acceptable source of surprise.
 dependencies = [
     "bedrock-agentcore==1.22.0",
-    "strands-agents==1.54.0",
+    "strands-agents==1.55.0",
     "pydantic==2.13.4",
     "boto3==1.43.78",
     "aws-lambda-powertools==3.34.0",
